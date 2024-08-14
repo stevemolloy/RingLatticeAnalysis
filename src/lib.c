@@ -68,3 +68,8 @@ size_t count_lines(char *contents) {
   return result;
 }
 
+void advance_to_next_line(char **string) {
+  while (**string != '\n') (*string)++;
+  (*string)++;
+}
+
