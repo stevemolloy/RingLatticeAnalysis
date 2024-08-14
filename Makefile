@@ -1,9 +1,28 @@
-CC=clang
-CFLAGS=-Wall -pedantic
+CC = clang
+CFLAGS = -Wall -Wpedantic -Wextra -ggdb -std=c18
 
-main: main.c lib.o
-	$(CC) $(CFLAGS) -o main main.c lib.o
+SRC = src
+OBJ = obj
 
-lib.o: lib.c
-	$(CC) $(CFLAGS) -o lib.o -c lib.c
-	
+SRCS = $(wildcard $(SRC)/*.c)
+OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
+
+BINDIR = bin
+BIN = $(BINDIR)/main
+
+all: $(BIN)
+
+$(BIN): $(OBJS)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
+
+$(OBJ)/%.o: $(SRC)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(CINCLUDES) -c $< -o $@
+
+clean:
+	rm -rf $(BINDIR) $(OBJ)
+
+$(OBJ):
+	@mkdir -p $@
+
