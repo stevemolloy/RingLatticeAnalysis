@@ -3,8 +3,11 @@
 
 #include "lib.h"
 
-int main(void)
-{
+typedef struct {
+  float length;
+} Drift;
+
+int main(void) {
   char *file_path = "./max4u_lattice.mad8";
   char *buffer = read_entire_file(file_path);
 
