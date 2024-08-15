@@ -14,11 +14,11 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
+	$(CC) $(CFLAGS) $(CLIBS) $^ -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(CINCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(BINDIR) $(OBJ)
