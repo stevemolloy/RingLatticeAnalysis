@@ -21,8 +21,22 @@ static Arena memory_arena = {0};
 int main(void) {
   char *file_path = "./lattices/max4u_lattice.mad8";
   char *buffer = read_entire_file(file_path);
-
   char *cursor = buffer;
+
+  while (*cursor != '\0') {
+    if (*cursor == '&' | *cursor == '!') {
+      while (*cursor != '\n') {
+        *cursor = ' ';
+        cursor++;
+      }
+      *cursor = ' ';
+    } else {
+      cursor++;
+    }
+  }
+
+  cursor = buffer;
+  printf("%s\n", cursor);
 
   hash_map *hmap = NULL;
 
