@@ -23,28 +23,13 @@ int main(void) {
   char *buffer = read_entire_file(file_path);
   char *cursor = buffer;
 
-  while (*cursor != '\0') {
-    if (*cursor == '&' | *cursor == '!') {
-      while (*cursor != '\n') {
-        *cursor = ' ';
-        cursor++;
-      }
-      *cursor = ' ';
-    } else {
-      cursor++;
-    }
-  }
-
-  cursor = buffer;
-  printf("%s\n", cursor);
+  cursor = join_lines(cursor);
 
   hash_map *hmap = NULL;
 
   while (*cursor != '\0') {
     if (*cursor == '!' | *cursor == '&') {
       advance_to_next_line(&cursor);
-    } else if (*cursor == '\n' /*|  *cursor == ' ' */) {
-      cursor++;
     } else if (isalpha(*cursor)) {
       char *word = cursor;
       while (isalnum(*cursor)) {

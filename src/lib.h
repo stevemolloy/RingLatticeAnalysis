@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+char *join_lines(char* cursor);
 size_t read_entire_file_to_lines(char *file_path, char **buffer, char ***lines);
 char *read_entire_file(char *file_path);
 size_t string_to_lines(char **string, char ***lines);

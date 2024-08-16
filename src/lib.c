@@ -6,6 +6,24 @@
 
 #include "lib.h"
 
+char *join_lines(char* cursor) {
+  char *buffer = cursor;
+
+  while (*cursor != '\0') {
+    if (*cursor == '&' | *cursor == '!') {
+      while (*cursor != '\n') {
+        *cursor = ' ';
+        cursor++;
+      }
+      *cursor = ' ';
+    } else {
+      cursor++;
+    }
+  }
+
+  return buffer;
+}
+
 size_t read_entire_file_to_lines(char *file_path, char **buffer, char ***lines) {
   *buffer = read_entire_file(file_path);
   size_t num_lines = string_to_lines(buffer, lines);
