@@ -1,5 +1,6 @@
 CC = clang
 CFLAGS = -Wall -Wpedantic -Wextra -ggdb -std=c18
+CINCLUDES = -I./third_party/
 
 SRC = src
 OBJ = obj
@@ -14,11 +15,11 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(CLIBS) $^ -o $@
+	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CINCLUDES) -c $< -o $@
 
 clean:
 	rm -rf $(BINDIR) $(OBJ)
