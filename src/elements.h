@@ -49,5 +49,7 @@ typedef struct {
   } as;
 } Element;
 
+void element_print(Element element);
+
 #endif // !ELEMENTS_H
 
