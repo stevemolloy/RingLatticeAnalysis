@@ -18,7 +18,7 @@
 typedef struct {
   char* key;
   Element value;
-} hash_map;
+} ElementLibrary;
 
 static Arena memory_arena = {0};
 
@@ -141,35 +141,40 @@ bool isvalididchar(char c) {
   return isalnum(c) | (c == '_');
 }
 
+Element* element_list = NULL;
+ElementLibrary *element_library = NULL;
+
 int main(void) {
-  char *file_path = "./lattices/max4u_lattice.mad8";
+  char *file_path = "./lattices/max4u_lattice_no_line_for_testing.mad8";
   char *buffer = read_entire_file(file_path);
   char *cursor = buffer;
 
   cursor = join_lines(cursor);
 
-  hash_map *hmap = NULL;
-
   while (*cursor != '\0') {
     if (*cursor == '!' | *cursor == '&') {
       advance_to_next_line(&cursor);
     } else if (isalpha(*cursor)) {
-      // char *element_name = cursor;
+      char *element_name = cursor;
       while (isvalididchar(*cursor)) {
         cursor++;
       }
       *cursor = '\0';
       cursor++;
 
-      Element element = create_element(&cursor);
-
-      element_print(element);
+      shput(element_library, element_name, arrput(element_list, create_element(&cursor)));
     } else {
       cursor++;
     }
   }
 
-  shfree(hmap);
+  char *test_ele_name = "d2_3";
+  Element test_ele = shget(element_library, test_ele_name);
+  printf("Element %s is ", test_ele_name);
+  element_print(test_ele);
+
+  arrfree(element_list);
+  shfree(element_library);
   arena_free(&memory_arena);
   free(buffer);
 
