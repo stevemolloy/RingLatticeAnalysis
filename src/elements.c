@@ -112,6 +112,10 @@ Element create_element(char **cursor) {
     }
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
+  } else if (strcmp(type, "LINE") == 0) {
+    *cursor -= 4; // Safe since we just extracted "LINE" from this, so this puts the cursor back there.
+    printf("Found a LINE, so returning to the main function\n");
+    return result;
   } else {
     fprintf(stderr, "ERROR: Unable to parse elements of type %s\n", type);
     printf("%s\n", *cursor);

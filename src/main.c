@@ -25,7 +25,7 @@ Element* element_list = NULL;
 ElementLibrary *element_library = NULL;
 
 int main(void) {
-  char *file_path = "./lattices/max4u_lattice_no_line_for_testing.mad8";
+  char *file_path = "./lattices/max4u_lattice.mad8";
   char *buffer = read_entire_file(file_path);
   char *cursor = buffer;
 
@@ -46,7 +46,12 @@ int main(void) {
     } else {
       cursor++;
     }
+    if (strncmp(cursor, "LINE", 4) == 0) {
+      break;
+    }
   }
+
+  printf("The following remains to be parsed:\n%s", cursor);
 
   char *test_ele_name = "d2_3";
   Element test_ele = shget(element_library, test_ele_name);
