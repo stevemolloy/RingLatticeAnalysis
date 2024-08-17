@@ -15,8 +15,6 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
-static Arena memory_arena = {0};
-
 bool isvalididchar(char c) {
   return isalnum(c) | (c == '_');
 }
@@ -60,7 +58,6 @@ int main(void) {
 
   arrfree(element_list);
   shfree(element_library);
-  arena_free(&memory_arena);
   free(buffer);
 
   printf("\n");
