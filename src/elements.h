@@ -2,6 +2,7 @@
 #define ELEMENTS_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define C 299792458.0f
 
@@ -59,6 +60,11 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
+float synch_rad_integral_1(Element *line, size_t periodicity);
+float synch_rad_integral_2(Element *line, size_t periodicity);
+float synch_rad_integral_3(Element *line, size_t periodicity);
+float element_length(Element element);
+float bending_radius_of_element(Element element);
 Element create_element(char **cursor);
 float assigned_float_from_string(char *string);
 void element_print(Element element);

@@ -1,8 +1,10 @@
 #define _GNU_SOURCE
+#include <math.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 #include "stb_ds.h"
 
@@ -11,6 +13,71 @@
 
 extern Element* element_list;
 extern ElementLibrary *element_library;
+
+float synch_rad_integral_1(Element *line, size_t periodicity) {
+  (void)line;
+  (void)periodicity;
+  return 0;
+}
+
+float synch_rad_integral_2(Element *line, size_t periodicity) {
+  float I_2 = 0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    float rho = bending_radius_of_element(line[i]);
+    I_2 += element_length(line[i]) / (rho * rho);
+  }
+
+  return I_2 * periodicity;
+}
+
+float synch_rad_integral_3(Element *line, size_t periodicity) {
+  float I_3 = 0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    float rho_abs = fabsf(bending_radius_of_element(line[i]));
+    I_3 += element_length(line[i]) / (rho_abs * rho_abs * rho_abs);
+  }
+
+  return I_3 * periodicity;
+}
+
+float element_length(Element element) {
+  float length;
+  switch (element.type) {
+    case ELETYPE_SBEND:
+      length = element.as.sbend.length;
+      break;
+    case ELETYPE_DRIFT:
+      length = element.as.drift.length;
+      break;
+    case ELETYPE_QUAD:
+      length = element.as.quad.length;
+      break;
+    case ELETYPE_SEXTUPOLE:
+      length = element.as.sextupole.length;
+      break;
+    case ELETYPE_MULTIPOLE:
+      length = element.as.multipole.length;
+      break;
+  }
+  return length;
+}
+
+float bending_radius_of_element(Element element) {
+  float rho = FLT_MAX;
+  switch (element.type) {
+    case ELETYPE_SBEND:
+      if (element.as.sbend.angle != 0) {
+        rho = element.as.sbend.length / element.as.sbend.angle;
+      }
+      break;
+    case ELETYPE_DRIFT:
+    case ELETYPE_QUAD:
+    case ELETYPE_SEXTUPOLE:
+    case ELETYPE_MULTIPOLE:
+      break;
+  }
+  return rho;
+}
 
 Element create_element(char **cursor) {
   char type[10] = {0};
