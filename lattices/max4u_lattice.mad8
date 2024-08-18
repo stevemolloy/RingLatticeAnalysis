@@ -7,8 +7,8 @@
 ! DEFINITIONS 
 
 bpm :MARKER; 
-ch :KICKER; 
-cv :KICKER; 
+ch :KICKER, L = 0.05; 
+cv :KICKER, L = 0.05; 
 d1 : DRIFT, L= 0.01000000; 
 d10 : DRIFT, L= 0.00608000; 
 d11 : DRIFT, L= 0.10000000; 
@@ -63,11 +63,11 @@ d9 : DRIFT, L= 0.09268000;
 d_corr : DRIFT, L= 0.05000000; 
 ge :MARKER; 
 gs :MARKER; 
-o1:  Multipole, K3L= -38933.64000000; 
+o1:  Multipole, L=0.1, K3L= -38933.64000000; 
 
-o2:  Multipole, K3L= 47605.92000000; 
+o2:  Multipole, L=0.1, K3L= 47605.92000000; 
 
-o3:  Multipole, K3L= -9387.60000000; 
+o3:  Multipole, L=0.1, K3L= -9387.60000000; 
 
 q1:  QUADRUPOLE,  L= 0.25000000,  K1= 3.49893000;
 q2:  QUADRUPOLE,  L= 0.25000000,  K1= -1.57587000;

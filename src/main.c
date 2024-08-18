@@ -79,6 +79,7 @@ int main(void) {
         total_length += line[i].as.sbend.length;
         break;
       case ELETYPE_MULTIPOLE:
+        total_length += line[i].as.multipole.length;
         break;
       case ELETYPE_SEXTUPOLE:
         total_length += line[i].as.sextupole.length;

@@ -18,12 +18,12 @@ Element create_element(char **cursor) {
     (*cursor)++;
   }
 
-  if (strcmp(type, "DRIFT") == 0) {
+  if (strcmp(type, "DRIFT") == 0 | strcmp(type, "KICKER") == 0) {
     result.type = ELETYPE_DRIFT;
     while (strncmp(*cursor, "L", 1) != 0) (*cursor)++;
     while (!isdigit(**cursor)) (*cursor)++;
     result.as.drift.length = strtof(*cursor, cursor);
-  } else if (strcmp(type, "MARKER") == 0 | strcmp(type, "KICKER") == 0) {
+  } else if (strcmp(type, "MARKER") == 0) {
     result.type = ELETYPE_DRIFT;
     result.as.drift.length = 0.0;
   } else if (strcmp(type, "SBEND") == 0) {
@@ -105,10 +105,15 @@ Element create_element(char **cursor) {
       temp_cursor++;
     }
     *temp_cursor = '\0';
+    char *l_string = strcasestr(*cursor, "l");
     char *k3l_string = strcasestr(*cursor, "k3l");
     if (k3l_string) {
       while (!isdigit(*k3l_string)) k3l_string++;
       result.as.multipole.K3L = strtof(k3l_string, NULL);
+    }
+    if (l_string) {
+      while (!isdigit(*l_string)) l_string++;
+      result.as.multipole.length = strtof(l_string, NULL);
     }
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
@@ -144,7 +149,7 @@ void element_print(Element element) {
              element.as.quad.K1);
       break;
     case ELETYPE_MULTIPOLE:
-      printf("Multipole: K3L = %f\n", element.as.multipole.K3L);
+      printf("Multipole: L = %f, K3L = %f\n", element.as.multipole.length, element.as.multipole.K3L);
       break;
     case ELETYPE_SEXTUPOLE:
       printf("Sextupole: L = %f, K2 = %f\n", 

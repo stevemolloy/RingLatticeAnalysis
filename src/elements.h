@@ -21,6 +21,7 @@ typedef struct {
 
 // Multipole, K3L= -38933.64000000; 
 typedef struct {
+  float length;
   float K3L;
 } Multipole;
 
