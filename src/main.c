@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   printf("\n");
   printf("Total length of this line is %f m\n", total_length);
   printf("Total length of %zu lines is %f m\n", periodicity, periodicity * total_length);
-  printf("RF frequency for a hamonic number of %zu is %0.3f MHz\n", harmonic_number, rf_freq/1e6);
+  printf("RF frequency for a hamonic number of %zu is %0.6f MHz\n", harmonic_number, rf_freq/1e6);
   printf("Synchrotron radiation integrals:\n");
   printf("\tI_2 = %f\n", synch_rad_integral_2(line, periodicity));
   printf("\tI_3 = %f\n", synch_rad_integral_3(line, periodicity));
