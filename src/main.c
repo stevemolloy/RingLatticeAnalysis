@@ -10,15 +10,6 @@
 #define ARENA_IMPLEMENTATION
 #include "arena.h"
 
-typedef struct {
-  char* key;
-  Element value;
-} ElementLibrary;
-
-bool isvalididchar(char c) {
-  return isalnum(c) | (c == '_');
-}
-
 Element* element_list = NULL;
 ElementLibrary *element_library = NULL;
 Element* line = NULL;
@@ -30,25 +21,7 @@ int main(void) {
 
   cursor = join_lines(cursor);
 
-  while (*cursor != '\0') {
-    if (*cursor == '!' | *cursor == '&') {
-      advance_to_next_line(&cursor);
-    } else if (isalpha(*cursor)) {
-      char *element_name = cursor;
-      while (isvalididchar(*cursor)) {
-        cursor++;
-      }
-      *cursor = '\0';
-      cursor++;
-
-      shput(element_library, element_name, arrput(element_list, create_element(&cursor)));
-    } else {
-      cursor++;
-    }
-    if (strncmp(cursor, "LINE", 4) == 0) {
-      break;
-    }
-  }
+  cursor = populate_element_library(cursor);
 
   advance_to_char(&cursor, '(');
   while (*cursor != ')') {
@@ -86,7 +59,14 @@ int main(void) {
         break;
     }
   }
+
+  printf("\n");
   printf("Total length of this line is %f m\n", total_length);
+  printf("Total length of 20 lines is %f m\n", 20 * total_length);
+
+  int harmonic_number = 176;
+  float rf_freq = C / (20 * total_length / harmonic_number);
+  printf("RF frequency for a hamonic number of %i is %0.3f MHz\n", harmonic_number, rf_freq/1e6);
 
   arrfree(line);
   arrfree(element_list);

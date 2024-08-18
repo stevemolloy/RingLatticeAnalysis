@@ -1,6 +1,10 @@
 #ifndef ELEMENTS_H
 #define ELEMENTS_H
 
+#include <stdbool.h>
+
+#define C 299792458.0f
+
 typedef struct {
   float length;
 } Drift;
@@ -50,8 +54,16 @@ typedef struct {
   } as;
 } Element;
 
+typedef struct {
+  char* key;
+  Element value;
+} ElementLibrary;
+
 Element create_element(char **cursor);
+float assigned_float_from_string(char *string);
 void element_print(Element element);
+bool isvalididchar(char c);
+char *populate_element_library(char *cursor);
 
 #endif // !ELEMENTS_H
 
