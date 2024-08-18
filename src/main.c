@@ -21,6 +21,7 @@ bool isvalididchar(char c) {
 
 Element* element_list = NULL;
 ElementLibrary *element_library = NULL;
+Element* line = NULL;
 
 int main(void) {
   char *file_path = "./lattices/max4u_lattice.mad8";
@@ -49,13 +50,44 @@ int main(void) {
     }
   }
 
-  printf("The following remains to be parsed:\n%s", cursor);
+  advance_to_char(&cursor, '(');
+  while (*cursor != ')') {
+    while (!isalpha(*cursor) & (*cursor != ')')) {
+      cursor++;
+    }
+    char *temp_cursor = cursor;
+    while (isvalididchar(*temp_cursor)) {
+      temp_cursor++;
+    }
+    *temp_cursor = '\0';
+    Element ele = shget(element_library, cursor);
+    arrput(line, ele);
+    cursor = temp_cursor + 1;
+  }
 
-  char *test_ele_name = "d2_3";
-  Element test_ele = shget(element_library, test_ele_name);
-  printf("Element %s is ", test_ele_name);
-  element_print(test_ele);
+  float total_length = 0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    element_print(line[i]);
+    switch (line[i].type) {
+      case ELETYPE_QUAD:
+        total_length += line[i].as.quad.length;
+        break;
+      case ELETYPE_DRIFT:
+        total_length += line[i].as.drift.length;
+        break;
+      case ELETYPE_SBEND:
+        total_length += line[i].as.sbend.length;
+        break;
+      case ELETYPE_MULTIPOLE:
+        break;
+      case ELETYPE_SEXTUPOLE:
+        total_length += line[i].as.sextupole.length;
+        break;
+    }
+  }
+  printf("Total length of this line is %f m\n", total_length);
 
+  arrfree(line);
   arrfree(element_list);
   shfree(element_library);
   free(buffer);
