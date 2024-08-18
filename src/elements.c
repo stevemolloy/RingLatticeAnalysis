@@ -7,6 +7,7 @@
 #include "stb_ds.h"
 
 #include "elements.h"
+#include "lib.h"
 
 extern Element* element_list;
 extern ElementLibrary *element_library;
@@ -97,7 +98,6 @@ Element create_element(char **cursor) {
     (*cursor)++;
   } else if (strcmp(type, "LINE") == 0) {
     *cursor -= 4; // Safe since we just extracted "LINE" from this, so this puts the cursor back there.
-    printf("Found a LINE, so returning to the main function\n");
     return result;
   } else {
     fprintf(stderr, "ERROR: Unable to parse elements of type %s\n", type);
@@ -168,6 +168,47 @@ void element_print(Element element) {
              element.as.sextupole.length,
              element.as.sextupole.K2);
       break;
+  }
+}
+
+float calculate_line_length(Element *line) {
+  float total_length = 0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    switch (line[i].type) {
+      case ELETYPE_QUAD:
+        total_length += line[i].as.quad.length;
+        break;
+      case ELETYPE_DRIFT:
+        total_length += line[i].as.drift.length;
+        break;
+      case ELETYPE_SBEND:
+        total_length += line[i].as.sbend.length;
+        break;
+      case ELETYPE_MULTIPOLE:
+        total_length += line[i].as.multipole.length;
+        break;
+      case ELETYPE_SEXTUPOLE:
+        total_length += line[i].as.sextupole.length;
+        break;
+    }
+  }
+  return total_length;
+}
+
+void create_line(char *cursor, Element **line) {
+  advance_to_char(&cursor, '(');
+  while (*cursor != ')') {
+    while (!isalpha(*cursor) & (*cursor != ')')) {
+      cursor++;
+    }
+    char *temp_cursor = cursor;
+    while (isvalididchar(*temp_cursor)) {
+      temp_cursor++;
+    }
+    *temp_cursor = '\0';
+    Element ele = shget(element_library, cursor);
+    arrput(*line, ele);
+    cursor = temp_cursor + 1;
   }
 }
 

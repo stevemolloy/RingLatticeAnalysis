@@ -7,7 +7,7 @@
 #include "lib.h"
 
 char *join_lines(char* cursor) {
-  char *buffer = cursor;
+  char *result = cursor;
 
   while (*cursor != '\0') {
     if (*cursor == '&' | *cursor == '!') {
@@ -21,7 +21,7 @@ char *join_lines(char* cursor) {
     }
   }
 
-  return buffer;
+  return result;
 }
 
 size_t read_entire_file_to_lines(char *file_path, char **buffer, char ***lines) {

@@ -64,6 +64,8 @@ float assigned_float_from_string(char *string);
 void element_print(Element element);
 bool isvalididchar(char c);
 char *populate_element_library(char *cursor);
+float calculate_line_length(Element *line);
+void create_line(char *cursor, Element **line);
 
 #endif // !ELEMENTS_H
 
