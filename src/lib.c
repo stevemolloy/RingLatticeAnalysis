@@ -6,6 +6,12 @@
 
 #include "lib.h"
 
+#define PI 3.14159265358979323846
+
+float radians_to_degrees(float radians) {
+  return radians * 180.0f / PI;
+}
+
 char *join_lines(char* cursor) {
   char *result = cursor;
 

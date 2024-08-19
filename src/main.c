@@ -46,12 +46,18 @@ int main(int argc, char **argv) {
   create_line(cursor, &line);
 
   float total_length = calculate_line_length(line);
+  float total_angle = calculate_line_angle(line);
   float rf_freq = C / (periodicity * total_length / harmonic_number);
 
   printf("\n");
-  printf("Total length of this line is %f m\n", total_length);
-  printf("Total length of %zu lines is %f m\n", periodicity, periodicity * total_length);
-  printf("RF frequency for a hamonic number of %zu is %0.6f MHz\n", harmonic_number, rf_freq/1e6);
+  printf("Summary of the lattice defined in %s\n", file_path);
+  printf("Periodicity: %zu\n", periodicity);
+  printf("Harmonic number: %zu\n", harmonic_number);
+  printf("Total length of the line: %f m\n", total_length);
+  printf("Total length of %zu lines: %f m\n", periodicity, periodicity * total_length);
+  printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(total_angle));
+  printf("Total bending angle of %zu lines: %0.3f degrees\n", periodicity, periodicity * radians_to_degrees(total_angle));
+  printf("RF frequency for a hamonic number of %zu: %0.6f MHz\n", harmonic_number, rf_freq/1e6);
   printf("Synchrotron radiation integrals:\n");
   printf("\tI_2 = %f\n", synch_rad_integral_2(line, periodicity));
   printf("\tI_3 = %f\n", synch_rad_integral_3(line, periodicity));

@@ -238,26 +238,27 @@ void element_print(Element element) {
   }
 }
 
+float calculate_line_angle(Element *line) {
+  float total_angle = 0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    switch (line[i].type) {
+      case ELETYPE_SBEND:
+        total_angle += line[i].as.sbend.angle;
+        break;
+      case ELETYPE_QUAD:
+      case ELETYPE_DRIFT:
+      case ELETYPE_MULTIPOLE:
+      case ELETYPE_SEXTUPOLE:
+        break;
+    }
+  }
+  return total_angle;
+}
+
 float calculate_line_length(Element *line) {
   float total_length = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
-    switch (line[i].type) {
-      case ELETYPE_QUAD:
-        total_length += line[i].as.quad.length;
-        break;
-      case ELETYPE_DRIFT:
-        total_length += line[i].as.drift.length;
-        break;
-      case ELETYPE_SBEND:
-        total_length += line[i].as.sbend.length;
-        break;
-      case ELETYPE_MULTIPOLE:
-        total_length += line[i].as.multipole.length;
-        break;
-      case ELETYPE_SEXTUPOLE:
-        total_length += line[i].as.sextupole.length;
-        break;
-    }
+    total_length += element_length(line[i]);
   }
   return total_length;
 }

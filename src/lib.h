@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+float radians_to_degrees(float radians);
 char *join_lines(char* cursor);
 size_t read_entire_file_to_lines(char *file_path, char **buffer, char ***lines);
 char *read_entire_file(char *file_path);

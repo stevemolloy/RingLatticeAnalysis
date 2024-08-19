@@ -71,6 +71,7 @@ void element_print(Element element);
 bool isvalididchar(char c);
 char *populate_element_library(char *cursor);
 float calculate_line_length(Element *line);
+float calculate_line_angle(Element *line);
 void create_line(char *cursor, Element **line);
 
 #endif // !ELEMENTS_H
