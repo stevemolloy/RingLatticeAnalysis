@@ -45,9 +45,9 @@ int main(int argc, char **argv) {
   Element* line = NULL;
   create_line(cursor, &line);
 
-  float total_length = calculate_line_length(line);
-  float total_angle = calculate_line_angle(line);
-  float rf_freq = C / (periodicity * total_length / harmonic_number);
+  double total_length = calculate_line_length(line);
+  double total_angle = calculate_line_angle(line);
+  double rf_freq = C / (periodicity * total_length / harmonic_number);
 
   printf("\n");
   printf("Summary of the lattice defined in %s\n", file_path);

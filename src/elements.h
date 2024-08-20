@@ -7,33 +7,33 @@
 #define C 299792458.0f
 
 typedef struct {
-  float length;
+  double length;
 } Drift;
 
 typedef struct {
-  float length;
-  float K1;
+  double length;
+  double K1;
 } Quad;
 
 // SBEND,L=0.20424000,  ANGLE = 0.00388598, K1 = -1.33342000  E1= 0.00000000,  E2= 0.00000000 ; 
 typedef struct {
-  float length;
-  float angle;
-  float K1;
-  float E1;
-  float E2;
+  double length;
+  double angle;
+  double K1;
+  double E1;
+  double E2;
 } Sbend;
 
 // Multipole, K3L= -38933.64000000; 
 typedef struct {
-  float length;
-  float K3L;
+  double length;
+  double K3L;
 } Multipole;
 
 //Sextupole,  L= 0.10000000, K2= -272.67400000 ;
 typedef struct {
-  float length;
-  float K2;
+  double length;
+  double K2;
 } Sextupole;
 
 typedef enum {
@@ -60,18 +60,18 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
-float synch_rad_integral_1(Element *line, size_t periodicity);
-float synch_rad_integral_2(Element *line, size_t periodicity);
-float synch_rad_integral_3(Element *line, size_t periodicity);
-float element_length(Element element);
-float bending_radius_of_element(Element element);
+double synch_rad_integral_1(Element *line, size_t periodicity);
+double synch_rad_integral_2(Element *line, size_t periodicity);
+double synch_rad_integral_3(Element *line, size_t periodicity);
+double element_length(Element element);
+double bending_radius_of_element(Element element);
 Element create_element(char **cursor);
-float assigned_float_from_string(char *string);
+double assigned_double_from_string(char *string);
 void element_print(Element element);
 bool isvalididchar(char c);
 char *populate_element_library(char *cursor);
-float calculate_line_length(Element *line);
-float calculate_line_angle(Element *line);
+double calculate_line_length(Element *line);
+double calculate_line_angle(Element *line);
 void create_line(char *cursor, Element **line);
 
 #endif // !ELEMENTS_H

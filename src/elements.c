@@ -14,34 +14,34 @@
 extern Element* element_list;
 extern ElementLibrary *element_library;
 
-float synch_rad_integral_1(Element *line, size_t periodicity) {
+double synch_rad_integral_1(Element *line, size_t periodicity) {
   (void)line;
   (void)periodicity;
   return 0;
 }
 
-float synch_rad_integral_2(Element *line, size_t periodicity) {
-  float I_2 = 0;
+double synch_rad_integral_2(Element *line, size_t periodicity) {
+  double I_2 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
-    float rho = bending_radius_of_element(line[i]);
+    double rho = bending_radius_of_element(line[i]);
     I_2 += element_length(line[i]) / (rho * rho);
   }
 
   return I_2 * periodicity;
 }
 
-float synch_rad_integral_3(Element *line, size_t periodicity) {
-  float I_3 = 0;
+double synch_rad_integral_3(Element *line, size_t periodicity) {
+  double I_3 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
-    float rho_abs = fabsf(bending_radius_of_element(line[i]));
+    double rho_abs = fabs(bending_radius_of_element(line[i]));
     I_3 += element_length(line[i]) / (rho_abs * rho_abs * rho_abs);
   }
 
   return I_3 * periodicity;
 }
 
-float element_length(Element element) {
-  float length;
+double element_length(Element element) {
+  double length;
   switch (element.type) {
     case ELETYPE_SBEND:
       length = element.as.sbend.length;
@@ -62,8 +62,8 @@ float element_length(Element element) {
   return length;
 }
 
-float bending_radius_of_element(Element element) {
-  float rho = FLT_MAX;
+double bending_radius_of_element(Element element) {
+  double rho = DBL_MAX;
   switch (element.type) {
     case ELETYPE_SBEND:
       if (element.as.sbend.angle != 0) {
@@ -99,7 +99,7 @@ Element create_element(char **cursor) {
     }
     *temp_cursor = '\0';
     char *l_string = strcasestr(*cursor, "l");
-    result.as.drift.length = assigned_float_from_string(l_string);
+    result.as.drift.length = assigned_double_from_string(l_string);
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
   } else if (strcmp(type, "MARKER") == 0) {
@@ -117,11 +117,11 @@ Element create_element(char **cursor) {
     char *k1_string = strcasestr(*cursor, "k1");
     char *e1_string = strcasestr(*cursor, "e1");
     char *e2_string = strcasestr(*cursor, "e2");
-    result.as.sbend.length = assigned_float_from_string(l_string);
-    result.as.sbend.angle = assigned_float_from_string(angle_string);
-    result.as.sbend.K1 = assigned_float_from_string(k1_string);
-    result.as.sbend.E1 = assigned_float_from_string(e1_string);
-    result.as.sbend.E2 = assigned_float_from_string(e2_string);
+    result.as.sbend.length = assigned_double_from_string(l_string);
+    result.as.sbend.angle = assigned_double_from_string(angle_string);
+    result.as.sbend.K1 = assigned_double_from_string(k1_string);
+    result.as.sbend.E1 = assigned_double_from_string(e1_string);
+    result.as.sbend.E2 = assigned_double_from_string(e2_string);
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
   } else if (strcmp(type, "QUADRUPOLE") == 0) {
@@ -133,8 +133,8 @@ Element create_element(char **cursor) {
     *temp_cursor = '\0';
     char *l_string = strcasestr(*cursor, "l");
     char *k1_string = strcasestr(*cursor, "k1");
-    result.as.quad.length = assigned_float_from_string(l_string);
-    result.as.quad.K1 = assigned_float_from_string(k1_string);
+    result.as.quad.length = assigned_double_from_string(l_string);
+    result.as.quad.K1 = assigned_double_from_string(k1_string);
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
   } else if (strcmp(type, "SEXTUPOLE") == 0) {
@@ -146,8 +146,8 @@ Element create_element(char **cursor) {
     *temp_cursor = '\0';
     char *l_string = strcasestr(*cursor, "l");
     char *k2_string = strcasestr(*cursor, "k2");
-    result.as.sextupole.length = assigned_float_from_string(l_string);
-    result.as.sextupole.K2 = assigned_float_from_string(k2_string);
+    result.as.sextupole.length = assigned_double_from_string(l_string);
+    result.as.sextupole.K2 = assigned_double_from_string(k2_string);
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
   } else if (strcmp(type, "MULTIPOLE") == 0) {
@@ -159,8 +159,8 @@ Element create_element(char **cursor) {
     *temp_cursor = '\0';
     char *l_string = strcasestr(*cursor, "l");
     char *k3l_string = strcasestr(*cursor, "k3l");
-    result.as.multipole.length = assigned_float_from_string(l_string);
-    result.as.multipole.K3L = assigned_float_from_string(k3l_string);
+    result.as.multipole.length = assigned_double_from_string(l_string);
+    result.as.multipole.K3L = assigned_double_from_string(k3l_string);
     while (**cursor != '\0') (*cursor)++;
     (*cursor)++;
   } else if (strcmp(type, "LINE") == 0) {
@@ -200,7 +200,7 @@ char *populate_element_library(char *cursor) {
   return cursor;
 }
 
-float assigned_float_from_string(char *string) {
+double assigned_double_from_string(char *string) {
   if (string) {
     while (*string != '=') string++;
     while ((*string != '-') & !isdigit(*string)) string++;
@@ -238,8 +238,8 @@ void element_print(Element element) {
   }
 }
 
-float calculate_line_angle(Element *line) {
-  float total_angle = 0;
+double calculate_line_angle(Element *line) {
+  double total_angle = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     switch (line[i].type) {
       case ELETYPE_SBEND:
@@ -255,10 +255,11 @@ float calculate_line_angle(Element *line) {
   return total_angle;
 }
 
-float calculate_line_length(Element *line) {
-  float total_length = 0;
+double calculate_line_length(Element *line) {
+  double total_length = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
-    total_length += element_length(line[i]);
+    double ele_len = element_length(line[i]);
+    total_length += ele_len;
   }
   return total_length;
 }
