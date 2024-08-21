@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #define C 299792458.0f
+#define BEAM_DOFS 6
 
 typedef struct {
   double length;
@@ -46,6 +47,7 @@ typedef enum {
 
 typedef struct {
   EleType type;
+  double R_matrix[BEAM_DOFS*BEAM_DOFS];
   union {
     Drift drift;
     Quad quad;

@@ -79,6 +79,16 @@ double bending_radius_of_element(Element element) {
   return rho;
 }
 
+void make_r_matrix(Element *element) {
+  double ele_length = element_length(*element);
+  memset(element->R_matrix, 0, sizeof(element->R_matrix));
+  for (size_t i=0; i<BEAM_DOFS; i++) {
+    element->R_matrix[i*BEAM_DOFS + i] = 1.0;
+  }
+  element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
+  element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
+}
+
 Element create_element(char **cursor) {
   char type[10] = {0};
   Element result = {0};
@@ -172,6 +182,7 @@ Element create_element(char **cursor) {
     exit(1);
   }
 
+  make_r_matrix(&result);
   return result;
 }
 
