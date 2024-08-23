@@ -1,6 +1,7 @@
 CC = clang
 CFLAGS = -Wall -Wpedantic -Wextra -ggdb -std=c18
 CINCLUDES = -I./third_party/
+CLIBS = -lm
 
 SRC = src
 OBJ = obj
