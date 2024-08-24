@@ -5,7 +5,9 @@
 #include <stddef.h>
 
 #define C 299792458.0f
+#define ELECTRON_MASS 510998.9499961642f
 #define BEAM_DOFS 6
+#define ERADIUS_TIMES_RESTMASS 0.959976365e-9
 
 typedef struct {
   double length;
