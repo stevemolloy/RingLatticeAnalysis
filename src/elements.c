@@ -24,7 +24,7 @@ double synch_rad_integral_2(Element *line, size_t periodicity) {
   double I_2 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     double rho = bending_radius_of_element(line[i]);
-    I_2 += element_length(line[i]) / (rho * rho);
+    I_2 += element_length(line[i]) / pow(rho, 2);
   }
 
   return I_2 * periodicity;
@@ -34,7 +34,7 @@ double synch_rad_integral_3(Element *line, size_t periodicity) {
   double I_3 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     double rho_abs = fabs(bending_radius_of_element(line[i]));
-    I_3 += element_length(line[i]) / (rho_abs * rho_abs * rho_abs);
+    I_3 += element_length(line[i]) / pow(rho_abs, 3);
   }
 
   return I_3 * periodicity;
@@ -290,5 +290,9 @@ void create_line(char *cursor, Element **line) {
     arrput(*line, ele);
     cursor = temp_cursor + 1;
   }
+}
+
+inline float e_loss_per_turn(float I2, float gamma0) {
+  return ERADIUS_TIMES_RESTMASS * I2 * pow(gamma0, 4);
 }
 

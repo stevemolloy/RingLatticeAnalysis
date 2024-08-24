@@ -75,6 +75,7 @@ char *populate_element_library(char *cursor);
 double calculate_line_length(Element *line);
 double calculate_line_angle(Element *line);
 void create_line(char *cursor, Element **line);
+float e_loss_per_turn(float I2, float gamma0);
 
 #endif // !ELEMENTS_H
 
