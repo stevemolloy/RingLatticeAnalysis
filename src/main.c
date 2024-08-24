@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <math.h>
 #include <stdbool.h>
 
@@ -10,6 +11,9 @@
 #define ARENA_IMPLEMENTATION
 #include "arena.h"
 
+#define NOB_IMPLEMENTATION
+#include "nob.h"
+
 Element *element_list = NULL;
 ElementLibrary *element_library = NULL;
 
@@ -19,26 +23,18 @@ int main(int argc, char **argv) {
   float E_0 = 0;
   char *file_path = NULL;
 
-  argc--;
-  argv++;
+  nob_shift_args(&argc, &argv);
   while (argc > 0) {
-    if (strcmp(*argv, "-p")==0) {
-      argc--;
-      argv++;
-      periodicity = atoi(*argv);
-    } else if (strcmp(*argv, "-h")==0) {
-      argc--;
-      argv++;
-      harmonic_number = atoi(*argv);
-    } else if (strcmp(*argv, "-E")==0) {
-      argc--;
-      argv++;
-      E_0 = atof(*argv);
+    char *next_arg = nob_shift_args(&argc, &argv);
+    if (strcmp(next_arg, "-p")==0) {
+      periodicity = atoi(nob_shift_args(&argc, &argv));
+    } else if (strcmp(next_arg, "-h")==0) {
+      harmonic_number = atoi(nob_shift_args(&argc, &argv));
+    } else if (strcmp(next_arg, "-E")==0) {
+      E_0 = atoi(nob_shift_args(&argc, &argv));
     } else {
-      file_path = *argv;
+      file_path = next_arg;
     }
-    argc--;
-    argv++;
   }
 
   float gamma_0 = E_0 * 1e9 / ELECTRON_MASS;
