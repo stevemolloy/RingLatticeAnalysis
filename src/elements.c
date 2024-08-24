@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <math.h>
+#include <assert.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -81,12 +82,150 @@ double bending_radius_of_element(Element element) {
 
 void make_r_matrix(Element *element) {
   double ele_length = element_length(*element);
+  double omega = 0;
+
   memset(element->R_matrix, 0, sizeof(element->R_matrix));
   for (size_t i=0; i<BEAM_DOFS; i++) {
     element->R_matrix[i*BEAM_DOFS + i] = 1.0;
   }
-  element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
-  element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
+
+  switch (element->type) {
+    case (ELETYPE_DRIFT):
+    case (ELETYPE_MULTIPOLE):
+    case (ELETYPE_SEXTUPOLE):
+      element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
+      element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
+      break;
+    case (ELETYPE_QUAD):
+      if (element->as.quad.K1 == 0) {
+        element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
+        element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
+        break;
+      }
+
+      omega = sqrt(fabs(element->as.quad.K1));
+      if (element->as.quad.K1 > 0) {
+        // Focusing 2x2
+        element->R_matrix[0*BEAM_DOFS + 0] = cos(omega * ele_length);
+        element->R_matrix[0*BEAM_DOFS + 1] = sin(omega * ele_length) / omega;
+        element->R_matrix[1*BEAM_DOFS + 0] = sin(omega * ele_length) * (-omega);
+        element->R_matrix[1*BEAM_DOFS + 1] = cos(omega * ele_length);
+        // Defocusing 2x2
+        element->R_matrix[2*BEAM_DOFS + 2] = cosh(omega * ele_length);
+        element->R_matrix[2*BEAM_DOFS + 3] = sinh(omega * ele_length) / omega;
+        element->R_matrix[3*BEAM_DOFS + 2] = sinh(omega * ele_length) * omega;
+        element->R_matrix[3*BEAM_DOFS + 3] = cosh(omega * ele_length);
+      } else if (element->as.quad.K1 < 0) {
+        // Defocusing 2x2
+        element->R_matrix[2*BEAM_DOFS + 2] = cos(omega * ele_length);
+        element->R_matrix[2*BEAM_DOFS + 3] = sin(omega * ele_length) / omega;
+        element->R_matrix[3*BEAM_DOFS + 2] = sin(omega * ele_length) * (-omega);
+        element->R_matrix[3*BEAM_DOFS + 3] = cos(omega * ele_length);
+        // Focusing 2x2
+        element->R_matrix[0*BEAM_DOFS + 0] = cosh(omega * ele_length);
+        element->R_matrix[0*BEAM_DOFS + 1] = sinh(omega * ele_length) / omega;
+        element->R_matrix[1*BEAM_DOFS + 0] = sinh(omega * ele_length) * omega;
+        element->R_matrix[1*BEAM_DOFS + 1] = cosh(omega * ele_length);
+      }
+
+      break;
+    case (ELETYPE_SBEND):
+      calc_sbend_matrix(element);
+      break;
+  }
+}
+
+void calc_sbend_matrix(Element *element) {
+  assert(element->type == ELETYPE_SBEND && "This func should only be called for sbends.");
+  float K = element->as.sbend.K1;
+  float L = element->as.sbend.length;
+  float h = element->as.sbend.angle / L;
+
+  float k_x_sqr = (1 - K) * h*h;
+  float k_x = sqrt(fabs(k_x_sqr));
+  if (k_x == 0.0f) {
+    k_x = DBL_MIN;
+    printf("k_x = %f\n", k_x);
+  }
+  float kxL = k_x * L;
+
+  float k_y_sqr = -K * h*h;
+  float k_y = sqrt(fabs(k_y_sqr));
+  if (k_y == 0.0f) k_y = DBL_MIN;
+  float kyL = k_y * L;
+
+  double (*sinlike_func)(double);
+  double (*coslike_func)(double);
+
+  if (k_x_sqr > 0) {
+    sinlike_func = &sin;
+    coslike_func = &cos;
+  } else {
+    sinlike_func = &sinh;
+    coslike_func = &cosh;
+  }
+  if (k_x == 0.0f) {
+    element->R_matrix[0*BEAM_DOFS + 0] = 1;
+    element->R_matrix[0*BEAM_DOFS + 1] = L;
+    element->R_matrix[1*BEAM_DOFS + 0] = 0;
+    element->R_matrix[1*BEAM_DOFS + 1] = 1;
+
+    element->R_matrix[4*BEAM_DOFS + 4] = 1;
+    element->R_matrix[4*BEAM_DOFS + 5] = 0;
+    element->R_matrix[5*BEAM_DOFS + 4] = 0;
+    element->R_matrix[5*BEAM_DOFS + 5] = 1;
+
+    element->R_matrix[0*BEAM_DOFS + 5] = 0;
+    element->R_matrix[1*BEAM_DOFS + 5] = h * L;
+  } else {
+    element->R_matrix[0*BEAM_DOFS + 0] =           coslike_func(kxL);
+    element->R_matrix[0*BEAM_DOFS + 1] = (1/k_x) * sinlike_func(kxL);
+    element->R_matrix[1*BEAM_DOFS + 0] =    -k_x * sinlike_func(kxL);
+    element->R_matrix[1*BEAM_DOFS + 1] =           coslike_func(kxL);
+
+    element->R_matrix[4*BEAM_DOFS + 4] = 1;
+    element->R_matrix[4*BEAM_DOFS + 5] = (h*h/(k_x*k_x*k_x)) * (kxL - sinlike_func(kxL));
+    element->R_matrix[5*BEAM_DOFS + 4] = 0;
+    element->R_matrix[5*BEAM_DOFS + 5] = 1;
+
+    element->R_matrix[0*BEAM_DOFS + 5] = (h/(k_x*k_x)) * (1 - coslike_func(kxL));
+    element->R_matrix[1*BEAM_DOFS + 5] = (h/k_x) * sinlike_func(kxL);
+  }
+
+  if (k_y_sqr > 0) {
+    sinlike_func = sin;
+    coslike_func = cos;
+  } else {
+    sinlike_func = sinh;
+    coslike_func = cosh;
+  }
+  if (k_y == 0.0f) {
+    element->R_matrix[2*BEAM_DOFS + 2] = 0;
+    element->R_matrix[2*BEAM_DOFS + 3] = L;
+    element->R_matrix[3*BEAM_DOFS + 2] = 0;
+    element->R_matrix[3*BEAM_DOFS + 3] = 1;
+
+    element->R_matrix[4*BEAM_DOFS + 0] = L;
+    element->R_matrix[4*BEAM_DOFS + 1] = 0;
+  } else {
+    element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(kyL);
+    element->R_matrix[2*BEAM_DOFS + 3] = (1/k_y) * sinlike_func(kyL);
+    element->R_matrix[3*BEAM_DOFS + 2] = -k_y * sinlike_func(kyL);
+    element->R_matrix[3*BEAM_DOFS + 3] = coslike_func(kyL);
+
+    element->R_matrix[4*BEAM_DOFS + 0] = (1 / k_y) * sinlike_func(kyL);
+    element->R_matrix[4*BEAM_DOFS + 1] = (h/(k_x*k_x)) * (1 - coslike_func(kxL));
+  }
+}
+
+void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
+  for (size_t j=0; j<BEAM_DOFS; j++) {
+    for (size_t i=0; i<BEAM_DOFS; i++) {
+      double val = mat[j*BEAM_DOFS + i];
+      (i==BEAM_DOFS-1) ? printf("%0.3f", val) : printf("%0.3f, ", val);
+    }
+    printf("\n");
+  }
 }
 
 Element create_element(char **cursor) {
