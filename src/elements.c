@@ -145,7 +145,6 @@ void calc_sbend_matrix(Element *element) {
   float k_x = sqrt(fabs(k_x_sqr));
   if (k_x == 0.0f) {
     k_x = DBL_MIN;
-    printf("k_x = %f\n", k_x);
   }
   float kxL = k_x * L;
 
@@ -431,7 +430,7 @@ void create_line(char *cursor, Element **line) {
   }
 }
 
-inline float e_loss_per_turn(float I2, float gamma0) {
+inline double e_loss_per_turn(double I2, double gamma0) {
   return ERADIUS_TIMES_RESTMASS * I2 * pow(gamma0, 4);
 }
 
