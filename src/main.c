@@ -72,6 +72,17 @@ int main(int argc, char **argv) {
   printf("\n");
   printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I2, gamma_0) / 1e3);
 
+  double mat1[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+  double mat2[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  double res[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+  matrix_multiply(mat1, mat2, res, 3, 3, 3, 3);
+  for (size_t i=0; i<3; i++) {
+    for (size_t j=0; j<3; j++) {
+      printf("%f ", res[i*3 + j]);
+    }
+    printf("\n");
+  }
+
   arrfree(line);
   arrfree(element_list);
   shfree(element_library);

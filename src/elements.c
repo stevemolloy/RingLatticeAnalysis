@@ -434,3 +434,22 @@ inline double e_loss_per_turn(double I2, double gamma0) {
   return ERADIUS_TIMES_RESTMASS * I2 * pow(gamma0, 4);
 }
 
+bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2) {
+  assert(c1 == r2 && "Matrix dimensions do not allow for multiplication");
+
+  size_t r3 = r1;
+  size_t c3 = c2;
+
+  for (size_t i=0; i<r1; i++) {
+    for (size_t j=0; j<c2; j++) {
+      result[i*r3 + j] = 0;
+
+      for (size_t k=0; k<c1; k++) {
+        result[i*r3 + j] += mat1[i*c3 + k] * mat2[k*c3 + j];
+      }
+    }
+  }
+
+  return true;
+}
+
