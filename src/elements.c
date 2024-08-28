@@ -137,33 +137,31 @@ void make_r_matrix(Element *element) {
 
 void calc_sbend_matrix(Element *element) {
   assert(element->type == ELETYPE_SBEND && "This func should only be called for sbends.");
-  float K = element->as.sbend.K1;
+  float K1 = element->as.sbend.K1;
   float L = element->as.sbend.length;
-  float h = element->as.sbend.angle / L;
+  float angle = element->as.sbend.angle;
+  float rho = fabs(L / angle);
+  float h = 1 / rho;
 
-  float k_x_sqr = (1 - K) * h*h;
-  float k_x = sqrt(fabs(k_x_sqr));
-  if (k_x == 0.0f) {
-    k_x = DBL_MIN;
-  }
-  float kxL = k_x * L;
+  float omega_x_sqr = pow(h, 2) + K1;
+  float omega_x = sqrt(fabs(omega_x_sqr));
+  float omega_x_L = omega_x * L;
 
-  float k_y_sqr = -K * h*h;
-  float k_y = sqrt(fabs(k_y_sqr));
-  if (k_y == 0.0f) k_y = DBL_MIN;
-  float kyL = k_y * L;
+  float omega_y_sqr = K1;
+  float omega_y = sqrt(fabs(omega_y_sqr));
+  float omega_y_L = omega_y * L;
 
   double (*sinlike_func)(double);
   double (*coslike_func)(double);
 
-  if (k_x_sqr > 0) {
+  if (omega_x_sqr > 0) {
     sinlike_func = &sin;
     coslike_func = &cos;
   } else {
     sinlike_func = &sinh;
     coslike_func = &cosh;
   }
-  if (k_x == 0.0f) {
+  if (omega_x == 0.0f) {
     element->R_matrix[0*BEAM_DOFS + 0] = 1;
     element->R_matrix[0*BEAM_DOFS + 1] = L;
     element->R_matrix[1*BEAM_DOFS + 0] = 0;
@@ -174,31 +172,31 @@ void calc_sbend_matrix(Element *element) {
     element->R_matrix[5*BEAM_DOFS + 4] = 0;
     element->R_matrix[5*BEAM_DOFS + 5] = 1;
 
-    element->R_matrix[0*BEAM_DOFS + 5] = 0;
-    element->R_matrix[1*BEAM_DOFS + 5] = h * L;
+    element->R_matrix[0*BEAM_DOFS + 4] = 0;
+    element->R_matrix[1*BEAM_DOFS + 4] = h * L;
   } else {
-    element->R_matrix[0*BEAM_DOFS + 0] =           coslike_func(kxL);
-    element->R_matrix[0*BEAM_DOFS + 1] = (1/k_x) * sinlike_func(kxL);
-    element->R_matrix[1*BEAM_DOFS + 0] =    -k_x * sinlike_func(kxL);
-    element->R_matrix[1*BEAM_DOFS + 1] =           coslike_func(kxL);
+    element->R_matrix[0*BEAM_DOFS + 0] = coslike_func(omega_x_L);
+    element->R_matrix[0*BEAM_DOFS + 1] = (1/omega_x) * sinlike_func(omega_x_L);
+    element->R_matrix[1*BEAM_DOFS + 0] = -omega_x * sinlike_func(omega_x_L);
+    element->R_matrix[1*BEAM_DOFS + 1] = coslike_func(omega_x_L);
 
     element->R_matrix[4*BEAM_DOFS + 4] = 1;
-    element->R_matrix[4*BEAM_DOFS + 5] = (h*h/(k_x*k_x*k_x)) * (kxL - sinlike_func(kxL));
+    element->R_matrix[4*BEAM_DOFS + 5] = (h*h/pow(omega_x, 3)) * sinlike_func(omega_x_L);
     element->R_matrix[5*BEAM_DOFS + 4] = 0;
     element->R_matrix[5*BEAM_DOFS + 5] = 1;
 
-    element->R_matrix[0*BEAM_DOFS + 5] = (h/(k_x*k_x)) * (1 - coslike_func(kxL));
-    element->R_matrix[1*BEAM_DOFS + 5] = (h/k_x) * sinlike_func(kxL);
+    element->R_matrix[0*BEAM_DOFS + 4] = (h/(omega_x*omega_x)) * (1 - coslike_func(omega_x_L));
+    element->R_matrix[1*BEAM_DOFS + 4] = (h/omega_x) * sinlike_func(omega_x_L);
   }
 
-  if (k_y_sqr > 0) {
-    sinlike_func = sin;
-    coslike_func = cos;
-  } else {
+  if (omega_y_sqr > 0) {
     sinlike_func = sinh;
     coslike_func = cosh;
+  } else {
+    sinlike_func = sin;
+    coslike_func = cos;
   }
-  if (k_y == 0.0f) {
+  if (omega_y == 0.0f) {
     element->R_matrix[2*BEAM_DOFS + 2] = 0;
     element->R_matrix[2*BEAM_DOFS + 3] = L;
     element->R_matrix[3*BEAM_DOFS + 2] = 0;
@@ -207,13 +205,13 @@ void calc_sbend_matrix(Element *element) {
     element->R_matrix[4*BEAM_DOFS + 0] = L;
     element->R_matrix[4*BEAM_DOFS + 1] = 0;
   } else {
-    element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(kyL);
-    element->R_matrix[2*BEAM_DOFS + 3] = (1/k_y) * sinlike_func(kyL);
-    element->R_matrix[3*BEAM_DOFS + 2] = -k_y * sinlike_func(kyL);
-    element->R_matrix[3*BEAM_DOFS + 3] = coslike_func(kyL);
+    element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(omega_y_L);
+    element->R_matrix[2*BEAM_DOFS + 3] = (1/omega_y) * sinlike_func(omega_y_L);
+    element->R_matrix[3*BEAM_DOFS + 2] = -omega_y * sinlike_func(omega_y_L);
+    element->R_matrix[3*BEAM_DOFS + 3] = coslike_func(omega_y_L);
 
-    element->R_matrix[4*BEAM_DOFS + 0] = (1 / k_y) * sinlike_func(kyL);
-    element->R_matrix[4*BEAM_DOFS + 1] = (h/(k_x*k_x)) * (1 - coslike_func(kxL));
+    element->R_matrix[4*BEAM_DOFS + 0] = (1 / omega_y) * sinlike_func(omega_y_L);
+    element->R_matrix[4*BEAM_DOFS + 1] = (h/(omega_y*omega_y)) * (1 - coslike_func(omega_y_L));
   }
 }
 
@@ -221,7 +219,7 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
-      (i==BEAM_DOFS-1) ? printf("%0.3f", val) : printf("%0.3f, ", val);
+      (i==BEAM_DOFS-1) ? printf("%+0.15f", val) : printf("%+0.15f, ", val);
     }
     printf("\n");
   }
@@ -437,15 +435,14 @@ inline double e_loss_per_turn(double I2, double gamma0) {
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2) {
   assert(c1 == r2 && "Matrix dimensions do not allow for multiplication");
 
-  size_t r3 = r1;
   size_t c3 = c2;
 
-  for (size_t i=0; i<r1; i++) {
-    for (size_t j=0; j<c2; j++) {
-      result[i*r3 + j] = 0;
+  for (size_t row=0; row<r1; row++) {
+    for (size_t col=0; col<c2; col++) {
+      result[row*c3 + col] = 0;
 
       for (size_t k=0; k<c1; k++) {
-        result[i*r3 + j] += mat1[i*c3 + k] * mat2[k*c3 + j];
+        result[row*c3 + col] += mat1[row*c3 + k] * mat2[k*c3 + col];
       }
     }
   }

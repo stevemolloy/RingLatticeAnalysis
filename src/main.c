@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
+#include <string.h>
 
 #include "lib.h"
 #include "elements.h"
@@ -60,6 +61,7 @@ int main(int argc, char **argv) {
   printf("\n");
   printf("Periodicity: %zu\n", periodicity);
   printf("Harmonic number: %zu\n", harmonic_number);
+  printf("Number of elements in the line: %td\n", arrlen(line));
   printf("Total length of the line: %f m\n", total_length);
   printf("Total length of %zu lines: %f m\n", periodicity, periodicity * total_length);
   printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(total_angle));
@@ -72,23 +74,59 @@ int main(int argc, char **argv) {
   printf("\n");
   printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I2, gamma_0) / 1e3);
 
-  double mat1[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-  double mat2[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-  double res[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-  matrix_multiply(mat1, mat2, res, 3, 3, 3, 3);
-  for (size_t i=0; i<3; i++) {
-    for (size_t j=0; j<3; j++) {
-      printf("%f ", res[i*3 + j]);
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {
+    1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1,
+  };
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
+    matrix_multiply(line[i].R_matrix, line_matrix, temp_result, 6, 6, 6, 6);
+    memcpy(line_matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+  }
+
+  printf("\n");
+  printf("Linear transfer matrix for the line:\n");
+  rmatrix_print(line_matrix);
+
+  double should_be[] = {
+    0.243212460, 5.846977417,            0,            0, 0.000012115,           0,
+   -0.160911806, 0.243212460,            0,            0, 0.000002576,           0,
+              0,           0, -0.732162629, -4.145847621,           0,           0,
+              0,           0,  0.111904229, -0.732162629,           0,           0,
+              0,           0,            0,            0, 1.000000000,           0,
+    0.000002576, 0.000012115,            0,            0, 0.004130975, 1.000000000,
+  };
+
+  printf("\n");
+  printf("Expected:\n");
+  rmatrix_print(should_be);
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    switch (line[i].type) {
+    case ELETYPE_SBEND:
+      printf("\nSbend: K1 = %f\n", line[i].as.sbend.K1);
+      rmatrix_print(line[i].R_matrix);
+      break;
+    case ELETYPE_QUAD:
+      printf("\nQuad\n");
+      rmatrix_print(line[i].R_matrix);
+      break;
+    case ELETYPE_DRIFT:
+    case ELETYPE_MULTIPOLE:
+    case ELETYPE_SEXTUPOLE:
+      break;
     }
-    printf("\n");
   }
 
   arrfree(line);
   arrfree(element_list);
   shfree(element_library);
   free(buffer);
-
-  printf("\n");
 
   return 0;
 }
