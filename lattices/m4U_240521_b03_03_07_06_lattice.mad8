@@ -8,8 +8,8 @@
 
 BPM :MONITOR; 
 ! RF_ON:=1; 
-! CAV : RFCavity, L=0.37800000,VOLT=0.09000000 &
-! , harm=176, lag=0.0; 
+CAV : RFCavity, L=0.37800000,VOLT=0.09000000 &
+, harm=176, lag=0.0; 
 
 CMh :KICKER; 
 CMv :KICKER; 

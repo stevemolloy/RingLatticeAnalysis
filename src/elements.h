@@ -30,6 +30,8 @@ typedef struct {
 // Multipole, K3L= -38933.64000000; 
 typedef struct {
   double length;
+  double K1L;
+  double K2L;
   double K3L;
 } Multipole;
 
@@ -39,12 +41,21 @@ typedef struct {
   double K2;
 } Sextupole;
 
+// CAV : RFCavity, L=0.37800000,VOLT=0.09000000, harm=176, lag=0.0; 
+typedef struct {
+  double length;
+  double voltage;
+  double harmonic;
+  double lag;
+} Cavity;
+
 typedef enum {
   ELETYPE_DRIFT,
   ELETYPE_QUAD,
   ELETYPE_SBEND,
   ELETYPE_MULTIPOLE,
   ELETYPE_SEXTUPOLE,
+  ELETYPE_CAVITY,
 } EleType;
 
 typedef struct {
@@ -56,6 +67,7 @@ typedef struct {
     Sbend sbend;
     Multipole multipole;
     Sextupole sextupole;
+    Cavity cavity;
   } as;
 } Element;
 
@@ -63,6 +75,11 @@ typedef struct {
   char* key;
   Element value;
 } ElementLibrary;
+
+typedef struct {
+  char* key;
+  double value;
+} str2dbl_hashmap;
 
 double synch_rad_integral_1(Element *line, int periodicity);
 double synch_rad_integral_2(Element *line, int periodicity);

@@ -8,6 +8,33 @@
 
 #define PI 3.14159265358979323846
 
+Arena make_arena(void) {
+  Arena result = {0};
+  result.capacity = ARENA_CAP;
+  result.data = calloc(result.capacity, 1);
+  if (result.data == NULL) {
+    fprintf(stderr, "Memory issues. Dying.\n");
+    exit(1);
+  }
+  return result;
+}
+
+void arena_free(Arena *arena) {
+  free(arena->data);
+  arena->capacity = 0;
+  arena->size = 0;
+}
+
+void *arena_alloc(Arena *arena, size_t size) {
+  if (arena->size + size > arena->capacity) {
+    fprintf(stderr, "Memory issues. Dying.\n");
+    exit(1);
+  }
+  void *result = arena->data + arena->size;
+  arena->size += size;
+  return result;
+}
+
 double radians_to_degrees(double radians) {
   return radians * 180.0f / PI;
 }

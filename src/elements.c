@@ -53,6 +53,8 @@ double element_length(Element element) {
       return element.as.sextupole.length;
     case ELETYPE_MULTIPOLE:
       return element.as.multipole.length;
+    case ELETYPE_CAVITY:
+      return element.as.cavity.length;
   }
 }
 
@@ -68,6 +70,7 @@ double bending_radius_of_element(Element element) {
     case ELETYPE_QUAD:
     case ELETYPE_SEXTUPOLE:
     case ELETYPE_MULTIPOLE:
+    case ELETYPE_CAVITY:
       break;
   }
   return rho;
@@ -84,6 +87,7 @@ void make_r_matrix(Element *element) {
 
   switch (element->type) {
     case (ELETYPE_DRIFT):
+    case (ELETYPE_CAVITY):
       element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
       element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
       break;
@@ -239,8 +243,11 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
 }
 
 Element create_element(char **cursor) {
-  char type[10] = {0};
+  char type[50] = {0};
   Element result = {0};
+
+  Arena mem_arena = make_arena();
+  str2dbl_hashmap* kv_pairs = NULL;
 
   while (**cursor == ' ' | **cursor == ':') (*cursor)++;
 
@@ -250,80 +257,18 @@ Element create_element(char **cursor) {
     (*cursor)++;
   }
 
-  if (strcmp(type, "DRIFT") == 0 | strcmp(type, "KICKER") == 0 | strcmp(type, "MONITOR") == 0) {
-    result.type = ELETYPE_DRIFT;
-    char *temp_cursor = *cursor;
-    while (*temp_cursor != ';') {
-      temp_cursor++;
-    }
-    *temp_cursor = '\0';
-    char *l_string = strcasestr(*cursor, "l");
-    result.as.drift.length = assigned_double_from_string(l_string);
-    while (**cursor != '\0') (*cursor)++;
-    (*cursor)++;
-  } else if (strcmp(type, "MARKER") == 0) {
-    result.type = ELETYPE_DRIFT;
-    result.as.drift.length = 0.0;
-  } else if (strcmp(type, "SBEND") == 0) {
-    result.type = ELETYPE_SBEND;
-    char *temp_cursor = *cursor;
-    while (*temp_cursor != ';') {
-      temp_cursor++;
-    }
-    *temp_cursor = '\0';
-    char *l_string = strcasestr(*cursor, "l");
-    char *angle_string = strcasestr(*cursor, "angle");
-    char *k1_string = strcasestr(*cursor, "k1");
-    char *e1_string = strcasestr(*cursor, "e1");
-    char *e2_string = strcasestr(*cursor, "e2");
-    result.as.sbend.length = assigned_double_from_string(l_string);
-    result.as.sbend.angle = assigned_double_from_string(angle_string);
-    result.as.sbend.K1 = assigned_double_from_string(k1_string);
-    result.as.sbend.E1 = assigned_double_from_string(e1_string);
-    result.as.sbend.E2 = assigned_double_from_string(e2_string);
-    while (**cursor != '\0') (*cursor)++;
-    (*cursor)++;
-  } else if (strcmp(type, "QUADRUPOLE") == 0) {
-    result.type = ELETYPE_QUAD;
-    char *temp_cursor = *cursor;
-    while (*temp_cursor != ';') {
-      temp_cursor++;
-    }
-    *temp_cursor = '\0';
-    char *l_string = strcasestr(*cursor, "l");
-    char *k1_string = strcasestr(*cursor, "k1");
-    result.as.quad.length = assigned_double_from_string(l_string);
-    result.as.quad.K1 = assigned_double_from_string(k1_string);
-    while (**cursor != '\0') (*cursor)++;
-    (*cursor)++;
-  } else if (strcmp(type, "SEXTUPOLE") == 0) {
-    result.type = ELETYPE_SEXTUPOLE;
-    char *temp_cursor = *cursor;
-    while (*temp_cursor != ';') {
-      temp_cursor++;
-    }
-    *temp_cursor = '\0';
-    char *l_string = strcasestr(*cursor, "l");
-    char *k2_string = strcasestr(*cursor, "k2");
-    result.as.sextupole.length = assigned_double_from_string(l_string);
-    result.as.sextupole.K2 = assigned_double_from_string(k2_string);
-    while (**cursor != '\0') (*cursor)++;
-    (*cursor)++;
-  } else if (strcmp(type, "MULTIPOLE") == 0) {
-    result.type = ELETYPE_MULTIPOLE;
-    char *temp_cursor = *cursor;
-    while (*temp_cursor != ';') {
-      temp_cursor++;
-    }
-    *temp_cursor = '\0';
-    char *l_string = strcasestr(*cursor, "l");
-    char *k3l_string = strcasestr(*cursor, "k3l");
-    result.as.multipole.length = assigned_double_from_string(l_string);
-    result.as.multipole.K3L = assigned_double_from_string(k3l_string);
-    while (**cursor != '\0') (*cursor)++;
-    (*cursor)++;
-  } else if (strcmp(type, "LINE") == 0) {
+  if (strcmp(type, "DRIFT") == 0)           result.type = ELETYPE_DRIFT;
+  else if (strcmp(type, "KICKER") == 0)     result.type = ELETYPE_DRIFT;
+  else if (strcmp(type, "MONITOR") == 0)    result.type = ELETYPE_DRIFT;
+  else if (strcmp(type, "MARKER") == 0)     result.type = ELETYPE_DRIFT;
+  else if (strcmp(type, "SBEND") == 0)      result.type = ELETYPE_SBEND;
+  else if (strcmp(type, "QUADRUPOLE") == 0) result.type = ELETYPE_QUAD;
+  else if (strcmp(type, "SEXTUPOLE") == 0)  result.type = ELETYPE_SEXTUPOLE;
+  else if (strcmp(type, "MULTIPOLE") == 0)  result.type = ELETYPE_MULTIPOLE;
+  else if (strcmp(type, "RFCAVITY") == 0)   result.type = ELETYPE_CAVITY;
+  else if (strcmp(type, "LINE") == 0) {
     *cursor -= 4; // Safe since we just extracted "LINE" from this, so this puts the cursor back there.
+    arena_free(&mem_arena);
     return result;
   } else {
     fprintf(stderr, "ERROR: Unable to parse elements of type %s\n", type);
@@ -331,7 +276,93 @@ Element create_element(char **cursor) {
     exit(1);
   }
 
+  while (**cursor==' ' | **cursor==',') (*cursor)++;
+
+  bool finding_key = true;
+  bool finding_val = false;
+  char *key = arena_alloc(&mem_arena, 100*sizeof(char));;
+  size_t key_index = 0;
+  double val = 0.0;
+  for (;;) {
+    if (**cursor == ';') {
+      break;
+    }
+    if (finding_key & !finding_val) {
+      if (isvalididchar(**cursor)) {
+        key[key_index] = **cursor;
+        key_index++;
+        (*cursor)++;
+      } else {
+        if (**cursor==' ' | **cursor=='=') {
+          while (!(isdigit(**cursor) | (**cursor=='+') | (**cursor=='-')) & (**cursor!=';')) {
+            (*cursor)++;
+          }
+          if (**cursor == ';') {
+            fprintf(stderr, "Element definition terminated early");
+            exit(1);
+          }
+          finding_key = false;
+          finding_val = true;
+        }
+      }
+    } else if (finding_val & !finding_key) {
+      val = strtod(*cursor, cursor);
+      shput(kv_pairs, key, val);
+      finding_key = true;
+      finding_val = false;
+      key = arena_alloc(&mem_arena, 100*sizeof(char));
+      key_index = 0;
+      val = 0.0;
+      while (**cursor==',' | **cursor==' ') {
+        (*cursor)++;
+      }
+    }
+  }
+
+  if (kv_pairs == NULL) {
+    shfree(kv_pairs);
+    make_r_matrix(&result);
+    arena_free(&mem_arena);
+    return result;
+  }
+
+  switch (result.type) {
+    case ELETYPE_DRIFT:
+      result.as.drift.length = shget(kv_pairs, "L");
+      break;
+    case ELETYPE_QUAD:
+      result.as.quad.length = shget(kv_pairs, "L");
+      result.as.quad.K1     = shget(kv_pairs, "K1");
+      break;
+    case ELETYPE_SBEND:
+      result.as.sbend.length = shget(kv_pairs, "L");
+      result.as.sbend.K1     = shget(kv_pairs, "K1");
+      result.as.sbend.angle  = shget(kv_pairs, "ANGLE");
+      result.as.sbend.E1     = shget(kv_pairs, "E1");
+      result.as.sbend.E2     = shget(kv_pairs, "E2");
+      break;
+    case ELETYPE_MULTIPOLE:
+      result.as.multipole.length = shget(kv_pairs, "L");
+      result.as.multipole.K1L    = shget(kv_pairs, "K1L");
+      result.as.multipole.K2L    = shget(kv_pairs, "K2L");
+      result.as.multipole.K3L    = shget(kv_pairs, "K3L");
+      break;
+    case ELETYPE_SEXTUPOLE:
+      result.as.sextupole.length = shget(kv_pairs, "L");
+      result.as.sextupole.K2     = shget(kv_pairs, "K2");
+      break;
+    case ELETYPE_CAVITY:
+      result.as.cavity.length   = shget(kv_pairs, "L");
+      result.as.cavity.voltage  = shget(kv_pairs, "VOLT");
+      result.as.cavity.harmonic = shget(kv_pairs, "harm");
+      result.as.cavity.lag      = shget(kv_pairs, "lag");
+  }
+
   make_r_matrix(&result);
+
+  shfree(kv_pairs);
+  arena_free(&mem_arena);
+
   return result;
 }
 
@@ -388,12 +419,23 @@ void element_print(Element element) {
              element.as.quad.K1);
       break;
     case ELETYPE_MULTIPOLE:
-      printf("Multipole: L = %f, K3L = %f\n", element.as.multipole.length, element.as.multipole.K3L);
+      printf("Multipole: L = %f, K1L = %f, K2L = %f, K3L = %f\n", 
+             element.as.multipole.length,
+             element.as.multipole.K1L,
+             element.as.multipole.K2L,
+             element.as.multipole.K3L);
       break;
     case ELETYPE_SEXTUPOLE:
       printf("Sextupole: L = %f, K2 = %f\n", 
              element.as.sextupole.length,
              element.as.sextupole.K2);
+      break;
+    case ELETYPE_CAVITY:
+      printf("Cavity; L = %f, V = %f, harmonic = %f, lag = %f\n",
+             element.as.cavity.length,
+             element.as.cavity.voltage,
+             element.as.cavity.harmonic,
+             element.as.cavity.lag);
       break;
   }
 }
@@ -409,6 +451,7 @@ double calculate_line_angle(Element *line) {
       case ELETYPE_DRIFT:
       case ELETYPE_MULTIPOLE:
       case ELETYPE_SEXTUPOLE:
+      case ELETYPE_CAVITY:
         break;
     }
   }
