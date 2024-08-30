@@ -15,52 +15,45 @@
 extern Element* element_list;
 extern ElementLibrary *element_library;
 
-double synch_rad_integral_1(Element *line, size_t periodicity) {
+double synch_rad_integral_1(Element *line, int periodicity) {
   (void)line;
   (void)periodicity;
   return 0;
 }
 
-double synch_rad_integral_2(Element *line, size_t periodicity) {
+double synch_rad_integral_2(Element *line, int periodicity) {
   double I_2 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     double rho = bending_radius_of_element(line[i]);
     I_2 += element_length(line[i]) / pow(rho, 2);
   }
 
-  return I_2 * periodicity;
+  return I_2 * (double)periodicity;
 }
 
-double synch_rad_integral_3(Element *line, size_t periodicity) {
+double synch_rad_integral_3(Element *line, int periodicity) {
   double I_3 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     double rho_abs = fabs(bending_radius_of_element(line[i]));
     I_3 += element_length(line[i]) / pow(rho_abs, 3);
   }
 
-  return I_3 * periodicity;
+  return I_3 * (double)periodicity;
 }
 
 double element_length(Element element) {
-  double length;
   switch (element.type) {
     case ELETYPE_SBEND:
-      length = element.as.sbend.length;
-      break;
+      return element.as.sbend.length;
     case ELETYPE_DRIFT:
-      length = element.as.drift.length;
-      break;
+      return element.as.drift.length;
     case ELETYPE_QUAD:
-      length = element.as.quad.length;
-      break;
+      return element.as.quad.length;
     case ELETYPE_SEXTUPOLE:
-      length = element.as.sextupole.length;
-      break;
+      return element.as.sextupole.length;
     case ELETYPE_MULTIPOLE:
-      length = element.as.multipole.length;
-      break;
+      return element.as.multipole.length;
   }
-  return length;
 }
 
 double bending_radius_of_element(Element element) {
@@ -91,6 +84,9 @@ void make_r_matrix(Element *element) {
 
   switch (element->type) {
     case (ELETYPE_DRIFT):
+      element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
+      element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
+      break;
     case (ELETYPE_MULTIPOLE):
     case (ELETYPE_SEXTUPOLE):
       element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
@@ -135,21 +131,38 @@ void make_r_matrix(Element *element) {
   }
 }
 
+double sbend_omegaxsqr(Element ele) {
+  assert(ele.type == ELETYPE_SBEND);
+  double L = ele.as.sbend.length;
+  double angle = ele.as.sbend.angle;
+  double h = fabs(angle / L);
+  double K1 = ele.as.sbend.K1;
+
+  return h*h + K1;
+}
+
+double sbend_omegaysqr(Element ele) {
+  assert(ele.type == ELETYPE_SBEND);
+  double K1 = ele.as.sbend.K1;
+
+  return K1;
+}
+
 void calc_sbend_matrix(Element *element) {
   assert(element->type == ELETYPE_SBEND && "This func should only be called for sbends.");
-  float K1 = element->as.sbend.K1;
-  float L = element->as.sbend.length;
-  float angle = element->as.sbend.angle;
-  float rho = fabs(L / angle);
-  float h = 1 / rho;
+  double K1 = element->as.sbend.K1;
+  double L = element->as.sbend.length;
+  double angle = element->as.sbend.angle;
+  double rho = fabs(L / angle);
+  double h = 1 / rho;
 
-  float omega_x_sqr = pow(h, 2) + K1;
-  float omega_x = sqrt(fabs(omega_x_sqr));
-  float omega_x_L = omega_x * L;
+  double omega_x_sqr = pow(h, 2) + K1;
+  double omega_x = sqrt(fabs(omega_x_sqr));
+  double omega_x_L = omega_x * L;
 
-  float omega_y_sqr = K1;
-  float omega_y = sqrt(fabs(omega_y_sqr));
-  float omega_y_L = omega_y * L;
+  double omega_y_sqr = K1;
+  double omega_y = sqrt(fabs(omega_y_sqr));
+  double omega_y_L = omega_y * L;
 
   double (*sinlike_func)(double);
   double (*coslike_func)(double);
@@ -233,11 +246,11 @@ Element create_element(char **cursor) {
 
   size_t i = 0;
   while (isalpha(**cursor)) {
-    type[i++] = toupper(**cursor);
+    type[i++] = (char)toupper(**cursor);
     (*cursor)++;
   }
 
-  if (strcmp(type, "DRIFT") == 0 | strcmp(type, "KICKER") == 0) {
+  if (strcmp(type, "DRIFT") == 0 | strcmp(type, "KICKER") == 0 | strcmp(type, "MONITOR") == 0) {
     result.type = ELETYPE_DRIFT;
     char *temp_cursor = *cursor;
     while (*temp_cursor != ';') {
@@ -351,7 +364,7 @@ double assigned_double_from_string(char *string) {
   if (string) {
     while (*string != '=') string++;
     while ((*string != '-') & !isdigit(*string)) string++;
-    return strtof(string, NULL);
+    return strtod(string, NULL);
   }
   return 0;
 }
@@ -416,6 +429,9 @@ void create_line(char *cursor, Element **line) {
   while (*cursor != ')') {
     while (!isalpha(*cursor) & (*cursor != ')')) {
       cursor++;
+    }
+    if (*cursor == ')') {
+      break;
     }
     char *temp_cursor = cursor;
     while (isvalididchar(*temp_cursor)) {

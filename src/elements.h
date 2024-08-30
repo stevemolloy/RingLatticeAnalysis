@@ -64,12 +64,14 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
-double synch_rad_integral_1(Element *line, size_t periodicity);
-double synch_rad_integral_2(Element *line, size_t periodicity);
-double synch_rad_integral_3(Element *line, size_t periodicity);
+double synch_rad_integral_1(Element *line, int periodicity);
+double synch_rad_integral_2(Element *line, int periodicity);
+double synch_rad_integral_3(Element *line, int periodicity);
 double element_length(Element element);
 double bending_radius_of_element(Element element);
 Element create_element(char **cursor);
+double sbend_omegaxsqr(Element ele);
+double sbend_omegaysqr(Element ele);
 void calc_sbend_matrix(Element *element);
 double assigned_double_from_string(char *string);
 void element_print(Element element);

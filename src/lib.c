@@ -8,7 +8,7 @@
 
 #define PI 3.14159265358979323846
 
-float radians_to_degrees(float radians) {
+double radians_to_degrees(double radians) {
   return radians * 180.0f / PI;
 }
 
@@ -45,7 +45,7 @@ char *read_entire_file(char *file_path) {
   }
 
   fseek(f, 0L, SEEK_END);
-  int sz = ftell(f);
+  size_t sz = (size_t)ftell(f);
   fseek(f, 0L, SEEK_SET);
 
   char *contents = calloc(2*sz, sizeof(char));

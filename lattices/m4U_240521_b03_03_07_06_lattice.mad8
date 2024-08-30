@@ -1,0 +1,132 @@
+!!
+!!  mad8 lattice: m4U_240521_b03_03_07_06
+!!  Created: 29-Aug-2024 20:43:42
+!!
+!!
+
+! DEFINITIONS 
+
+BPM :MONITOR; 
+! RF_ON:=1; 
+! CAV : RFCavity, L=0.37800000,VOLT=0.09000000 &
+! , harm=176, lag=0.0; 
+
+CMh :KICKER; 
+CMv :KICKER; 
+D1:  SBEND,L=0.05000000,  ANGLE = 0.00001868, &
+ K1 = 0.00608219  E1= 0.00000000,  E2= 0.00000000 ; 
+D2:  SBEND,L=0.05000000,  ANGLE = 0.00000155, &
+ K1 = -0.00015086  E1= 0.00000000,  E2= 0.00000000 ; 
+D3:  SBEND,L=0.05000000,  ANGLE = 0.00000201, &
+ K1 = -0.00015271  E1= 0.00000000,  E2= 0.00000000 ; 
+GE :MARKER; 
+GS :MARKER; 
+O1:  Multipole, L=0.1, K3L= 1196.19631220; 
+
+O2:  Multipole, L=0.1, K3L= -5179.78679028; 
+
+O3:  Multipole, L=0.1, K3L= 11797.61187417; 
+
+Q1:  Multipole, L=0.25, K1L= 3.96101195; 
+
+Q2:  Multipole, L=0.25, K1L= -2.72885301; 
+
+Q3:  Multipole, L=0.15, K1L= 4.21203366; 
+
+Q4:  Multipole, L=0.15, K1L= 5.49051094; 
+
+R1:  SBEND,L=0.15000000,  ANGLE = -0.00383972, &
+ K1 = 5.40097882  E1= 0.00000000,  E2= 0.00000000 ; 
+S1:  Multipole, L=0.1, K2L= -424.01895711; 
+
+S2:  Multipole, L=0.1, K2L= 620.05770963; 
+
+S3:  Multipole, L=0.1, K2L= -440.01707801; 
+
+S4:  Multipole, L=0.1, K2L= 554.92446256; 
+
+S5:  Multipole, L=0.1, K2L= 462.82822615; 
+
+corrh_ac :KICKER; 
+corrv_ac :KICKER; 
+str0010 : DRIFT, L= 0.01000000; 
+str0020 : DRIFT, L= 0.02000000; 
+str0021 : DRIFT, L= 0.02100000; 
+str0025 : DRIFT, L= 0.02500000; 
+str0050 : DRIFT, L= 0.05000000; 
+str0058 : DRIFT, L= 0.05800000; 
+str0075 : DRIFT, L= 0.07500000; 
+str0100 : DRIFT, L= 0.10000000; 
+str0302 : DRIFT, L= 0.30200000; 
+str0321 : DRIFT, L= 0.32100000; 
+str0362 : DRIFT, L= 0.36200000; 
+str0462 : DRIFT, L= 0.46200000; 
+str0500 : DRIFT, L= 0.50000000; 
+strx006 : DRIFT, L= 0.00608000; 
+strx013 : DRIFT, L= 0.01250000; 
+strx093 : DRIFT, L= 0.09268000; 
+strx203 : DRIFT, L= 0.20311000; 
+strx403 : DRIFT, L= 0.40311000; 
+! LINE 
+
+m4U_240521_b03_03_07_06 : LINE = (str0500 &
+,str0500 ,str0500 ,str0500 ,str0321 &
+,GS ,str0025 ,BPM ,str0025 ,str0058 &
+,str0025 ,CMh ,str0050 ,CMv ,str0025 &
+,str0021 ,O1 ,str0025 ,Q1 ,str0025 &
+,O2 ,str0100 ,Q2 ,strx006 ,D1 &
+,D1 ,D1 ,D1 ,D1 ,D1 &
+,D1 ,D1 ,D1 ,D1 ,D1 &
+,D1 ,O3 ,strx093 ,str0075 ,CMh &
+,str0025 ,str0025 ,BPM ,str0025 ,str0020 &
+,S1 ,GE ,str0500 ,str0500 ,str0302 &
+,GS ,Q3 ,str0075 ,S2 ,strx013 &
+,str0025 ,BPM ,str0025 ,strx013 ,Q3 &
+,str0100 ,str0025 ,CMv ,str0050 ,CMh &
+,str0025 ,strx203 ,S3 ,str0010 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,str0010 ,S3 ,strx403 ,GE &
+,GS ,Q4 ,str0075 ,S4 ,strx013 &
+,str0025 ,BPM ,str0025 ,strx013 ,Q4 &
+,str0100 ,str0025 ,CMv ,str0050 ,CMh &
+,str0025 ,strx203 ,S3 ,str0010 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,str0010 ,S3 ,strx403 ,GE &
+,GS ,R1 ,str0075 ,S5 ,strx013 &
+,str0025 ,BPM ,str0025 ,strx013 ,R1 &
+,str0100 ,str0025 ,CMv ,str0050 ,CMh &
+,str0025 ,strx203 ,S3 ,str0010 ,D3 &
+,D3 ,D3 ,D3 ,D3 ,D3 &
+,D3 ,D3 ,D3 ,D3 ,D3 &
+,D3 ,str0010 ,S3 ,strx203 ,str0025 &
+,CMh ,str0050 ,CMv ,str0025 ,str0100 &
+,R1 ,strx013 ,str0025 ,BPM ,str0025 &
+,strx013 ,S5 ,str0075 ,R1 ,GE &
+,GS ,strx403 ,S3 ,str0010 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,str0010 ,S3 ,strx203 ,str0025 &
+,CMh ,str0050 ,CMv ,str0025 ,str0100 &
+,Q4 ,strx013 ,str0025 ,BPM ,str0025 &
+,strx013 ,S4 ,str0075 ,Q4 ,GE &
+,GS ,strx403 ,S3 ,str0010 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,D2 ,D2 ,D2 ,D2 &
+,D2 ,str0010 ,S3 ,strx203 ,str0025 &
+,CMh ,str0050 ,CMv ,str0025 ,str0100 &
+,Q3 ,strx013 ,str0025 ,BPM ,str0025 &
+,strx013 ,S2 ,str0075 ,Q3 ,GE &
+,str0100 ,corrh_ac ,corrv_ac ,str0362 ,CAV &
+,str0462 ,GS ,S1 ,str0020 ,str0025 &
+,BPM ,str0025 ,str0025 ,CMh ,str0050 &
+,CMv ,str0025 ,strx093 ,O3 ,D1 &
+,D1 ,D1 ,D1 ,D1 ,D1 &
+,D1 ,D1 ,D1 ,D1 ,D1 &
+,D1 ,strx006 ,Q2 ,str0100 ,O2 &
+,str0025 ,Q1 ,str0025 ,O1 ,str0021 &
+,str0025 ,CMv ,str0050 ,CMh ,str0025 &
+,str0058 ,str0025 ,BPM ,str0025 ,GE &
+,str0321 ,str0500 ,str0500 ,str0500 ,str0500, &
+) 
