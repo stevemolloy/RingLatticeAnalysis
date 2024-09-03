@@ -9,6 +9,8 @@
 #define BEAM_DOFS 6
 #define ERADIUS_TIMES_RESTMASS 0.959976365e-9
 
+#define ELENAME_MAX_LEN 64
+
 typedef struct {
   double length;
 } Drift;
@@ -59,6 +61,7 @@ typedef enum {
 } EleType;
 
 typedef struct {
+  char name[ELENAME_MAX_LEN];
   EleType type;
   double R_matrix[BEAM_DOFS*BEAM_DOFS];
   union {
@@ -86,7 +89,7 @@ double synch_rad_integral_2(Element *line, int periodicity);
 double synch_rad_integral_3(Element *line, int periodicity);
 double element_length(Element element);
 double bending_radius_of_element(Element element);
-Element create_element(char **cursor);
+Element create_element(char *name, char **cursor);
 double sbend_omegaxsqr(Element ele);
 double sbend_omegaysqr(Element ele);
 void calc_sbend_matrix(Element *element);

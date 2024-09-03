@@ -242,15 +242,17 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
   }
 }
 
-Element create_element(char **cursor) {
-  char type[50] = {0};
+Element create_element(char *name, char **cursor) {
   Element result = {0};
+  size_t name_len = strlen(name);
+  memcpy(result.name, name, name_len > ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
 
   Arena mem_arena = make_arena();
   str2dbl_hashmap* kv_pairs = NULL;
 
   while (**cursor == ' ' | **cursor == ':') (*cursor)++;
 
+  char type[50] = {0};
   size_t i = 0;
   while (isalpha(**cursor)) {
     type[i++] = (char)toupper(**cursor);
@@ -280,7 +282,7 @@ Element create_element(char **cursor) {
 
   bool finding_key = true;
   bool finding_val = false;
-  char *key = arena_alloc(&mem_arena, 100*sizeof(char));;
+  char *key = arena_alloc(&mem_arena, 100*sizeof(char));
   size_t key_index = 0;
   double val = 0.0;
   for (;;) {
@@ -380,7 +382,8 @@ char *populate_element_library(char *cursor) {
       *cursor = '\0';
       cursor++;
 
-      shput(element_library, element_name, arrput(element_list, create_element(&cursor)));
+      shput(element_library, element_name, arrput(element_list, 
+                                                  create_element(element_name, &cursor)));
     } else {
       cursor++;
     }
@@ -401,6 +404,7 @@ double assigned_double_from_string(char *string) {
 }
 
 void element_print(Element element) {
+  printf("%s: ", element.name);
   switch (element.type) {
     case ELETYPE_DRIFT:
       printf("Drift: L = %f\n", element.as.drift.length);
