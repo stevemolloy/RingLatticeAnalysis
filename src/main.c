@@ -87,25 +87,6 @@ int main(int argc, char **argv) {
     memcpy(line_matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
   }
 
-  // for (size_t i=0; i<arrlenu(line); i++) {
-  //   switch (line[i].type) {
-  //   case ELETYPE_SBEND:
-  //     printf("Sbend: K1 = %+0.6f :: Angle = %+0.6f :: w_x_sqr = %+0.6f :: w_y_sqr = %+0.6f\n", 
-  //            line[i].as.sbend.K1, line[i].as.sbend.angle, 
-  //            sbend_omegaxsqr(line[i]), sbend_omegaysqr(line[i]));
-  //     break;
-  //   case ELETYPE_QUAD:
-  //   case ELETYPE_DRIFT:
-  //   case ELETYPE_MULTIPOLE:
-  //   case ELETYPE_SEXTUPOLE:
-  //     break;
-  //   }
-  // }
-
-  for (size_t i=0; i<arrlenu(line); i++) {
-    element_print(line[i]);
-  }
-
   arrfree(line);
   arrfree(element_list);
   shfree(element_library);
