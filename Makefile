@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -O0 -Wall -Wpedantic -Wextra -std=c18
+CFLAGS = -O0 -Wall -Wpedantic -Wextra -std=c18 -ggdb
 CINCLUDES = -I./third_party/
 CLIBS = -lm
 
