@@ -30,7 +30,7 @@ void *arena_alloc(Arena *arena, size_t size) {
     fprintf(stderr, "Memory issues. Dying.\n");
     exit(1);
   }
-  void *result = arena->data + arena->size;
+  void *result = (void*)((char*)arena->data + arena->size);
   arena->size += size;
   return result;
 }
