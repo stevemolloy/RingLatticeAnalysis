@@ -51,6 +51,8 @@ double element_length(Element element) {
       return element.as.quad.length;
     case ELETYPE_SEXTUPOLE:
       return element.as.sextupole.length;
+    case ELETYPE_OCTUPOLE:
+      return element.as.octupole.length;
     case ELETYPE_MULTIPOLE:
       return element.as.multipole.length;
     case ELETYPE_CAVITY:
@@ -69,6 +71,7 @@ double bending_radius_of_element(Element element) {
     case ELETYPE_DRIFT:
     case ELETYPE_QUAD:
     case ELETYPE_SEXTUPOLE:
+    case ELETYPE_OCTUPOLE:
     case ELETYPE_MULTIPOLE:
     case ELETYPE_CAVITY:
       break;
@@ -93,6 +96,7 @@ void make_r_matrix(Element *element) {
       break;
     case (ELETYPE_MULTIPOLE):
     case (ELETYPE_SEXTUPOLE):
+    case (ELETYPE_OCTUPOLE):
       element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
       element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
       break;
@@ -233,10 +237,12 @@ void calc_sbend_matrix(Element *element) {
 }
 
 void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
+  char *fmt_str = "%+0.6f";
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
-      (i==BEAM_DOFS-1) ? printf("%+0.15f", val) : printf("%+0.15f, ", val);
+      printf(fmt_str, val);
+      if (i!=BEAM_DOFS-1) printf(", ");
     }
     printf("\n");
   }
@@ -245,7 +251,7 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
 Element create_element(char *name, char **cursor) {
   Element result = {0};
   size_t name_len = strlen(name);
-  memcpy(result.name, name, name_len > ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
+  memcpy(result.name, name, name_len >= ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
 
   Arena mem_arena = make_arena();
   str2dbl_hashmap* kv_pairs = NULL;
@@ -358,6 +364,33 @@ Element create_element(char *name, char **cursor) {
       result.as.cavity.voltage  = shget(kv_pairs, "VOLT");
       result.as.cavity.harmonic = shget(kv_pairs, "harm");
       result.as.cavity.lag      = shget(kv_pairs, "lag");
+      break;
+    case ELETYPE_OCTUPOLE:
+      break;
+  }
+
+  Element new_result = {0};
+  if (result.type == ELETYPE_MULTIPOLE) {
+    memcpy(new_result.name, result.name, strlen(result.name));
+    if (result.as.multipole.K2L == 0.0 & result.as.multipole.K3L == 0.0) {
+      // This is actually a quad
+      new_result.type = ELETYPE_QUAD;
+      new_result.as.quad.length = result.as.multipole.length;
+      new_result.as.quad.K1 = result.as.multipole.K1L / result.as.multipole.length;
+      result = new_result;
+    } else if (result.as.multipole.K1L == 0.0 & result.as.multipole.K3L == 0.0) {
+      // This is actually a sextupole
+      new_result.type = ELETYPE_SEXTUPOLE;
+      new_result.as.sextupole.length = result.as.multipole.length;
+      new_result.as.sextupole.K2 = result.as.multipole.K2L / result.as.multipole.length;
+      result = new_result;
+    } else if (result.as.multipole.K1L == 0.0 & result.as.multipole.K2L == 0.0) {
+      // This is actually an octupole
+      new_result.type = ELETYPE_OCTUPOLE;
+      new_result.as.octupole.length = result.as.multipole.length;
+      new_result.as.octupole.K3 = result.as.multipole.K3L / result.as.multipole.length;
+      result = new_result;
+    }
   }
 
   make_r_matrix(&result);
@@ -434,6 +467,11 @@ void element_print(Element element) {
              element.as.sextupole.length,
              element.as.sextupole.K2);
       break;
+    case ELETYPE_OCTUPOLE:
+      printf("Sextupole: L = %f, K2 = %f\n", 
+             element.as.octupole.length,
+             element.as.octupole.K3);
+      break;
     case ELETYPE_CAVITY:
       printf("Cavity; L = %f, V = %f, harmonic = %f, lag = %f\n",
              element.as.cavity.length,
@@ -455,6 +493,7 @@ double calculate_line_angle(Element *line) {
       case ELETYPE_DRIFT:
       case ELETYPE_MULTIPOLE:
       case ELETYPE_SEXTUPOLE:
+      case ELETYPE_OCTUPOLE:
       case ELETYPE_CAVITY:
         break;
     }

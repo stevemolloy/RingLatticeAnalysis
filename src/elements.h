@@ -43,6 +43,11 @@ typedef struct {
   double K2;
 } Sextupole;
 
+typedef struct {
+  double length;
+  double K3;
+} Octupole;
+
 // CAV : RFCavity, L=0.37800000,VOLT=0.09000000, harm=176, lag=0.0; 
 typedef struct {
   double length;
@@ -57,6 +62,7 @@ typedef enum {
   ELETYPE_SBEND,
   ELETYPE_MULTIPOLE,
   ELETYPE_SEXTUPOLE,
+  ELETYPE_OCTUPOLE,
   ELETYPE_CAVITY,
 } EleType;
 
@@ -70,6 +76,7 @@ typedef struct {
     Sbend sbend;
     Multipole multipole;
     Sextupole sextupole;
+    Octupole octupole;
     Cavity cavity;
   } as;
 } Element;
