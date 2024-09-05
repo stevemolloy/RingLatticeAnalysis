@@ -465,7 +465,7 @@ Element_98 : DRIFT, L= 0.025000000000000;
 Element_99 :KICKER; 
 ! LINE 
 
-testingtesting : LINE = (Element_1 &
+testingtesting : LINE = (&
 ,Element_2 ,Element_3 ,Element_4 ,Element_5 &
 ,Element_6 ,Element_7 ,Element_8 ,Element_9 ,Element_10 &
 ,Element_11 ,Element_12 ,Element_13 ,Element_14 ,Element_15 &
