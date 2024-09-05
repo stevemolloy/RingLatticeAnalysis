@@ -15,6 +15,10 @@
 extern Element* element_list;
 extern ElementLibrary *element_library;
 
+static void calc_sbend_matrix(Element *element);
+static void calc_quad_matrix(Element *element);
+static void make_r_matrix(Element *element);
+
 double synch_rad_integral_1(Element *line, int periodicity) {
   (void)line;
   (void)periodicity;
@@ -79,9 +83,8 @@ double bending_radius_of_element(Element element) {
   return rho;
 }
 
-void make_r_matrix(Element *element) {
+static void make_r_matrix(Element *element) {
   double ele_length = element_length(*element);
-  double omega = 0;
 
   memset(element->R_matrix, 0, sizeof(element->R_matrix));
   for (size_t i=0; i<BEAM_DOFS; i++) {
@@ -91,9 +94,6 @@ void make_r_matrix(Element *element) {
   switch (element->type) {
     case (ELETYPE_DRIFT):
     case (ELETYPE_CAVITY):
-      element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
-      element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
-      break;
     case (ELETYPE_MULTIPOLE):
     case (ELETYPE_SEXTUPOLE):
     case (ELETYPE_OCTUPOLE):
@@ -101,37 +101,7 @@ void make_r_matrix(Element *element) {
       element->R_matrix[2*BEAM_DOFS + 3] = ele_length;
       break;
     case (ELETYPE_QUAD):
-      if (element->as.quad.K1 == 0) {
-        element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
-        element->R_matrix[0*BEAM_DOFS + 1] = ele_length;
-        break;
-      }
-
-      omega = sqrt(fabs(element->as.quad.K1));
-      if (element->as.quad.K1 > 0) {
-        // Focusing 2x2
-        element->R_matrix[0*BEAM_DOFS + 0] = cos(omega * ele_length);
-        element->R_matrix[0*BEAM_DOFS + 1] = sin(omega * ele_length) / omega;
-        element->R_matrix[1*BEAM_DOFS + 0] = sin(omega * ele_length) * (-omega);
-        element->R_matrix[1*BEAM_DOFS + 1] = cos(omega * ele_length);
-        // Defocusing 2x2
-        element->R_matrix[2*BEAM_DOFS + 2] = cosh(omega * ele_length);
-        element->R_matrix[2*BEAM_DOFS + 3] = sinh(omega * ele_length) / omega;
-        element->R_matrix[3*BEAM_DOFS + 2] = sinh(omega * ele_length) * omega;
-        element->R_matrix[3*BEAM_DOFS + 3] = cosh(omega * ele_length);
-      } else if (element->as.quad.K1 < 0) {
-        // Defocusing 2x2
-        element->R_matrix[2*BEAM_DOFS + 2] = cos(omega * ele_length);
-        element->R_matrix[2*BEAM_DOFS + 3] = sin(omega * ele_length) / omega;
-        element->R_matrix[3*BEAM_DOFS + 2] = sin(omega * ele_length) * (-omega);
-        element->R_matrix[3*BEAM_DOFS + 3] = cos(omega * ele_length);
-        // Focusing 2x2
-        element->R_matrix[0*BEAM_DOFS + 0] = cosh(omega * ele_length);
-        element->R_matrix[0*BEAM_DOFS + 1] = sinh(omega * ele_length) / omega;
-        element->R_matrix[1*BEAM_DOFS + 0] = sinh(omega * ele_length) * omega;
-        element->R_matrix[1*BEAM_DOFS + 1] = cosh(omega * ele_length);
-      }
-
+      calc_quad_matrix(element);
       break;
     case (ELETYPE_SBEND):
       calc_sbend_matrix(element);
@@ -139,24 +109,44 @@ void make_r_matrix(Element *element) {
   }
 }
 
-double sbend_omegaxsqr(Element ele) {
-  assert(ele.type == ELETYPE_SBEND);
-  double L = ele.as.sbend.length;
-  double angle = ele.as.sbend.angle;
-  double h = fabs(angle / L);
-  double K1 = ele.as.sbend.K1;
+static void calc_quad_matrix(Element *element) {
+  assert(element->type == ELETYPE_QUAD && "This func should only be called for quads.");
+  double omega = sqrt(fabs(element->as.quad.K1));
+  double L = element->as.quad.length;
+  double omega_L = omega * L;
 
-  return h*h + K1;
+  if (element->as.quad.K1 == 0) {
+    element->R_matrix[0*BEAM_DOFS + 1] = L;
+    element->R_matrix[0*BEAM_DOFS + 1] = L;
+    return;
+  }
+
+  if (element->as.quad.K1 > 0) {
+    // Focusing 2x2
+    element->R_matrix[0*BEAM_DOFS + 0] = cos(omega_L);
+    element->R_matrix[0*BEAM_DOFS + 1] = sin(omega_L) / omega;
+    element->R_matrix[1*BEAM_DOFS + 0] = sin(omega_L) * (-omega);
+    element->R_matrix[1*BEAM_DOFS + 1] = cos(omega_L);
+    // Defocusing 2x2
+    element->R_matrix[2*BEAM_DOFS + 2] = cosh(omega_L);
+    element->R_matrix[2*BEAM_DOFS + 3] = sinh(omega_L) / omega;
+    element->R_matrix[3*BEAM_DOFS + 2] = sinh(omega_L) * omega;
+    element->R_matrix[3*BEAM_DOFS + 3] = cosh(omega_L);
+  } else if (element->as.quad.K1 < 0) {
+    // Defocusing 2x2
+    element->R_matrix[2*BEAM_DOFS + 2] = cos(omega_L);
+    element->R_matrix[2*BEAM_DOFS + 3] = sin(omega_L) / omega;
+    element->R_matrix[3*BEAM_DOFS + 2] = sin(omega_L) * (-omega);
+    element->R_matrix[3*BEAM_DOFS + 3] = cos(omega_L);
+    // Focusing 2x2
+    element->R_matrix[0*BEAM_DOFS + 0] = cosh(omega_L);
+    element->R_matrix[0*BEAM_DOFS + 1] = sinh(omega_L) / omega;
+    element->R_matrix[1*BEAM_DOFS + 0] = sinh(omega_L) * omega;
+    element->R_matrix[1*BEAM_DOFS + 1] = cosh(omega_L);
+  }
 }
 
-double sbend_omegaysqr(Element ele) {
-  assert(ele.type == ELETYPE_SBEND);
-  double K1 = ele.as.sbend.K1;
-
-  return K1;
-}
-
-void calc_sbend_matrix(Element *element) {
+static void calc_sbend_matrix(Element *element) {
   assert(element->type == ELETYPE_SBEND && "This func should only be called for sbends.");
   double K1 = element->as.sbend.K1;
   double L = element->as.sbend.length;
@@ -175,13 +165,6 @@ void calc_sbend_matrix(Element *element) {
   double (*sinlike_func)(double);
   double (*coslike_func)(double);
 
-  if (omega_x_sqr > 0) {
-    sinlike_func = &sin;
-    coslike_func = &cos;
-  } else {
-    sinlike_func = &sinh;
-    coslike_func = &cosh;
-  }
   if (omega_x == 0.0f) {
     element->R_matrix[0*BEAM_DOFS + 0] = 1;
     element->R_matrix[0*BEAM_DOFS + 1] = L;
@@ -196,6 +179,13 @@ void calc_sbend_matrix(Element *element) {
     element->R_matrix[0*BEAM_DOFS + 4] = 0;
     element->R_matrix[1*BEAM_DOFS + 4] = h * L;
   } else {
+    if (omega_x_sqr > 0) {
+      sinlike_func = &sin;
+      coslike_func = &cos;
+    } else {
+      sinlike_func = &sinh;
+      coslike_func = &cosh;
+    }
     element->R_matrix[0*BEAM_DOFS + 0] = coslike_func(omega_x_L);
     element->R_matrix[0*BEAM_DOFS + 1] = (1/omega_x) * sinlike_func(omega_x_L);
     element->R_matrix[1*BEAM_DOFS + 0] = -omega_x * sinlike_func(omega_x_L);
@@ -210,13 +200,6 @@ void calc_sbend_matrix(Element *element) {
     element->R_matrix[1*BEAM_DOFS + 4] = (h/omega_x) * sinlike_func(omega_x_L);
   }
 
-  if (omega_y_sqr > 0) {
-    sinlike_func = sinh;
-    coslike_func = cosh;
-  } else {
-    sinlike_func = sin;
-    coslike_func = cos;
-  }
   if (omega_y == 0.0f) {
     element->R_matrix[2*BEAM_DOFS + 2] = 0;
     element->R_matrix[2*BEAM_DOFS + 3] = L;
@@ -226,6 +209,13 @@ void calc_sbend_matrix(Element *element) {
     element->R_matrix[4*BEAM_DOFS + 0] = L;
     element->R_matrix[4*BEAM_DOFS + 1] = 0;
   } else {
+    if (omega_y_sqr > 0) {
+      sinlike_func = sinh;
+      coslike_func = cosh;
+    } else {
+      sinlike_func = sin;
+      coslike_func = cos;
+    }
     element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(omega_y_L);
     element->R_matrix[2*BEAM_DOFS + 3] = (1/omega_y) * sinlike_func(omega_y_L);
     element->R_matrix[3*BEAM_DOFS + 2] = -omega_y * sinlike_func(omega_y_L);
@@ -425,15 +415,6 @@ char *populate_element_library(char *cursor) {
     }
   }
   return cursor;
-}
-
-double assigned_double_from_string(char *string) {
-  if (string) {
-    while (*string != '=') string++;
-    while ((*string != '-') & !isdigit(*string)) string++;
-    return strtod(string, NULL);
-  }
-  return 0;
 }
 
 void element_print(Element element) {

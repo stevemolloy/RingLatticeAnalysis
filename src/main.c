@@ -54,7 +54,6 @@ int main(int argc, char **argv) {
   double I2 = synch_rad_integral_2(line, periodicity);
   double I3 = synch_rad_integral_3(line, periodicity);
 
-  printf("\n");
   printf("Summary of the lattice defined in %s\n", file_path);
   printf("\n");
   printf("Periodicity: %d\n", periodicity);
@@ -81,10 +80,16 @@ int main(int argc, char **argv) {
     0, 0, 0, 0, 0, 1,
   };
 
-  for (size_t i=0; i<arrlenu(line); i++) {
+  // for (size_t i=0; i<arrlenu(line); i++) {
+  for (size_t i=0; i<19; i++) {
+    printf("\n");
+    element_print(line[i]);
+    rmatrix_print(line[i].R_matrix);
     double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
     matrix_multiply(line[i].R_matrix, line_matrix, temp_result, 6, 6, 6, 6);
     memcpy(line_matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+    printf("\nTotal matrix for the line is:\n");
+    rmatrix_print(line_matrix);
   }
 
   arrfree(line);
