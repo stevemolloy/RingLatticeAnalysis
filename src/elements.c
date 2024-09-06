@@ -12,12 +12,16 @@
 #include "elements.h"
 #include "lib.h"
 
+#define EPSILON 0
+
 extern Element* element_list;
 extern ElementLibrary *element_library;
 
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
 static void make_r_matrix(Element *element);
+static void getMinor(double* matrix, double* minor, int n, int r, int c);
+static double determinant(double* matrix, int n);
 
 double synch_rad_integral_1(Element *line, int periodicity) {
   (void)line;
@@ -164,6 +168,7 @@ static void calc_sbend_matrix(Element *element) {
 
   double (*sinlike_func)(double);
   double (*coslike_func)(double);
+  double sign;
 
   if (omega_x == 0.0f) {
     element->R_matrix[0*BEAM_DOFS + 0] = 1;
@@ -176,28 +181,33 @@ static void calc_sbend_matrix(Element *element) {
     element->R_matrix[5*BEAM_DOFS + 4] = 0;
     element->R_matrix[5*BEAM_DOFS + 5] = 1;
 
-    element->R_matrix[0*BEAM_DOFS + 4] = 0;
-    element->R_matrix[1*BEAM_DOFS + 4] = h * L;
+    element->R_matrix[4*BEAM_DOFS + 0] = h * L;
+    element->R_matrix[4*BEAM_DOFS + 1] = 0;
   } else {
     if (omega_x_sqr > 0) {
       sinlike_func = &sin;
       coslike_func = &cos;
+      sign = -1;
     } else {
       sinlike_func = &sinh;
       coslike_func = &cosh;
+      sign = 1;
     }
     element->R_matrix[0*BEAM_DOFS + 0] = coslike_func(omega_x_L);
     element->R_matrix[0*BEAM_DOFS + 1] = (1/omega_x) * sinlike_func(omega_x_L);
-    element->R_matrix[1*BEAM_DOFS + 0] = -omega_x * sinlike_func(omega_x_L);
+    element->R_matrix[1*BEAM_DOFS + 0] = sign * omega_x * sinlike_func(omega_x_L);
     element->R_matrix[1*BEAM_DOFS + 1] = coslike_func(omega_x_L);
 
+    element->R_matrix[0*BEAM_DOFS + 5] = (h/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
+    element->R_matrix[1*BEAM_DOFS + 5] = (h/omega_x) * sinlike_func(omega_x_L);
+
+    element->R_matrix[4*BEAM_DOFS + 0] = -(h/omega_x) * sinlike_func(omega_x_L);
+    element->R_matrix[4*BEAM_DOFS + 1] = -(h/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
+
     element->R_matrix[4*BEAM_DOFS + 4] = 1;
-    element->R_matrix[4*BEAM_DOFS + 5] = (h*h/pow(omega_x, 3)) * sinlike_func(omega_x_L);
+    element->R_matrix[4*BEAM_DOFS + 5] = -pow(h,2)*(omega_x_L - sinlike_func(omega_x_L)) / pow(omega_x, 3);
     element->R_matrix[5*BEAM_DOFS + 4] = 0;
     element->R_matrix[5*BEAM_DOFS + 5] = 1;
-
-    element->R_matrix[0*BEAM_DOFS + 4] = (h/(omega_x*omega_x)) * (1 - coslike_func(omega_x_L));
-    element->R_matrix[1*BEAM_DOFS + 4] = (h/omega_x) * sinlike_func(omega_x_L);
   }
 
   if (omega_y == 0.0f) {
@@ -205,24 +215,20 @@ static void calc_sbend_matrix(Element *element) {
     element->R_matrix[2*BEAM_DOFS + 3] = L;
     element->R_matrix[3*BEAM_DOFS + 2] = 0;
     element->R_matrix[3*BEAM_DOFS + 3] = 1;
-
-    element->R_matrix[4*BEAM_DOFS + 0] = L;
-    element->R_matrix[4*BEAM_DOFS + 1] = 0;
   } else {
     if (omega_y_sqr > 0) {
       sinlike_func = sinh;
       coslike_func = cosh;
+      sign = 1;
     } else {
       sinlike_func = sin;
       coslike_func = cos;
+      sign = -1;
     }
     element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(omega_y_L);
     element->R_matrix[2*BEAM_DOFS + 3] = (1/omega_y) * sinlike_func(omega_y_L);
-    element->R_matrix[3*BEAM_DOFS + 2] = -omega_y * sinlike_func(omega_y_L);
+    element->R_matrix[3*BEAM_DOFS + 2] = sign * omega_y * sinlike_func(omega_y_L);
     element->R_matrix[3*BEAM_DOFS + 3] = coslike_func(omega_y_L);
-
-    element->R_matrix[4*BEAM_DOFS + 0] = (1 / omega_y) * sinlike_func(omega_y_L);
-    element->R_matrix[4*BEAM_DOFS + 1] = (h/(omega_y*omega_y)) * (1 - coslike_func(omega_y_L));
   }
 }
 
@@ -235,6 +241,19 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
       if (i!=BEAM_DOFS-1) printf(", ");
     }
     printf("\n");
+  }
+
+  double x_det = mat[0*BEAM_DOFS + 0] * mat[1*BEAM_DOFS + 1] 
+                  - mat[0*BEAM_DOFS + 1] * mat[1*BEAM_DOFS + 0];
+  double y_det = mat[2*BEAM_DOFS + 2] * mat[3*BEAM_DOFS + 3] 
+                  - mat[2*BEAM_DOFS + 3] * mat[3*BEAM_DOFS + 2];
+  double z_det = mat[4*BEAM_DOFS + 4] * mat[5*BEAM_DOFS + 5] 
+                  - mat[4*BEAM_DOFS + 5] * mat[5*BEAM_DOFS + 4];
+  double R = determinant(mat, BEAM_DOFS);
+  printf("|x|-1 = %+0.6e, |y|-1 = %0.6e, |z|-1 = %0.6e\n", x_det-1, y_det-1, z_det-1);
+  printf("|R| - 1 = %0.6e\n", R - 1);
+  if ((fabs(R - 1) > EPSILON)) {
+    printf("****** Non-unity determinant! ******\n");
   }
 }
 
@@ -366,19 +385,22 @@ Element create_element(char *name, char **cursor) {
       // This is actually a quad
       new_result.type = ELETYPE_QUAD;
       new_result.as.quad.length = result.as.multipole.length;
-      new_result.as.quad.K1 = result.as.multipole.K1L / result.as.multipole.length;
+      // new_result.as.quad.K1 = result.as.multipole.K1L / result.as.multipole.length;
+      new_result.as.quad.K1 = result.as.multipole.K1L;
       result = new_result;
     } else if (result.as.multipole.K1L == 0.0 & result.as.multipole.K3L == 0.0) {
       // This is actually a sextupole
       new_result.type = ELETYPE_SEXTUPOLE;
       new_result.as.sextupole.length = result.as.multipole.length;
-      new_result.as.sextupole.K2 = result.as.multipole.K2L / result.as.multipole.length;
+      // new_result.as.sextupole.K2 = result.as.multipole.K2L / result.as.multipole.length;
+      new_result.as.sextupole.K2 = result.as.multipole.K2L;
       result = new_result;
     } else if (result.as.multipole.K1L == 0.0 & result.as.multipole.K2L == 0.0) {
       // This is actually an octupole
       new_result.type = ELETYPE_OCTUPOLE;
       new_result.as.octupole.length = result.as.multipole.length;
-      new_result.as.octupole.K3 = result.as.multipole.K3L / result.as.multipole.length;
+      // new_result.as.octupole.K3 = result.as.multipole.K3L / result.as.multipole.length;
+      new_result.as.octupole.K3 = result.as.multipole.K3L;
       result = new_result;
     }
   }
@@ -531,5 +553,45 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
   }
 
   return true;
+}
+
+// Courtesy ChatGPT
+// Function to get the minor matrix by removing row `r` and column `c`
+static void getMinor(double* matrix, double* minor, int n, int r, int c) {
+    int minorRow = 0, minorCol = 0;
+    for (int i = 0; i < n; i++) {
+        if (i == r) continue; // Skip the row `r`
+        minorCol = 0;
+        for (int j = 0; j < n; j++) {
+            if (j == c) continue; // Skip the column `c`
+            minor[minorRow * (n - 1) + minorCol] = matrix[i * n + j];
+            minorCol++;
+        }
+        minorRow++;
+    }
+}
+
+// Courtesy ChatGPT
+// Recursive function to calculate the determinant
+static double determinant(double* matrix, int n) {
+    // Base case: if matrix is 2x2, return determinant directly
+    if (n == 2) return matrix[0] * matrix[3] - matrix[1] * matrix[2];
+    
+    double det = 0.0;
+    double minor[(n - 1) * (n - 1)]; // Minor matrix will be (n-1)x(n-1)
+
+    // Cofactor expansion along the first row (i = 0)
+    for (int j = 0; j < n; j++) {
+        // Get the minor matrix for element at (0, j)
+        getMinor(matrix, minor, n, 0, j);
+
+        // Compute cofactor (-1)^(i+j) * element * determinant of minor
+        double cofactor = (j % 2 == 0 ? 1 : -1) * matrix[j] * determinant(minor, n - 1);
+
+        // Add cofactor to the determinant
+        det += cofactor;
+    }
+
+    return det;
 }
 
