@@ -12,7 +12,7 @@
 #include "elements.h"
 #include "lib.h"
 
-#define EPSILON 0
+#define EPSILON 1e-12
 
 extern Element* element_list;
 extern ElementLibrary *element_library;
@@ -155,7 +155,7 @@ static void calc_sbend_matrix(Element *element) {
   double K1 = element->as.sbend.K1;
   double L = element->as.sbend.length;
   double angle = element->as.sbend.angle;
-  double rho = fabs(L / angle);
+  double rho = L / angle;
   double h = 1 / rho;
 
   double omega_x_sqr = pow(h, 2) + K1;
@@ -193,6 +193,7 @@ static void calc_sbend_matrix(Element *element) {
       coslike_func = &cosh;
       sign = 1;
     }
+    assert((sign == 1) | (sign == -1) && "Sign value has been corrupted");
     element->R_matrix[0*BEAM_DOFS + 0] = coslike_func(omega_x_L);
     element->R_matrix[0*BEAM_DOFS + 1] = (1/omega_x) * sinlike_func(omega_x_L);
     element->R_matrix[1*BEAM_DOFS + 0] = sign * omega_x * sinlike_func(omega_x_L);
@@ -201,8 +202,8 @@ static void calc_sbend_matrix(Element *element) {
     element->R_matrix[0*BEAM_DOFS + 5] = (h/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
     element->R_matrix[1*BEAM_DOFS + 5] = (h/omega_x) * sinlike_func(omega_x_L);
 
-    element->R_matrix[4*BEAM_DOFS + 0] = -(h/omega_x) * sinlike_func(omega_x_L);
-    element->R_matrix[4*BEAM_DOFS + 1] = -(h/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
+    element->R_matrix[4*BEAM_DOFS + 0] = -element->R_matrix[1*BEAM_DOFS + 5];
+    element->R_matrix[4*BEAM_DOFS + 1] = -element->R_matrix[0*BEAM_DOFS + 5];
 
     element->R_matrix[4*BEAM_DOFS + 4] = 1;
     element->R_matrix[4*BEAM_DOFS + 5] = -pow(h,2)*(omega_x_L - sinlike_func(omega_x_L)) / pow(omega_x, 3);
@@ -225,6 +226,7 @@ static void calc_sbend_matrix(Element *element) {
       coslike_func = cos;
       sign = -1;
     }
+    assert((sign == 1) | (sign == -1) && "Sign value has been corrupted");
     element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(omega_y_L);
     element->R_matrix[2*BEAM_DOFS + 3] = (1/omega_y) * sinlike_func(omega_y_L);
     element->R_matrix[3*BEAM_DOFS + 2] = sign * omega_y * sinlike_func(omega_y_L);
@@ -233,7 +235,7 @@ static void calc_sbend_matrix(Element *element) {
 }
 
 void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
-  char *fmt_str = "%+0.6f";
+  char *fmt_str = "%+0.9f";
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
@@ -243,18 +245,10 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
     printf("\n");
   }
 
-  double x_det = mat[0*BEAM_DOFS + 0] * mat[1*BEAM_DOFS + 1] 
-                  - mat[0*BEAM_DOFS + 1] * mat[1*BEAM_DOFS + 0];
-  double y_det = mat[2*BEAM_DOFS + 2] * mat[3*BEAM_DOFS + 3] 
-                  - mat[2*BEAM_DOFS + 3] * mat[3*BEAM_DOFS + 2];
-  double z_det = mat[4*BEAM_DOFS + 4] * mat[5*BEAM_DOFS + 5] 
-                  - mat[4*BEAM_DOFS + 5] * mat[5*BEAM_DOFS + 4];
   double R = determinant(mat, BEAM_DOFS);
-  printf("|x|-1 = %+0.6e, |y|-1 = %0.6e, |z|-1 = %0.6e\n", x_det-1, y_det-1, z_det-1);
-  printf("|R| - 1 = %0.6e\n", R - 1);
-  if ((fabs(R - 1) > EPSILON)) {
-    printf("****** Non-unity determinant! ******\n");
-  }
+  printf("|R| - 1 = %0.6e     ", R - 1);
+  if ((fabs(R - 1) > EPSILON)) printf("****** Non-unity determinant! ******");
+  printf("\n");
 }
 
 Element create_element(char *name, char **cursor) {
@@ -380,27 +374,32 @@ Element create_element(char *name, char **cursor) {
 
   Element new_result = {0};
   if (result.type == ELETYPE_MULTIPOLE) {
+    double K1L = result.as.multipole.K1L;
+    double K2L = result.as.multipole.K2L;
+    double K3L = result.as.multipole.K3L;
     memcpy(new_result.name, result.name, strlen(result.name));
-    if (result.as.multipole.K2L == 0.0 & result.as.multipole.K3L == 0.0) {
+    if (K2L == 0.0 & K3L == 0.0) {
       // This is actually a quad
       new_result.type = ELETYPE_QUAD;
       new_result.as.quad.length = result.as.multipole.length;
-      // new_result.as.quad.K1 = result.as.multipole.K1L / result.as.multipole.length;
-      new_result.as.quad.K1 = result.as.multipole.K1L;
+      new_result.as.quad.K1 = K1L;
       result = new_result;
-    } else if (result.as.multipole.K1L == 0.0 & result.as.multipole.K3L == 0.0) {
+    } else if (K1L == 0.0 & K3L == 0.0) {
       // This is actually a sextupole
       new_result.type = ELETYPE_SEXTUPOLE;
       new_result.as.sextupole.length = result.as.multipole.length;
-      // new_result.as.sextupole.K2 = result.as.multipole.K2L / result.as.multipole.length;
-      new_result.as.sextupole.K2 = result.as.multipole.K2L;
+      new_result.as.sextupole.K2 = K2L;
       result = new_result;
-    } else if (result.as.multipole.K1L == 0.0 & result.as.multipole.K2L == 0.0) {
+    } else if (K1L == 0.0 & K2L == 0.0) {
       // This is actually an octupole
       new_result.type = ELETYPE_OCTUPOLE;
       new_result.as.octupole.length = result.as.multipole.length;
-      // new_result.as.octupole.K3 = result.as.multipole.K3L / result.as.multipole.length;
-      new_result.as.octupole.K3 = result.as.multipole.K3L;
+      new_result.as.octupole.K3 = K3L;
+      result = new_result;
+    } else if (K1L == 0.0 & K2L == 0.0 & K3L == 0.0) {
+      // This is actually a drift
+      new_result.type = ELETYPE_DRIFT;
+      new_result.as.drift.length = result.as.multipole.length;
       result = new_result;
     }
   }
