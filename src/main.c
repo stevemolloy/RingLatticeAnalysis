@@ -2,9 +2,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "lib.h"
 #include "elements.h"
+
+#define M_PI acos(-1.0)
 
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
@@ -15,13 +18,18 @@
 Element *element_list = NULL;
 ElementLibrary *element_library = NULL;
 
+void usage(const char* program) {
+  fprintf(stderr, "USAGE: %s [-p <periodicity>] [-h <harmonic number>] [-E <kinetic energy>] lattice_file\n", program);
+}
+
 int main(int argc, char **argv) {
+  const char* program = nob_shift_args(&argc, &argv);
+
   int periodicity = 1;
   int harmonic_number = 1;
   double E_0 = 0;
   char *file_path = NULL;
 
-  nob_shift_args(&argc, &argv);
   while (argc > 0) {
     char *next_arg = nob_shift_args(&argc, &argv);
     if (strcmp(next_arg, "-p")==0) {
@@ -33,6 +41,11 @@ int main(int argc, char **argv) {
     } else {
       file_path = next_arg;
     }
+  }
+
+  if (file_path == NULL) {
+    usage(program);
+    return 1;
   }
 
   double gamma_0 = E_0 * 1e9 / ELECTRON_MASS;
@@ -71,6 +84,14 @@ int main(int argc, char **argv) {
   printf("\n");
   printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I2, gamma_0) / 1e3);
 
+  // for (size_t i=0; i<arrlenu(line); i++) {
+  //   if (line[i].type == ELETYPE_SBEND) {
+  //     printf("\n");
+  //     element_print(line[i]);
+  //     rmatrix_print(line[i].R_matrix);
+  //   }
+  // }
+
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {
     1, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0,
@@ -80,18 +101,59 @@ int main(int argc, char **argv) {
     0, 0, 0, 0, 0, 1,
   };
 
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {
+    1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1,
+  };
+
   for (size_t i=0; i<arrlenu(line); i++) {
-  // for (size_t i=0; i<19; i++) {
-    printf("\n");
-    element_print(line[i]);
-    rmatrix_print(line[i].R_matrix);
-    printf("\n");
     double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
     matrix_multiply(line[i].R_matrix, line_matrix, temp_result, 6, 6, 6, 6);
     memcpy(line_matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
-    printf("Total matrix for the line is:\n");
-    rmatrix_print(line_matrix);
   }
+
+  printf("\n");
+  printf("Total matrix for the line is:\n");
+  rmatrix_print(line_matrix);
+
+  double x_trace = (line_matrix[0*BEAM_DOFS + 0] + line_matrix[1*BEAM_DOFS + 1]) / 2;
+  double y_trace = (line_matrix[2*BEAM_DOFS + 2] + line_matrix[3*BEAM_DOFS + 3]) / 2;
+  printf("\n");
+  printf("x fractional tune = %f\n", acos(x_trace) / (2*M_PI));
+  printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
+
+  for (size_t i=0; i<(size_t)periodicity; i++) {
+    double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
+    matrix_multiply(line_matrix, total_matrix, temp_result, 6, 6, 6, 6);
+    memcpy(total_matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+  }
+
+  printf("\n");
+  printf("Total matrix:\n");
+  rmatrix_print(total_matrix);
+
+  x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]) / 2;
+  y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]) / 2;
+  printf("\n");
+  printf("x fractional tune = %f\n", acos(x_trace) / (2*M_PI));
+  printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
+
+  double R11 = line_matrix[0*BEAM_DOFS + 0];
+  double R12 = line_matrix[0*BEAM_DOFS + 1];
+  double R21 = line_matrix[1*BEAM_DOFS + 0];
+  double R22 = line_matrix[1*BEAM_DOFS + 1];
+  double R16 = line_matrix[0*BEAM_DOFS + 5];
+  double R26 = line_matrix[1*BEAM_DOFS + 5];
+
+  double eta_x  = ((1 - R22)*R16 -    R12   *R26) / (1 - R11 - R22 + R11*R22 - R12*R21);
+  double eta_px = (  -R21   *R16 + (1 - R11)*R26) / (1 - R11 - R22 + R11*R22 - R12*R21);
+
+  printf("eta_x  = %f\n", eta_x);
+  printf("eta_px = %f\n", eta_px);
 
   arrfree(line);
   arrfree(element_list);
