@@ -18,6 +18,9 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// This software library is modified from the original. Mostly to 
+// remove functionality that isn't needed by my stuff: Stephen Molloy
 
 #ifndef NOB_H_
 #define NOB_H_
