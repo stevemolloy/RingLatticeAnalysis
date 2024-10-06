@@ -554,6 +554,26 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
   return true;
 }
 
+void apply_matrix_n_times(double* result, double *matrix, size_t N) {
+  memcpy(result, SIXBYSIX_IDENTITY, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+
+  for (size_t i=0; i<N; i++) {
+    double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
+    matrix_multiply(matrix, result, temp_result, 6, 6, 6, 6);
+    memcpy(result, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+  }
+}
+
+void get_line_matrix(double *matrix, Element *line) {
+  memcpy(matrix, SIXBYSIX_IDENTITY, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
+    matrix_multiply(line[i].R_matrix, matrix, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS);
+    memcpy(matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+  }
+}
+
 // Courtesy ChatGPT
 // Function to get the minor matrix by removing row `r` and column `c`
 static void getMinor(double* matrix, double* minor, int n, int r, int c) {
