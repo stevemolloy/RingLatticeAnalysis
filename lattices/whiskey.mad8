@@ -1,0 +1,16 @@
+!! L      = <length>, ( [m] )
+!! T      = <bending angle>, ( [degree] )
+!! T1     = <entrance angle>, ( [degree] )
+!! T2     = <exit angle>, ( [degree] )
+!! gap    = <total magnet gap>, ( [m] )
+!! K      = <K-value>, ( [m^-2] )
+!!          ( K > 0 : focusing in horizontal plane )
+!!          ( K < 0 : defocusing in horizontal plane )
+
+D1:  Drift, L = 1.234;
+
+B1: SBEND, L = 3.141593, ANGLE = 0.019610170409557887, K1 = 2.71828, E1 = 0.0, E2 = 0.0 ;
+
+!! bendline :  LINE = ( B1 )
+driftline : LINE = ( D1 )
+
