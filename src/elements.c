@@ -235,7 +235,7 @@ static void calc_sbend_matrix(Element *element) {
 }
 
 void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
-  char *fmt_str = "%+0.9f";
+  char *fmt_str = "%+0.6e";
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
@@ -247,7 +247,7 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
 
   double R = determinant(mat, BEAM_DOFS);
   printf("|R| - 1 = %0.6e     ", R - 1);
-  if ((fabs(R - 1) > EPSILON)) printf("****** Non-unity determinant! ******");
+  if ((fabs(R - 1) > EPSILON)) printf("\n****** Non-unity determinant! ******");
   printf("\n");
 }
 
