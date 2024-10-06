@@ -12,7 +12,7 @@
 #include "elements.h"
 #include "lib.h"
 
-#define EPSILON 1e-12
+#define EPSILON 1e-9
 
 extern Element* element_list;
 extern ElementLibrary *element_library;
