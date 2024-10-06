@@ -84,14 +84,6 @@ int main(int argc, char **argv) {
   printf("\n");
   printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I2, gamma_0) / 1e3);
 
-  // for (size_t i=0; i<arrlenu(line); i++) {
-  //   if (line[i].type == ELETYPE_SBEND) {
-  //     printf("\n");
-  //     element_print(line[i]);
-  //     rmatrix_print(line[i].R_matrix);
-  //   }
-  // }
-
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {
     1, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0,
