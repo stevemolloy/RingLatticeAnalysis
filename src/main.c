@@ -62,31 +62,38 @@ int main(int argc, char **argv) {
   Element* line = NULL;
   create_line(cursor, &line);
 
+  printf("\nSummary of the lattice defined in %s\n", file_path);
+  printf("\n");
+
   double line_length = calculate_line_length(line);
   double total_length = line_length * periodicity;
 
   double line_angle = calculate_line_angle(line);
   double total_angle = line_angle * periodicity;
+
   bool closed_system = !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
   if (!closed_system) {
-    printf("\n");
-    printf("Total bending angle (%0.3f) is not within %0.1e degrees of a circle. System does not close.\n", 
+    printf("Total bending angle (%0.3f degrees) is not within %0.1e degrees of a circle.\n", 
            radians_to_degrees(total_angle), radians_to_degrees(ANGLE_EPSILON));
-    printf("Not calculating ring parameters\n");
+    printf("System does not close, so not calculating ring parameters.\n");
+    printf("\n");
   }
 
   get_line_matrix(line_matrix, line);
   apply_matrix_n_times(total_matrix, line_matrix, periodicity);
 
-  printf("\nSummary of the lattice defined in %s\n", file_path);
-  printf("\n");
   printf("Periodicity: %zu\n", periodicity);
   printf("Harmonic number: %d\n", harmonic_number);
   printf("Number of elements in the line: %td\n", arrlen(line));
   printf("Total length of the line: %f m\n", line_length);
-  printf("Total length of %zu lines: %f m\n", periodicity, total_length);
+  if (periodicity != 1) {
+    printf("Total length of %zu lines: %f m\n", periodicity, total_length);
+  }
   printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(line_angle));
-  printf("Total bending angle of %zu lines: %0.3f degrees\n", periodicity, radians_to_degrees(total_angle));
+  if (periodicity != 1) {
+    printf("Total bending angle of %zu lines: %0.3f degrees\n", 
+           periodicity, radians_to_degrees(total_angle));
+  }
 
   if (closed_system) {
     double rf_freq = C / (total_length / harmonic_number);
@@ -105,7 +112,7 @@ int main(int argc, char **argv) {
   }
 
   printf("\n");
-  printf("Total matrix for the line is:\n");
+  printf("Total matrix, R, for the line is:\n");
   rmatrix_print(line_matrix);
 
   double x_trace, y_trace;
@@ -117,9 +124,11 @@ int main(int argc, char **argv) {
     printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
   }
 
-  printf("\n");
-  printf("Total matrix:\n");
-  rmatrix_print(total_matrix);
+  if (periodicity != 1) {
+    printf("\n");
+    printf("Total matrix, R, for the full system:\n");
+    rmatrix_print(total_matrix);
+  }
 
   if (closed_system) {
     x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]) / 2;
@@ -141,6 +150,8 @@ int main(int argc, char **argv) {
     printf("eta_x  = %f\n", eta_x);
     printf("eta_px = %f\n", eta_px);
   }
+
+  printf("\n");
 
   arrfree(line);
   arrfree(element_list);
