@@ -2,3 +2,4 @@ bin
 obj
 .cache/clangd/index
 compile_commands.json
+tests/matmul_result.txt

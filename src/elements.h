@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #define C 299792458.0f
 #define ELECTRON_MASS 510998.9499961642f
@@ -107,7 +108,7 @@ double element_length(Element element);
 double bending_radius_of_element(Element element);
 Element create_element(char *name, char **cursor);
 void element_print(Element element);
-void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]);
+void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool isvalididchar(char c);
 char *populate_element_library(char *cursor);
 double calculate_line_length(Element *line);

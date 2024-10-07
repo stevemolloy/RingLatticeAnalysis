@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
   printf("\n");
   printf("Total matrix, R, for the line is:\n");
-  rmatrix_print(line_matrix);
+  rmatrix_print(stdout, line_matrix);
 
   double x_trace, y_trace;
   if (closed_system) {
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
   if (periodicity != 1) {
     printf("\n");
     printf("Total matrix, R, for the full system:\n");
-    rmatrix_print(total_matrix);
+    rmatrix_print(stdout, total_matrix);
   }
 
   if (closed_system) {
