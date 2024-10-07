@@ -115,6 +115,7 @@ double calculate_line_angle(Element *line);
 void create_line(char *cursor, Element **line);
 double e_loss_per_turn(double I2, double gamma0);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
+double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
 void get_line_matrix(double *matrix, Element *line);
 

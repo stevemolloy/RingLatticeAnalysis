@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <float.h>
 
+#define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
 #include "elements.h"
@@ -21,7 +22,6 @@ static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
 static void make_r_matrix(Element *element);
 static void getMinor(double* matrix, double* minor, int n, int r, int c);
-static double determinant(double* matrix, int n);
 
 double synch_rad_integral_1(Element *line, int periodicity) {
   (void)line;
@@ -245,10 +245,10 @@ void rmatrix_print(double mat[BEAM_DOFS*BEAM_DOFS]) {
     printf("\n");
   }
 
-  double R = determinant(mat, BEAM_DOFS);
-  printf("|R| - 1 = %0.6e     ", R - 1);
-  if ((fabs(R - 1) > EPSILON)) printf("\n****** Non-unity determinant! ******");
-  printf("\n");
+  // double R = determinant(mat, BEAM_DOFS);
+  // printf("|R| - 1 = %0.6e     ", R - 1);
+  // if ((fabs(R - 1) > EPSILON)) printf("\n****** Non-unity determinant! ******");
+  // printf("\n");
 }
 
 Element create_element(char *name, char **cursor) {
@@ -537,7 +537,10 @@ inline double e_loss_per_turn(double I2, double gamma0) {
 }
 
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2) {
-  assert(c1 == r2 && "Matrix dimensions do not allow for multiplication");
+  if (c1 != r2) {
+    fprintf(stderr, "Matrix dimensions do not allow for multiplication");
+    return false;
+  }
 
   size_t c3 = c2;
 
@@ -592,7 +595,7 @@ static void getMinor(double* matrix, double* minor, int n, int r, int c) {
 
 // Courtesy ChatGPT
 // Recursive function to calculate the determinant
-static double determinant(double* matrix, int n) {
+double determinant(double* matrix, int n) {
     // Base case: if matrix is 2x2, return determinant directly
     if (n == 2) return matrix[0] * matrix[3] - matrix[1] * matrix[2];
     

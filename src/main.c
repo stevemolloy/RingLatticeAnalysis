@@ -10,7 +10,6 @@
 #define M_PI (acos(-1.0))
 #define ANGLE_EPSILON (0.1*M_PI/180)
 
-#define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
 #define NOB_IMPLEMENTATION

@@ -9,12 +9,23 @@ OBJ = obj
 SRCS = $(wildcard $(SRC)/*.c)
 OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 
+TEST_SRCS = $(filter-out $(SRC)/main.c, $(SRCS))
+TEST_OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(TEST_SRCS))
+
+MAIN_SRCS = $(filter-out $(SRC)/test.c, $(SRCS))
+MAIN_OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(MAIN_SRCS))
+
 BINDIR = bin
 BIN = $(BINDIR)/rla
+TESTBIN = $(BINDIR)/test
 
-all: $(BIN)
+all: $(BIN) $(TESTBIN)
 
-$(BIN): $(OBJS)
+$(BIN): $(MAIN_OBJS)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
+
+$(TESTBIN): $(TEST_OBJS)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
 
@@ -27,4 +38,7 @@ clean:
 
 $(OBJ):
 	@mkdir -p $@
+
+test: $(TESTBIN)
+	$(TESTBIN)
 
