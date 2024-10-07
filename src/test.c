@@ -21,7 +21,9 @@ int main(void) {
   else result = false;
 
   printf("\n");
+  printf("========================\n");
   printf("Tests: %zu (Passed: %zu)\n", test_counter, passed_counter);
+  printf("========================\n");
 
   if (!result) return 1;
   return 0;
