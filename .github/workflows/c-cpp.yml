@@ -8,9 +8,14 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make && ./bin/test
 
+  build:
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
     - name: make
