@@ -7,14 +7,13 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build_test_linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: make
       run: make && ./bin/test
-
-  build:
+  build_test_windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
