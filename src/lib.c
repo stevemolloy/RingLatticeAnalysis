@@ -67,7 +67,7 @@ char *read_entire_file(const char *file_path) {
   // Reads an entire file into a char array, and returns a ptr to this. The ptr should be freed by the caller
   FILE *f = fopen(file_path, "r");
   if (f==NULL) {
-    fprintf(stderr, "Could not read %s: %s\n", file_path, strerror(errno));
+    fprintf(stderr, "Could not read %s: %s\n", file_path, STRERROR(errno));
     exit(1);
   }
 
