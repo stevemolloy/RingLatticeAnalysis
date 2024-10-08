@@ -67,7 +67,13 @@ char *read_entire_file(const char *file_path) {
   // Reads an entire file into a char array, and returns a ptr to this. The ptr should be freed by the caller
   FILE *f = fopen(file_path, "r");
   if (f==NULL) {
-    fprintf(stderr, "Could not read %s: %s\n", file_path, STRERROR(errno));
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+    char errmsg[80];
+    strerror_s(errmsg, sizeof(errmsg), errno);
+    fprintf(stderr, "Could not read %s: %s\n", file_path, errmsg);
+#else
+    fprintf(stderr, "Could not read %s: %s\n", file_path, strerror(errno));
+#endif // Windows
     exit(1);
   }
 
