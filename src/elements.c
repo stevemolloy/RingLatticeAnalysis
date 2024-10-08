@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <float.h>
 
+#define NOB_IMPLEMENTATION
+#include "nob.h"
+
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
@@ -14,9 +17,6 @@
 #include "lib.h"
 
 #define EPSILON 1e-9
-
-extern Element* element_list;
-extern ElementLibrary *element_library;
 
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
@@ -416,7 +416,7 @@ bool isvalididchar(char c) {
   return isalnum(c) | (c == '_');
 }
 
-char *populate_element_library(char *cursor) {
+char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor) {
   while (*cursor != '\0') {
     if (isalpha(*cursor)) {
       char *element_name = cursor;
@@ -426,7 +426,7 @@ char *populate_element_library(char *cursor) {
       *cursor = '\0';
       cursor++;
 
-      shput(element_library, element_name, arrput(element_list, 
+      shput(*element_library, element_name, arrput(*element_list, 
                                                   create_element(element_name, &cursor)));
     } else {
       cursor++;
@@ -512,7 +512,7 @@ double calculate_line_length(Element *line) {
   return total_length;
 }
 
-void create_line(char *cursor, Element **line) {
+void create_line(char *cursor, Element **line, ElementLibrary *element_library) {
   advance_to_char(&cursor, '(');
   while (*cursor != ')') {
     while (!isalpha(*cursor) & (*cursor != ')')) {
@@ -615,5 +615,48 @@ double determinant(double* matrix, int n) {
     }
 
     return det;
+}
+
+CommandLineArgs get_clargs(int argc, char **argv) {
+  CommandLineArgs args = {
+    .programname = nob_shift_args(&argc, &argv),
+    .periodicity = 1,
+    .harmonic_number = 1,
+    .E_0 = 0,
+    .file_path = NULL,
+  };
+
+  while (argc > 0) {
+    char *next_arg = nob_shift_args(&argc, &argv);
+    if (strcmp(next_arg, "-p")==0) {
+      args.periodicity = (size_t)atoi(nob_shift_args(&argc, &argv));
+    } else if (strcmp(next_arg, "-h")==0) {
+      args.harmonic_number = atoi(nob_shift_args(&argc, &argv));
+    } else if (strcmp(next_arg, "-E")==0) {
+      args.E_0 = strtod(nob_shift_args(&argc, &argv), NULL);
+    } else {
+      args.file_path = next_arg;
+    }
+  }
+
+  return args;
+}
+
+void generate_lattice(char *filename, Element **line) {
+  char *buffer = read_entire_file(filename);
+  char *cursor = buffer;
+
+  cursor = join_lines(cursor);
+
+  Element *element_list = NULL;
+  ElementLibrary *element_library = NULL;
+  cursor = populate_element_library(&element_library, &element_list, cursor);
+
+  create_line(cursor, line, element_library);
+
+  arrfree(element_list);
+  shfree(element_library);
+
+  free(buffer);
 }
 

@@ -1,7 +1,5 @@
-#define _POSIX_C_SOURCE 200809L
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "lib.h"
@@ -12,63 +10,24 @@
 
 #include "stb_ds.h"
 
-#define NOB_IMPLEMENTATION
-#include "nob.h"
-
-Element *element_list = NULL;
-ElementLibrary *element_library = NULL;
-
-double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-
 void usage(const char* program) {
   fprintf(stderr, "USAGE: %s [-p <periodicity>] [-h <harmonic number>] [-E <kinetic energy>] lattice_file\n", program);
 }
 
 int main(int argc, char **argv) {
-  const char* program = nob_shift_args(&argc, &argv);
+  CommandLineArgs args = get_clargs(argc, argv);
 
-  size_t periodicity = 1;
-  int harmonic_number = 1;
-  double E_0 = 0;
-  char *file_path = NULL;
+  Element *line = {0};
+  generate_lattice(args.file_path, &line);
 
-  while (argc > 0) {
-    char *next_arg = nob_shift_args(&argc, &argv);
-    if (strcmp(next_arg, "-p")==0) {
-      periodicity = (size_t)atoi(nob_shift_args(&argc, &argv));
-    } else if (strcmp(next_arg, "-h")==0) {
-      harmonic_number = atoi(nob_shift_args(&argc, &argv));
-    } else if (strcmp(next_arg, "-E")==0) {
-      E_0 = strtod(nob_shift_args(&argc, &argv), NULL);
-    } else {
-      file_path = next_arg;
-    }
-  }
-
-  if (file_path == NULL) {
-    usage(program);
-    return 1;
-  }
-
-  char *buffer = read_entire_file(file_path);
-  char *cursor = buffer;
-
-  cursor = join_lines(cursor);
-
-  cursor = populate_element_library(cursor);
-
-  Element* line = NULL;
-  create_line(cursor, &line);
-
-  printf("\nSummary of the lattice defined in %s\n", file_path);
+  printf("\nSummary of the lattice defined in %s\n", args.file_path);
   printf("\n");
 
   double line_length = calculate_line_length(line);
-  double total_length = line_length * periodicity;
+  double total_length = line_length * args.periodicity;
 
   double line_angle = calculate_line_angle(line);
-  double total_angle = line_angle * periodicity;
+  double total_angle = line_angle * args.periodicity;
 
   bool closed_system = !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
   if (!closed_system) {
@@ -78,30 +37,33 @@ int main(int argc, char **argv) {
     printf("\n");
   }
 
-  get_line_matrix(line_matrix, line);
-  apply_matrix_n_times(total_matrix, line_matrix, periodicity);
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
 
-  printf("Periodicity: %zu\n", periodicity);
-  printf("Harmonic number: %d\n", harmonic_number);
+  get_line_matrix(line_matrix, line);
+  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
+
+  printf("Periodicity: %zu\n", args.periodicity);
+  printf("Harmonic number: %d\n", args.harmonic_number);
   printf("Number of elements in the line: %td\n", arrlen(line));
   printf("Total length of the line: %f m\n", line_length);
-  if (periodicity != 1) {
-    printf("Total length of %zu lines: %f m\n", periodicity, total_length);
+  if (args.periodicity != 1) {
+    printf("Total length of %zu lines: %f m\n", args.periodicity, total_length);
   }
   printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(line_angle));
-  if (periodicity != 1) {
+  if (args.periodicity != 1) {
     printf("Total bending angle of %zu lines: %0.3f degrees\n", 
-           periodicity, radians_to_degrees(total_angle));
+           args.periodicity, radians_to_degrees(total_angle));
   }
 
   if (closed_system) {
-    double rf_freq = C / (total_length / harmonic_number);
+    double rf_freq = C / (total_length / args.harmonic_number);
 
-    double gamma_0 = E_0 * 1e9 / ELECTRON_MASS;
-    double I2 = synch_rad_integral_2(line, periodicity);
-    double I3 = synch_rad_integral_3(line, periodicity);
+    double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
+    double I2 = synch_rad_integral_2(line, args.periodicity);
+    double I3 = synch_rad_integral_3(line, args.periodicity);
 
-    printf("RF frequency for a hamonic number of %d: %0.6f MHz\n", harmonic_number, rf_freq/1e6);
+    printf("RF frequency for a hamonic number of %d: %0.6f MHz\n", args.harmonic_number, rf_freq/1e6);
     printf("\n");
     printf("Synchrotron radiation integrals:\n");
     printf("\tI_2 = %f\n", I2);
@@ -123,7 +85,7 @@ int main(int argc, char **argv) {
     printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
   }
 
-  if (periodicity != 1) {
+  if (args.periodicity != 1) {
     printf("\n");
     printf("Total matrix, R, for the full system:\n");
     rmatrix_print(stdout, total_matrix);
@@ -153,9 +115,6 @@ int main(int argc, char **argv) {
   printf("\n");
 
   arrfree(line);
-  arrfree(element_list);
-  shfree(element_library);
-  free(buffer);
 
   return 0;
 }

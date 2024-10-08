@@ -22,6 +22,14 @@
 #define ELENAME_MAX_LEN 64
 
 typedef struct {
+  size_t periodicity;
+  int harmonic_number;
+  double E_0;
+  char *file_path;
+  char *programname;
+} CommandLineArgs;
+
+typedef struct {
   double length;
 } Drift;
 
@@ -110,15 +118,17 @@ Element create_element(char *name, char **cursor);
 void element_print(Element element);
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool isvalididchar(char c);
-char *populate_element_library(char *cursor);
+char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor);
 double calculate_line_length(Element *line);
 double calculate_line_angle(Element *line);
-void create_line(char *cursor, Element **line);
+void create_line(char *cursor, Element **line, ElementLibrary *element_library);
 double e_loss_per_turn(double I2, double gamma0);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
 double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
 void get_line_matrix(double *matrix, Element *line);
+CommandLineArgs get_clargs(int argc, char **argv);
+void generate_lattice(char *filename, Element **line);
 
 #endif // !ELEMENTS_H
 
