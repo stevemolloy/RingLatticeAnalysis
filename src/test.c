@@ -34,7 +34,12 @@ bool test_matmul(void) {
   const char *expected_filename = "./tests/matmul_expected.txt";
   const char *result_filename =   "./tests/matmul_result.txt";
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  FILE *result_file;
+  fopen_s(&result_file, result_filename, "w");
+#else
   FILE *result_file = fopen(result_filename, "w");
+#endif
   double matA[36] = {
     0.3171, 0.7952, 0.7547, 0.4984, 0.2551, 0.1386,
     0.9502, 0.1869, 0.2760, 0.9597, 0.5060, 0.1493,
