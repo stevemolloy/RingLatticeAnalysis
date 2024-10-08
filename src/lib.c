@@ -67,7 +67,7 @@ char *read_entire_file(const char *file_path) {
   // Reads an entire file into a char array, and returns a ptr to this. The ptr should be freed by the caller
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
   FILE *f;
-  int succ = fopen_s(f, file_path, "r");
+  int succ = fopen_s(&f, file_path, "r");
   if (succ != 0) {
     char errmsg[80];
     strerror_s(errmsg, sizeof(errmsg), errno);
