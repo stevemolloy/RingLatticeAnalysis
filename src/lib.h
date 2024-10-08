@@ -1,12 +1,6 @@
 #ifndef _LIB
 #define _LIB
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#define STRERROR strerror_s
-#else
-#define STRERROR strerror
-#endif
-
 #include <stddef.h>
 
 #define ARENA_CAP 1024 * 1024
