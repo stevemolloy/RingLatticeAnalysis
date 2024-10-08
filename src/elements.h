@@ -128,7 +128,7 @@ double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
 void get_line_matrix(double *matrix, Element *line);
 CommandLineArgs get_clargs(int argc, char **argv);
-void generate_lattice(char *filename, Element **line);
+void generate_lattice(const char *filename, Element **line);
 
 #endif // !ELEMENTS_H
 

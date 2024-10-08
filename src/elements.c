@@ -642,7 +642,7 @@ CommandLineArgs get_clargs(int argc, char **argv) {
   return args;
 }
 
-void generate_lattice(char *filename, Element **line) {
+void generate_lattice(const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   char *cursor = buffer;
 

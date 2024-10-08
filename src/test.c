@@ -10,15 +10,23 @@ Element *element_list = NULL;
 ElementLibrary *element_library = NULL;
 
 bool test_matmul(void);
+bool test_sbend(void);
+
+typedef bool (*TestFunction)(void);
+
+TestFunction test_functions[] = {test_matmul, test_sbend};
 
 int main(void) {
   bool result = true;
   size_t test_counter = 0;
   size_t passed_counter = 0;
+  size_t num_of_functions = (sizeof(test_functions)/sizeof(test_functions[0]));
 
-  test_counter++;
-  if (test_matmul()) passed_counter++;
-  else result = false;
+  for (size_t i=0; i<num_of_functions; i++) {
+    test_counter++;
+    if (test_functions[i]()) passed_counter++;
+    else result = false;
+  }
 
   printf("\n");
   printf("========================\n");
@@ -59,7 +67,7 @@ bool test_matmul(void) {
   double result[36] = {0};
   if (!matrix_multiply(matA, matB, result, 6, 6, 6, 6)) {
     fprintf(stderr, "Matrix multiplication didn't work");
-    return 1;
+    return false;
   };
   fprintf(result_file, "matA = \n");
   rmatrix_print(result_file, matA);
@@ -75,7 +83,7 @@ bool test_matmul(void) {
 
   if (!matrix_multiply(matB, matA, result, 6, 6, 6, 6)) {
     fprintf(stderr, "Matrix multiplication didn't work");
-    return 1;
+    return false;
   };
   fprintf(result_file, "matB * matA = \n");
   rmatrix_print(result_file, result);
@@ -98,6 +106,60 @@ bool test_matmul(void) {
   free(expected_buff);
   free(result_buff);
 
+  return comparison_result;
+}
+
+bool compare_files(const char *testname, const char *filename1, const char *filename2) {
+  bool comparison_result = true;
+  char *expected_buff = read_entire_file(filename1);
+  char *result_buff = read_entire_file(filename2);
+  
+  if (strcmp(expected_buff, result_buff) != 0) {
+    comparison_result = false;
+  } else {
+    comparison_result = true;
+  }
+
+  if (!comparison_result) {
+    printf("%s FAILED\n", testname);
+    printf("    Expected (%s) does not match actual (%s)\n", filename1, filename2);
+    comparison_result = false;
+  } else {
+    printf("%s PASSED\n", testname);
+  }
+
+  free(expected_buff);
+  free(result_buff);
+
+  return comparison_result;
+}
+
+bool test_sbend(void) {
+  const char *test_name = "SBEND ELEMENT TEST";
+  const char *expected_filename = "./tests/sbend_expected.txt";
+  const char *result_filename =   "./tests/sbend_result.txt";
+
+  const char *filename = "./lattices/whiskey.mad8";
+
+  Element *line = {0};
+  generate_lattice(filename, &line);
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  get_line_matrix(line_matrix, line);
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  FILE *result_file;
+  fopen_s(&result_file, result_filename, "w");
+#else
+  FILE *result_file = fopen(result_filename, "w");
+#endif
+
+  fprintf(result_file, "Total matrix, R, for the line is:\n");
+  rmatrix_print(result_file, line_matrix);
+
+  fclose(result_file);
+
+  bool comparison_result = compare_files(test_name, expected_filename, result_filename);
+  
   return comparison_result;
 }
 
