@@ -532,7 +532,7 @@ void create_line(char *cursor, Element **line) {
   }
 }
 
-inline double e_loss_per_turn(double I2, double gamma0) {
+double e_loss_per_turn(double I2, double gamma0) {
   return ERADIUS_TIMES_RESTMASS * I2 * pow(gamma0, 4);
 }
 
