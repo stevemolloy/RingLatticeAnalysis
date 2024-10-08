@@ -18,4 +18,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: make
-      run: make && ./bin/test
+      run: make
+    - name: test
+      run: ./bin/test
