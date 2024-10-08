@@ -43,7 +43,7 @@ char *join_lines(char* cursor) {
   char *result = cursor;
 
   while (*cursor != '\0') {
-    if (*cursor == '&' | *cursor == '!') {
+    if ((*cursor == '&') | (*cursor == '!')) {
       while (*cursor != '\n') {
         *cursor = ' ';
         cursor++;

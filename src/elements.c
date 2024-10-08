@@ -66,6 +66,7 @@ double element_length(Element element) {
     case ELETYPE_CAVITY:
       return element.as.cavity.length;
   }
+  assert(false && "Unreachable code");
 }
 
 double bending_radius_of_element(Element element) {
@@ -259,7 +260,7 @@ Element create_element(char *name, char **cursor) {
   Arena mem_arena = make_arena();
   str2dbl_hashmap* kv_pairs = NULL;
 
-  while (**cursor == ' ' | **cursor == ':') (*cursor)++;
+  while ((**cursor == ' ') | (**cursor == ':')) (*cursor)++;
 
   char type[50] = {0};
   size_t i = 0;
@@ -287,7 +288,7 @@ Element create_element(char *name, char **cursor) {
     exit(1);
   }
 
-  while (**cursor==' ' | **cursor==',') (*cursor)++;
+  while ((**cursor==' ') | (**cursor==',')) (*cursor)++;
 
   bool finding_key = true;
   bool finding_val = false;
@@ -304,7 +305,7 @@ Element create_element(char *name, char **cursor) {
         key_index++;
         (*cursor)++;
       } else {
-        if (**cursor==' ' | **cursor=='=') {
+        if ((**cursor==' ') | (**cursor=='=')) {
           while (!(isdigit(**cursor) | (**cursor=='+') | (**cursor=='-')) & (**cursor!=';')) {
             (*cursor)++;
           }
@@ -324,7 +325,7 @@ Element create_element(char *name, char **cursor) {
       key = arena_alloc(&mem_arena, 100*sizeof(char));
       key_index = 0;
       val = 0.0;
-      while (**cursor==',' | **cursor==' ') {
+      while ((**cursor==',') | (**cursor==' ')) {
         (*cursor)++;
       }
     }
@@ -378,25 +379,25 @@ Element create_element(char *name, char **cursor) {
     double K2L = result.as.multipole.K2L;
     double K3L = result.as.multipole.K3L;
     memcpy(new_result.name, result.name, strlen(result.name));
-    if (K2L == 0.0 & K3L == 0.0) {
+    if ((K2L == 0.0) & (K3L == 0.0)) {
       // This is actually a quad
       new_result.type = ELETYPE_QUAD;
       new_result.as.quad.length = result.as.multipole.length;
       new_result.as.quad.K1 = K1L;
       result = new_result;
-    } else if (K1L == 0.0 & K3L == 0.0) {
+    } else if ((K1L == 0.0) & (K3L == 0.0)) {
       // This is actually a sextupole
       new_result.type = ELETYPE_SEXTUPOLE;
       new_result.as.sextupole.length = result.as.multipole.length;
       new_result.as.sextupole.K2 = K2L;
       result = new_result;
-    } else if (K1L == 0.0 & K2L == 0.0) {
+    } else if ((K1L == 0.0) & (K2L == 0.0)) {
       // This is actually an octupole
       new_result.type = ELETYPE_OCTUPOLE;
       new_result.as.octupole.length = result.as.multipole.length;
       new_result.as.octupole.K3 = K3L;
       result = new_result;
-    } else if (K1L == 0.0 & K2L == 0.0 & K3L == 0.0) {
+    } else if ((K1L == 0.0) & (K2L == 0.0) & (K3L == 0.0)) {
       // This is actually a drift
       new_result.type = ELETYPE_DRIFT;
       new_result.as.drift.length = result.as.multipole.length;
