@@ -1,7 +1,7 @@
 CFLAGS = -O0 -Wall -Wpedantic -Wextra -std=c18 -ggdb
 CINCLUDES = -I./third_party/
 ifeq ($(OS),Windows_NT)
-	CC = clang
+	CC = gcc
 	CLIBS = 
 else
 	CC ?= clang
