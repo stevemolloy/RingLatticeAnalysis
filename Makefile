@@ -1,7 +1,11 @@
 CC = clang
 CFLAGS = -O0 -Wall -Wpedantic -Wextra -std=c18 -ggdb
 CINCLUDES = -I./third_party/
-CLIBS = -lm
+ifeq ($(OS),Windows_NT)
+	CLIBS = 
+else
+	CLIBS = -lm
+endif
 
 SRC = src
 OBJ = obj
