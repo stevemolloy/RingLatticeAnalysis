@@ -1,7 +1,7 @@
 #ifndef _LIB
 #define _LIB
 
-#if defined(WIN32)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #define STRERROR strerror_s
 #else
 #define STRERROR strerror
