@@ -27,11 +27,11 @@ all: $(BIN) $(TESTBIN)
 
 $(BIN): $(MAIN_OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
+	$(CC) $(CFLAGS) $(CINCLUDES) $^ -o $@ $(CLIBS)
 
 $(TESTBIN): $(TEST_OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) $^ -o $@
+	$(CC) $(CFLAGS) $(CINCLUDES) $^ -o $@ $(CLIBS)
 
 $(OBJ)/%.o: $(SRC)/%.c
 	@mkdir -p $(@D)
