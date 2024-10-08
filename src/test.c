@@ -6,9 +6,6 @@
 #include "elements.h"
 #include "lib.h"
 
-Element *element_list = NULL;
-ElementLibrary *element_library = NULL;
-
 bool test_matmul(void);
 bool test_sbend(void);
 
