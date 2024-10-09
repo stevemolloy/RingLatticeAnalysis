@@ -4,3 +4,4 @@ obj
 compile_commands.json
 tests/matmul_result.txt
 tests/sbend_result.txt
+tests/fulllat_allmats_result.txt

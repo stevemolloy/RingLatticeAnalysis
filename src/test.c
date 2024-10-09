@@ -6,12 +6,15 @@
 #include "elements.h"
 #include "lib.h"
 
+#include "stb_ds.h"
+
 bool test_matmul(void);
 bool test_sbend(void);
+bool test_full_lat_all_mats(void);
 
 typedef bool (*TestFunction)(void);
 
-TestFunction test_functions[] = {test_matmul, test_sbend};
+TestFunction test_functions[] = {test_matmul, test_sbend, test_full_lat_all_mats};
 
 int main(void) {
   bool result = true;
@@ -152,6 +155,44 @@ bool test_sbend(void) {
 
   fprintf(result_file, "Total matrix, R, for the line is:\n");
   rmatrix_print(result_file, line_matrix);
+
+  fclose(result_file);
+
+  bool comparison_result = compare_files(test_name, expected_filename, result_filename);
+  
+  return comparison_result;
+}
+
+bool test_full_lat_all_mats(void) {
+  const char *test_name = "FULL LAT ALL MATS TEST";
+  const char *expected_filename = "./tests/fulllat_allmats_expected.txt";
+  const char *result_filename =   "./tests/fulllat_allmats_result.txt";
+
+  const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
+
+  Element *line = {0};
+  generate_lattice(filename, &line);
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  FILE *result_file;
+  fopen_s(&result_file, result_filename, "w");
+#else
+  FILE *result_file = fopen(result_filename, "w");
+#endif
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    switch (line[i].type) {
+      case ELETYPE_DRIFT:     fprintf(result_file, "DRIFT\n"); break;
+      case ELETYPE_QUAD:      fprintf(result_file, "QUAD\n"); break;
+      case ELETYPE_SBEND:     fprintf(result_file, "SBEND\n"); break;
+      case ELETYPE_CAVITY:    fprintf(result_file, "CAVITY\n"); break;
+      case ELETYPE_SEXTUPOLE: fprintf(result_file, "SEXTUPOLE\n"); break;
+      case ELETYPE_OCTUPOLE:  fprintf(result_file, "OCTUPOLE\n"); break;
+      case ELETYPE_MULTIPOLE: fprintf(result_file, "MULTIPOLE\n"); break;
+    }
+    rmatrix_print(result_file, line[i].R_matrix);
+    fprintf(result_file, "\n");
+  }
 
   fclose(result_file);
 
