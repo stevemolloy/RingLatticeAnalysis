@@ -241,7 +241,8 @@ void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
-      fprintf(file, fmt_str, val);
+      if (val != 0.0) fprintf(file, fmt_str, val);
+      else fprintf(file, "%*c0", 12, ' ');
       if (i!=BEAM_DOFS-1) fprintf(file, ", ");
     }
     fprintf(file, "\n");
