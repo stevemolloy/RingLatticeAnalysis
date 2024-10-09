@@ -66,7 +66,8 @@ double element_length(Element element) {
     case ELETYPE_CAVITY:
       return element.as.cavity.length;
   }
-  assert(false && "Unreachable code");
+  fprintf(stderr, "Reached unreachable code. Something is badly wrong. Exiting.\n");
+  exit(1);
 }
 
 double bending_radius_of_element(Element element) {
