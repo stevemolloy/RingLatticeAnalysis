@@ -181,6 +181,7 @@ bool test_full_lat_all_mats(void) {
 #endif
 
   for (size_t i=0; i<arrlenu(line); i++) {
+    fprintf(result_file, "Element %03zu: ", i+1);
     switch (line[i].type) {
       case ELETYPE_DRIFT:     fprintf(result_file, "DRIFT\n"); break;
       case ELETYPE_QUAD:      fprintf(result_file, "QUAD\n"); break;
