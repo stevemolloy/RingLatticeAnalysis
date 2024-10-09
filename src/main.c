@@ -20,14 +20,33 @@ int main(int argc, char **argv) {
   Element *line = {0};
   generate_lattice(args.file_path, &line);
 
-  printf("\nSummary of the lattice defined in %s\n", args.file_path);
-  printf("\n");
-
   double line_length = calculate_line_length(line);
   double total_length = line_length * args.periodicity;
 
   double line_angle = calculate_line_angle(line);
   double total_angle = line_angle * args.periodicity;
+
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    switch (line[i].type) {
+      case ELETYPE_DRIFT:     printf("DRIFT\n"); break;
+      case ELETYPE_QUAD:      printf("QUAD\n"); break;
+      case ELETYPE_SBEND:     printf("SBEND\n"); break;
+      case ELETYPE_CAVITY:    printf("CAVITY\n"); break;
+      case ELETYPE_SEXTUPOLE: printf("SEXTUPOLE\n"); break;
+      case ELETYPE_OCTUPOLE:  printf("OCTUPOLE\n"); break;
+      case ELETYPE_MULTIPOLE: printf("MULTIPOLE\n"); break;
+    }
+    rmatrix_print(stdout, line[i].R_matrix);
+    printf("\n");
+  }
+  get_line_matrix(line_matrix, line);
+  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
+
+  printf("\nSummary of the lattice defined in %s\n", args.file_path);
+  printf("\n");
 
   bool closed_system = !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
   if (!closed_system) {
@@ -36,12 +55,6 @@ int main(int argc, char **argv) {
     printf("System does not close, so not calculating ring parameters.\n");
     printf("\n");
   }
-
-  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-
-  get_line_matrix(line_matrix, line);
-  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
 
   printf("Periodicity: %zu\n", args.periodicity);
   printf("Harmonic number: %d\n", args.harmonic_number);
