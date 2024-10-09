@@ -2,6 +2,7 @@ CFLAGS = -O0 -Wall -Wpedantic -Wextra -std=c18 -ggdb
 CINCLUDES = -I./third_party/
 ifeq ($(OS),Windows_NT)
 	CC = gcc
+	CFLAGS += -D__USE_MINGW_ANSI_STDIO
 	CLIBS = 
 else
 	CC ?= clang
