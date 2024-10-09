@@ -1,3 +1,5 @@
+#include <ctype.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,10 +13,11 @@
 bool test_matmul(void);
 bool test_sbend(void);
 bool test_full_lat_all_mats(void);
+bool compare_with_matlab(void);
 
 typedef bool (*TestFunction)(void);
 
-TestFunction test_functions[] = {test_matmul, test_sbend, test_full_lat_all_mats};
+TestFunction test_functions[] = {test_matmul, test_sbend, test_full_lat_all_mats, compare_with_matlab};
 
 int main(void) {
   bool result = true;
@@ -200,5 +203,123 @@ bool test_full_lat_all_mats(void) {
   bool comparison_result = compare_files(test_name, expected_filename, result_filename);
   
   return comparison_result;
+}
+
+bool compare_arrays(double *mat1, double *mat2, size_t n) {
+  for (size_t i=0; i<n; i++) {
+    if (fabs(mat1[i] - mat2[i]) > 1e-6) {
+      printf("    Difference is %e\n", fabs(mat1[i] - mat2[i]));
+      return false;
+    }
+  }
+  return true;
+}
+
+bool compare_with_matlab(void) {
+  const char *test_name = "MATLAB_COMPARISON TEST";
+
+  const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
+
+  Element *line = {0};
+  generate_lattice(filename, &line);
+
+  const char *matlab_output_filename = "./tests/matlab_output.txt";
+  char *matlab_output_buffer = read_entire_file(matlab_output_filename);
+  char *cursor = matlab_output_buffer;
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    if (strncmp(cursor, "Element ", 8) != 0) {
+      printf("%s FAILED\n", test_name);
+      printf("    Error while parsing element %zu\n", i+1);
+      printf("    Expected the text \"Element\", but got something else. File not formatted correctly.\n");
+      return false;
+    }
+    cursor += 8;
+    size_t ele_num = strtol(cursor, &cursor, 10);
+    if (ele_num != i+1) {
+      printf("%s FAILED\n", test_name);
+      printf("    Error while parsing element %zu\n", i+1);
+      printf("    Got an unexpected element number from the matlab output file\n");
+      return false;
+    }
+    while ((*cursor==':') || isspace(*cursor)) {
+      cursor++;
+    }
+    if ((strncmp(cursor, "Drift", 5) == 0)) {
+      cursor += 5;
+      if (line[i].type != ELETYPE_DRIFT) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected a DRIFT, but got something else.\n");
+        return false;
+      }
+    } else if ((strncmp(cursor, "Marker", 6) == 0)) {
+      cursor += 6;
+      if (line[i].type != ELETYPE_DRIFT) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected a DRIFT, but got something else.\n");
+        return false;
+      }
+    } else if ((strncmp(cursor, "Monitor", 7) == 0)) {
+      cursor += 7;
+      if (line[i].type != ELETYPE_DRIFT) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected a DRIFT, but got something else.\n");
+        return false;
+      }
+    } else if ((strncmp(cursor, "Corrector", 9) == 0)) {
+      cursor += 9;
+      if (line[i].type != ELETYPE_DRIFT) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected a DRIFT, but got something else.\n");
+        return false;
+      }
+    } else if ((strncmp(cursor, "Multipole", 9) == 0)) {
+      cursor += 9;
+      if ((line[i].type != ELETYPE_SBEND) && 
+        (line[i].type != ELETYPE_QUAD) && 
+        (line[i].type != ELETYPE_OCTUPOLE) && 
+        (line[i].type != ELETYPE_SEXTUPOLE) && 
+        (line[i].type != ELETYPE_MULTIPOLE)) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected something that matches a multipole, but got something else.\n");
+        return false;
+      }
+    } else if ((strncmp(cursor, "Bend", 4) == 0)) {
+      cursor += 4;
+      if ((line[i].type != ELETYPE_SBEND)) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected something that matches a multipole, but got something else.\n");
+        return false;
+      }
+    } else {
+      printf("%s FAILED\n", test_name);
+      printf("    Error while parsing element %zu\n", i+1);
+      printf("    Got an unknown element type.\n");
+      return false;
+    }
+
+    double mat_from_matlab[BEAM_DOFS*BEAM_DOFS] = {0};
+    for (size_t j=0; j<BEAM_DOFS*BEAM_DOFS; j++) {
+      mat_from_matlab[j] = strtod(cursor, &cursor);
+    }
+    if (!compare_arrays(mat_from_matlab, line[i].R_matrix, BEAM_DOFS*BEAM_DOFS)) {
+      printf("%s FAILED\n", test_name);
+      printf("    Error while parsing element %zu\n", i+1);
+      printf("    Matrices not equal.\n");
+      return false;
+    }
+
+    while (isspace(*cursor)) {
+      cursor++;
+    }
+  }
+
+  return true;
 }
 
