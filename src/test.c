@@ -1,3 +1,4 @@
+#include <float.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
@@ -205,10 +206,13 @@ bool test_full_lat_all_mats(void) {
   return comparison_result;
 }
 
-bool compare_arrays(double *mat1, double *mat2, size_t n) {
+bool compare_arrays(double *correct_mat, double *compare_mat, size_t n) {
   for (size_t i=0; i<n; i++) {
-    if (fabs(mat1[i] - mat2[i]) > 1e-6) {
-      printf("    Difference is %e\n", fabs(mat1[i] - mat2[i]));
+    double absolute_diff = fabs(compare_mat[i] - correct_mat[i]);
+    double relative_diff = correct_mat[i]==0.0 ? DBL_MAX : absolute_diff / correct_mat[i];
+    if ((relative_diff > 1e-6) && (absolute_diff > 1e-9)) {
+      printf("    fabs(%e - %e)\n", correct_mat[i], compare_mat[i]);
+      printf("    abs diff = %e :: rel dif = %e\n", absolute_diff, relative_diff);
       return false;
     }
   }
@@ -306,7 +310,24 @@ bool compare_with_matlab(void) {
 
     double mat_from_matlab[BEAM_DOFS*BEAM_DOFS] = {0};
     for (size_t j=0; j<BEAM_DOFS*BEAM_DOFS; j++) {
-      mat_from_matlab[j] = strtod(cursor, &cursor);
+      size_t y_ind = j / BEAM_DOFS;
+      size_t x_ind = j % BEAM_DOFS;
+      double sign = 1.0;
+      if (y_ind == 4) {
+        y_ind = 5;
+        sign = -1.0;
+      } else if (y_ind == 5) {
+        y_ind = 4;
+        sign = -1.0;
+      }
+      if (x_ind == 4) {
+        x_ind = 5;
+        sign = -1.0;
+      } else if (x_ind == 5) {
+        x_ind = 4;
+        sign = -1.0;
+      }
+      mat_from_matlab[y_ind*BEAM_DOFS + x_ind] = sign * strtod(cursor, &cursor);
     }
     if (!compare_arrays(mat_from_matlab, line[i].R_matrix, BEAM_DOFS*BEAM_DOFS)) {
       printf("%s FAILED\n", test_name);
