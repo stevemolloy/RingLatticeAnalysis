@@ -125,6 +125,8 @@ bool test_sbend(void) {
   fclose(result_file);
 
   bool comparison_result = compare_files(test_name, expected_filename, result_filename);
+
+  arrfree(line);
   
   return comparison_result;
 }
@@ -165,6 +167,8 @@ bool test_full_lat_all_mats(void) {
 
   bool comparison_result = compare_files(test_name, expected_filename, result_filename);
   
+  arrfree(line);
+
   return comparison_result;
 }
 
@@ -311,6 +315,9 @@ bool compare_with_matlab(void) {
       cursor++;
     }
   }
+
+  free(matlab_output_buffer);
+  arrfree(line);
 
   printf("%s PASSED\n", test_name);
   return true;
