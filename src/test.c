@@ -11,6 +11,8 @@
 
 #include "stb_ds.h"
 
+bool compare_files(const char *testname, const char *filename1, const char *filename2);
+
 bool test_matmul(void);
 bool test_sbend(void);
 bool test_full_lat_all_mats(void);
@@ -95,47 +97,7 @@ bool test_matmul(void) {
 
   fclose(result_file);
 
-  char *expected_buff = read_entire_file(expected_filename);
-  char *result_buff = read_entire_file(result_filename);
-  
-  bool comparison_result = true;
-  if (strcmp(expected_buff, result_buff) != 0) {
-    printf("%s FAILED\n", test_name);
-    printf("    Expected (%s) does not match actual (%s)\n", expected_filename, result_filename);
-    comparison_result = false;
-  } else {
-    printf("%s PASSED\n", test_name);
-  }
-
-  free(expected_buff);
-  free(result_buff);
-
-  return comparison_result;
-}
-
-bool compare_files(const char *testname, const char *filename1, const char *filename2) {
-  bool comparison_result = true;
-  char *expected_buff = read_entire_file(filename1);
-  char *result_buff = read_entire_file(filename2);
-  
-  if (strcmp(expected_buff, result_buff) != 0) {
-    comparison_result = false;
-  } else {
-    comparison_result = true;
-  }
-
-  if (!comparison_result) {
-    printf("%s FAILED\n", testname);
-    printf("    Expected (%s) does not match actual (%s)\n", filename1, filename2);
-    comparison_result = false;
-  } else {
-    printf("%s PASSED\n", testname);
-  }
-
-  free(expected_buff);
-  free(result_buff);
-
-  return comparison_result;
+  return compare_files(test_name, expected_filename, result_filename);
 }
 
 bool test_sbend(void) {
@@ -352,5 +314,30 @@ bool compare_with_matlab(void) {
 
   printf("%s PASSED\n", test_name);
   return true;
+}
+
+bool compare_files(const char *testname, const char *filename1, const char *filename2) {
+  bool comparison_result = true;
+  char *expected_buff = read_entire_file(filename1);
+  char *result_buff = read_entire_file(filename2);
+  
+  if (strcmp(expected_buff, result_buff) != 0) {
+    comparison_result = false;
+  } else {
+    comparison_result = true;
+  }
+
+  if (!comparison_result) {
+    printf("%s FAILED\n", testname);
+    printf("    Expected (%s) does not match actual (%s)\n", filename1, filename2);
+    comparison_result = false;
+  } else {
+    printf("%s PASSED\n", testname);
+  }
+
+  free(expected_buff);
+  free(result_buff);
+
+  return comparison_result;
 }
 
