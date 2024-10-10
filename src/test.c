@@ -207,16 +207,17 @@ bool test_full_lat_all_mats(void) {
 }
 
 bool compare_arrays(double *correct_mat, double *compare_mat, size_t n) {
+  bool result = true;
   for (size_t i=0; i<n; i++) {
     double absolute_diff = fabs(compare_mat[i] - correct_mat[i]);
     double relative_diff = correct_mat[i]==0.0 ? DBL_MAX : absolute_diff / correct_mat[i];
     if ((relative_diff > 1e-6) && (absolute_diff > 1e-9)) {
       printf("    fabs(%e - %e)\n", correct_mat[i], compare_mat[i]);
       printf("    abs diff = %e :: rel dif = %e\n", absolute_diff, relative_diff);
-      return false;
+      result = false;
     }
   }
-  return true;
+  return result;
 }
 
 bool compare_with_matlab(void) {
@@ -301,6 +302,14 @@ bool compare_with_matlab(void) {
         printf("    Expected something that matches a multipole, but got something else.\n");
         return false;
       }
+    } else if ((strncmp(cursor, "RFCavity", 8) == 0)) {
+      cursor += 8;
+      if ((line[i].type != ELETYPE_CAVITY)) {
+        printf("%s FAILED\n", test_name);
+        printf("    Error while parsing element %zu\n", i+1);
+        printf("    Expected something that matches a multipole, but got something else.\n");
+        return false;
+      }
     } else {
       printf("%s FAILED\n", test_name);
       printf("    Error while parsing element %zu\n", i+1);
@@ -341,6 +350,7 @@ bool compare_with_matlab(void) {
     }
   }
 
+  printf("%s PASSED\n", test_name);
   return true;
 }
 

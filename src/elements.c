@@ -160,6 +160,8 @@ static void calc_sbend_matrix(Element *element) {
   double rho = L / angle;
   double h = 1 / rho;
 
+  double h_sign = h / fabs(h);
+
   double omega_x_sqr = pow(h, 2) + K1;
   double omega_x = sqrt(fabs(omega_x_sqr));
   double omega_x_L = omega_x * L;
@@ -195,17 +197,17 @@ static void calc_sbend_matrix(Element *element) {
       coslike_func = &cosh;
       sign = 1;
     }
-    assert((sign == 1) | (sign == -1) && "Sign value has been corrupted");
+    assert(((sign == 1) || (sign == -1)) && "Sign value has been corrupted");
     element->R_matrix[0*BEAM_DOFS + 0] = coslike_func(omega_x_L);
     element->R_matrix[0*BEAM_DOFS + 1] = (1/omega_x) * sinlike_func(omega_x_L);
     element->R_matrix[1*BEAM_DOFS + 0] = sign * omega_x * sinlike_func(omega_x_L);
     element->R_matrix[1*BEAM_DOFS + 1] = coslike_func(omega_x_L);
 
-    element->R_matrix[0*BEAM_DOFS + 5] = (h/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
-    element->R_matrix[1*BEAM_DOFS + 5] = (h/omega_x) * sinlike_func(omega_x_L);
+    element->R_matrix[0*BEAM_DOFS + 5] = (fabs(h)/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
+    element->R_matrix[1*BEAM_DOFS + 5] = (fabs(h)/omega_x) * sinlike_func(omega_x_L);
 
-    element->R_matrix[4*BEAM_DOFS + 0] = -element->R_matrix[1*BEAM_DOFS + 5];
-    element->R_matrix[4*BEAM_DOFS + 1] = -element->R_matrix[0*BEAM_DOFS + 5];
+    element->R_matrix[4*BEAM_DOFS + 0] = h_sign * -element->R_matrix[1*BEAM_DOFS + 5];
+    element->R_matrix[4*BEAM_DOFS + 1] = h_sign * -element->R_matrix[0*BEAM_DOFS + 5];
 
     element->R_matrix[4*BEAM_DOFS + 4] = 1;
     element->R_matrix[4*BEAM_DOFS + 5] = -pow(h,2)*(omega_x_L - sinlike_func(omega_x_L)) / pow(omega_x, 3);
@@ -228,7 +230,7 @@ static void calc_sbend_matrix(Element *element) {
       coslike_func = cos;
       sign = -1;
     }
-    assert((sign == 1) | (sign == -1) && "Sign value has been corrupted");
+    assert(((sign == 1) || (sign == -1)) && "Sign value has been corrupted");
     element->R_matrix[2*BEAM_DOFS + 2] = coslike_func(omega_y_L);
     element->R_matrix[2*BEAM_DOFS + 3] = (1/omega_y) * sinlike_func(omega_y_L);
     element->R_matrix[3*BEAM_DOFS + 2] = sign * omega_y * sinlike_func(omega_y_L);
