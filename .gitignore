@@ -5,3 +5,6 @@ compile_commands.json
 tests/matmul_result.txt
 tests/sbend_result.txt
 tests/fulllat_allmats_result.txt
+lattices/m4U_240618_f02_02_01_01
+lattices/m4U_240521_b03_03_07_06.mat
+lattices/m4Uc_240521_b03_03_07_06.m
