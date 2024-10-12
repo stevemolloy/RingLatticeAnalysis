@@ -40,7 +40,7 @@ $(OBJ)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) $(CINCLUDES) -c $< -o $@
 
 clean:
-	rm -rf $(BINDIR) $(OBJ)
+	rm -rf $(BINDIR) $(OBJ) tests/*result*
 
 $(OBJ):
 	@mkdir -p $@
