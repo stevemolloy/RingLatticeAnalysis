@@ -236,12 +236,12 @@ static void calc_sbend_matrix(Element *element) {
 }
 
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
-  char *fmt_str = "%+0.16e";
+  char *fmt_str = "%+0.6e";
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
       if (val != 0.0) fprintf(file, fmt_str, val);
-      else fprintf(file, "%*c0", 22, ' ');
+      else fprintf(file, "%*c0", 12, ' ');
       if (i!=BEAM_DOFS-1) fprintf(file, ", ");
     }
     fprintf(file, "\n");
@@ -577,9 +577,6 @@ void get_line_matrix(double *matrix, Element *line) {
     matrix_multiply(line[i].R_matrix, matrix, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS);
     memcpy(matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
 
-    printf("%zu %s\n", i, line[i].name);
-    rmatrix_print(stdout, matrix);
-    printf("\n");
   }
 }
 
