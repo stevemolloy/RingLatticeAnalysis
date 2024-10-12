@@ -157,10 +157,7 @@ static void calc_sbend_matrix(Element *element) {
   double K1 = element->as.sbend.K1;
   double L = element->as.sbend.length;
   double angle = element->as.sbend.angle;
-  double rho = L / angle;
-  double h = 1 / rho;
-
-  double h_sign = h / fabs(h);
+  double h = angle / L;
 
   double omega_x_sqr = pow(h, 2) + K1;
   double omega_x = sqrt(fabs(omega_x_sqr));
@@ -203,11 +200,11 @@ static void calc_sbend_matrix(Element *element) {
     element->R_matrix[1*BEAM_DOFS + 0] = sign * omega_x * sinlike_func(omega_x_L);
     element->R_matrix[1*BEAM_DOFS + 1] = coslike_func(omega_x_L);
 
-    element->R_matrix[0*BEAM_DOFS + 5] = (fabs(h)/pow(omega_x,2)) * (1 - coslike_func(omega_x_L));
-    element->R_matrix[1*BEAM_DOFS + 5] = (fabs(h)/omega_x) * sinlike_func(omega_x_L);
+    element->R_matrix[0*BEAM_DOFS + 5] = (h/omega_x_sqr) * (1 - coslike_func(omega_x_L));
+    element->R_matrix[1*BEAM_DOFS + 5] = (h/omega_x) * sinlike_func(omega_x_L);
 
-    element->R_matrix[4*BEAM_DOFS + 0] = h_sign * -element->R_matrix[1*BEAM_DOFS + 5];
-    element->R_matrix[4*BEAM_DOFS + 1] = h_sign * -element->R_matrix[0*BEAM_DOFS + 5];
+    element->R_matrix[4*BEAM_DOFS + 0] = element->R_matrix[1*BEAM_DOFS + 5];
+    element->R_matrix[4*BEAM_DOFS + 1] = element->R_matrix[0*BEAM_DOFS + 5];
 
     element->R_matrix[4*BEAM_DOFS + 4] = 1;
     element->R_matrix[4*BEAM_DOFS + 5] = -pow(h,2)*(omega_x_L - sinlike_func(omega_x_L)) / pow(omega_x, 3);
@@ -239,12 +236,12 @@ static void calc_sbend_matrix(Element *element) {
 }
 
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
-  char *fmt_str = "%+0.6e";
+  char *fmt_str = "%+0.16e";
   for (size_t j=0; j<BEAM_DOFS; j++) {
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
       if (val != 0.0) fprintf(file, fmt_str, val);
-      else fprintf(file, "%*c0", 12, ' ');
+      else fprintf(file, "%*c0", 22, ' ');
       if (i!=BEAM_DOFS-1) fprintf(file, ", ");
     }
     fprintf(file, "\n");
@@ -579,6 +576,10 @@ void get_line_matrix(double *matrix, Element *line) {
     double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
     matrix_multiply(line[i].R_matrix, matrix, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS);
     memcpy(matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
+
+    printf("%zu %s\n", i, line[i].name);
+    rmatrix_print(stdout, matrix);
+    printf("\n");
   }
 }
 
