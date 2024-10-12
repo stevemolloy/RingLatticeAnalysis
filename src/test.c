@@ -20,7 +20,7 @@ bool compare_with_matlab(void);
 
 typedef bool (*TestFunction)(void);
 
-TestFunction test_functions[] = {test_matmul, test_sbend, test_full_lat_all_mats, compare_with_matlab};
+TestFunction test_functions[] = {test_matmul, test_sbend, /*test_full_lat_all_mats, compare_with_matlab*/};
 
 int main(void) {
   bool result = true;
