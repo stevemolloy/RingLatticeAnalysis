@@ -649,6 +649,9 @@ CommandLineArgs get_clargs(int argc, char **argv) {
       args.harmonic_number = atoi(nob_shift_args(&argc, &argv));
     } else if (strcmp(next_arg, "-E")==0) {
       args.E_0 = strtod(nob_shift_args(&argc, &argv), NULL);
+    } else if (strcmp(next_arg, "--save_disp")==0) {
+      args.save_dispersion = true;
+      args.dispersion_filename = nob_shift_args(&argc, &argv);
     } else {
       args.file_path = next_arg;
     }

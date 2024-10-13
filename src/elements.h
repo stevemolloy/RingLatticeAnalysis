@@ -27,6 +27,8 @@ typedef struct {
   double E_0;
   char *file_path;
   char *programname;
+  char *dispersion_filename;
+  bool save_dispersion;
 } CommandLineArgs;
 
 typedef struct {

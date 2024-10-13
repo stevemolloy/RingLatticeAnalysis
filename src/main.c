@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "lib.h"
 #include "elements.h"
@@ -123,6 +124,20 @@ int main(int argc, char **argv) {
     printf("\n");
     printf("eta_x at beginning of the line  = %0.6e\n", eta_x);
 
+    if (args.save_dispersion) {
+      FILE *savefile = fopen(args.dispersion_filename, "w");
+      fprintf(savefile, "S / m, Eta / m\n");
+      double eta_vec[3] = {eta_x, 0.0f, 1.0f};
+      double S = 0.0f;
+      for (size_t i=0; i<arrlenu(line); i++) {
+        double temp_vec[3] = {0};
+        matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_vec, 3, 3, 3, 1);
+        memcpy(eta_vec, temp_vec, 3*sizeof(double));
+        S += element_length(line[i]);
+        fprintf(savefile, "%0.12e, %0.12e\n", S, eta_vec[0]);
+      }
+      fclose(savefile);
+    }
   }
 
   printf("\n");
