@@ -17,10 +17,11 @@ bool test_matmul(void);
 bool test_sbend(void);
 bool test_full_lat_all_mats(void);
 bool compare_with_matlab(void);
+bool test_threebythree(void);
 
 typedef bool (*TestFunction)(void);
 
-TestFunction test_functions[] = {test_matmul, test_sbend, /*test_full_lat_all_mats, compare_with_matlab*/};
+TestFunction test_functions[] = {test_matmul, test_sbend, /*test_full_lat_all_mats, compare_with_matlab*/ test_threebythree};
 
 int main(void) {
   bool result = true;
@@ -41,6 +42,29 @@ int main(void) {
 
   if (!result) return 1;
   return 0;
+}
+
+bool test_threebythree(void) {
+  const char *test_name = "MULTIPLY MATRIX BY VECTOR TEST";
+  double threebythree[9] = {
+    1, 2, 3,
+    4, 5, 6,
+    7, 8, 9,
+  };
+  double vec3[3] = {2, 2, 2};
+  double result[3] = {0};
+  double expected[3] = {12, 30, 48};
+
+  matrix_multiply(threebythree, vec3, result, 3, 3, 3, 1);
+  for (size_t i=0; i<3; i++) {
+    if (result[i] != expected[i]) {
+      printf("%s FAILED\n", test_name);
+      return false;
+    }
+  }
+
+  printf("%s PASSED\n", test_name);
+  return true;
 }
 
 bool test_matmul(void) {

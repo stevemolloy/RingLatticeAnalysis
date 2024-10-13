@@ -544,14 +544,16 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
     return false;
   }
 
+  size_t r3 = r1;
   size_t c3 = c2;
 
-  for (size_t row=0; row<r1; row++) {
-    for (size_t col=0; col<c2; col++) {
-      result[row*c3 + col] = 0;
+  for (size_t row=0; row<r3; row++) {
+    for (size_t col=0; col<c3; col++) {
+      size_t output_ind = row*c3 + col;
+      result[output_ind] = 0;
 
       for (size_t k=0; k<c1; k++) {
-        result[row*c3 + col] += mat1[row*c3 + k] * mat2[k*c3 + col];
+        result[output_ind] += mat1[row*c1 + k] * mat2[k*c2 + col];
       }
     }
   }
