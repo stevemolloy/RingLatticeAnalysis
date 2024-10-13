@@ -115,31 +115,14 @@ int main(int argc, char **argv) {
     printf("x fractional tune = %f\n", acos(x_trace) / (2*M_PI));
     printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
 
-    double R11 = total_matrix[0*BEAM_DOFS + 0];
-    double R12 = total_matrix[0*BEAM_DOFS + 1];
-    double R21 = total_matrix[1*BEAM_DOFS + 0];
-    double R22 = total_matrix[1*BEAM_DOFS + 1];
-    double R16 = total_matrix[0*BEAM_DOFS + 5];
-    double R26 = total_matrix[1*BEAM_DOFS + 5];
+    const double R11 = total_matrix[0*BEAM_DOFS + 0];
+    const double R16 = total_matrix[0*BEAM_DOFS + 5];
 
-    double eta_x  = R16 / (1 - R11);
-
-    printf("eta_x  = %0.6e\n", eta_x);
-
-    double disp_vec[3*1] = {eta_x, 0.0f, 1.0f};
-    double three_by_three[3*3] = {
-      R11, R12, R16,
-      R21, R22, R26,
-      0.0f, 0.0f, 1.0f,
-    };
-
-    double repeat_test[3*1];
-    matrix_multiply(three_by_three, disp_vec, repeat_test, 3, 3, 3, 1);
+    const double eta_x  = R16 / (1 - R11);
 
     printf("\n");
-    printf("eta_x_1 = %0.6e\n", repeat_test[0]);
-    printf("eta_px_1 = %0.6e\n", repeat_test[1]);
-    printf("One? = %0.6e\n", repeat_test[2]);
+    printf("eta_x at beginning of the line  = %0.6e\n", eta_x);
+
   }
 
   printf("\n");
