@@ -125,8 +125,8 @@ int main(int argc, char **argv) {
     double eta_x  = ((1 - R22)*R16 -    R12   *R26) / (1 - R11 - R22 + R11*R22 - R12*R21);
     double eta_px = (  -R21   *R16 + (1 - R11)*R26) / (1 - R11 - R22 + R11*R22 - R12*R21);
 
-    printf("eta_x  = %f\n", eta_x);
-    printf("eta_px = %f\n", eta_px);
+    printf("eta_x  = %0.6e\n", eta_x);
+    printf("eta_px = %0.6e\n", eta_px);
   }
 
   printf("\n");
