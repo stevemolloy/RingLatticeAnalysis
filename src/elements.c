@@ -113,6 +113,16 @@ static void make_r_matrix(Element *element) {
       calc_sbend_matrix(element);
       break;
   }
+
+  element->eta_prop_matrix[0*3 + 0] = element->R_matrix[0*BEAM_DOFS + 0];
+  element->eta_prop_matrix[0*3 + 1] = element->R_matrix[0*BEAM_DOFS + 1];
+  element->eta_prop_matrix[0*3 + 2] = element->R_matrix[0*BEAM_DOFS + 5];
+  element->eta_prop_matrix[1*3 + 0] = element->R_matrix[1*BEAM_DOFS + 0];
+  element->eta_prop_matrix[1*3 + 1] = element->R_matrix[1*BEAM_DOFS + 1];
+  element->eta_prop_matrix[1*3 + 2] = element->R_matrix[1*BEAM_DOFS + 5];
+  element->eta_prop_matrix[2*3 + 0] = 0.0f;
+  element->eta_prop_matrix[2*3 + 1] = 0.0f;
+  element->eta_prop_matrix[2*3 + 2] = 1.0f;
 }
 
 static void calc_quad_matrix(Element *element) {

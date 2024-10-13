@@ -88,6 +88,7 @@ typedef struct {
   char name[ELENAME_MAX_LEN];
   EleType type;
   double R_matrix[BEAM_DOFS*BEAM_DOFS];
+  double eta_prop_matrix[9];
   union {
     Drift drift;
     Quad quad;
