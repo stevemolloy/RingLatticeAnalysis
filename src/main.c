@@ -134,15 +134,39 @@ int main(int argc, char **argv) {
     printf("beta_x at beginning of the line = %0.6e\n", beta_x);
     printf("beta_y at beginning of the line = %0.6e\n", beta_y);
 
+    double *Ss = {0};
     double *element_etas = {0};
     double *element_etaps = {0};
+    double *element_beta_xs = {0};
+    double *element_beta_ys = {0};
+
+    double S = 0.0;
     double eta_vec[3] = {eta_x, 0.0f, 1.0f};
+    double twiss_x_vec[3] = {beta_x, 0.0f, 1/beta_x};
+    double twiss_y_vec[3] = {beta_y, 0.0f, 1/beta_y};
+
+    arrput(Ss, 0.0);
     arrput(element_etas, eta_vec[0]);
     arrput(element_etaps, eta_vec[1]);
+    arrput(element_beta_xs, beta_x);
+    arrput(element_beta_ys, beta_y);
     for (size_t i=0; i<arrlenu(line); i++) {
-      double temp_vec[3] = {0};
-      matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_vec, 3, 3, 3, 1);
-      memcpy(eta_vec, temp_vec, 3*sizeof(double));
+      S += element_length(line[i]);
+      arrput(Ss, S);
+
+      double temp_twiss_x_vec[3] = {0};
+      matrix_multiply(line[i].twiss_prop_matrix_x, twiss_x_vec, temp_twiss_x_vec, 3, 3, 3, 1);
+      memcpy(twiss_x_vec, temp_twiss_x_vec, 3*sizeof(double));
+      arrput(element_beta_xs, twiss_x_vec[0]);
+
+      double temp_twiss_y_vec[3] = {0};
+      matrix_multiply(line[i].twiss_prop_matrix_y, twiss_y_vec, temp_twiss_y_vec, 3, 3, 3, 1);
+      memcpy(twiss_y_vec, temp_twiss_y_vec, 3*sizeof(double));
+      arrput(element_beta_ys, twiss_y_vec[0]);
+
+      double temp_eta_vec[3] = {0};
+      matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
+      memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
       arrput(element_etas, eta_vec[0]);
       arrput(element_etaps, eta_vec[1]);
     }
@@ -178,6 +202,9 @@ int main(int argc, char **argv) {
   
     arrfree(element_etas);
     arrfree(element_etaps);
+    arrfree(element_beta_xs);
+    arrfree(element_beta_ys);
+    arrfree(Ss);
   }
 
   printf("\n");

@@ -123,6 +123,28 @@ static void make_r_matrix(Element *element) {
   element->eta_prop_matrix[2*3 + 0] = 0.0f;
   element->eta_prop_matrix[2*3 + 1] = 0.0f;
   element->eta_prop_matrix[2*3 + 2] = 1.0f;
+
+  element->twiss_prop_matrix_x[0*3 + 0] = pow(element->R_matrix[0*BEAM_DOFS + 0], 2);
+  element->twiss_prop_matrix_x[0*3 + 1] = -2.0f * element->R_matrix[0*BEAM_DOFS + 0] * element->R_matrix[0*BEAM_DOFS + 1];
+  element->twiss_prop_matrix_x[0*3 + 2] = pow(element->R_matrix[0*BEAM_DOFS + 1], 2);
+  element->twiss_prop_matrix_x[1*3 + 0] = -1.0f * element->R_matrix[0*BEAM_DOFS + 0] * element->R_matrix[1*BEAM_DOFS + 0];
+  element->twiss_prop_matrix_x[1*3 + 1] = element->R_matrix[0*BEAM_DOFS + 0] * element->R_matrix[1*BEAM_DOFS + 1] + 
+    element->R_matrix[0*BEAM_DOFS + 1] * element->R_matrix[1*BEAM_DOFS + 0];;
+  element->twiss_prop_matrix_x[1*3 + 2] = -1.0f * element->R_matrix[0*BEAM_DOFS + 1] * element->R_matrix[1*BEAM_DOFS + 1];
+  element->twiss_prop_matrix_x[2*3 + 0] = pow(element->R_matrix[1*BEAM_DOFS + 0], 2);
+  element->twiss_prop_matrix_x[2*3 + 1] = -2.0f * element->R_matrix[1*BEAM_DOFS + 0] * element->R_matrix[1*BEAM_DOFS + 1];
+  element->twiss_prop_matrix_x[2*3 + 2] = pow(element->R_matrix[1*BEAM_DOFS + 1], 2);
+
+  element->twiss_prop_matrix_y[0*3 + 0] = pow(element->R_matrix[2*BEAM_DOFS + 2], 2);
+  element->twiss_prop_matrix_y[0*3 + 1] = -2.0f * element->R_matrix[2*BEAM_DOFS + 2] * element->R_matrix[2*BEAM_DOFS + 3];
+  element->twiss_prop_matrix_y[0*3 + 2] = pow(element->R_matrix[2*BEAM_DOFS + 3], 2);
+  element->twiss_prop_matrix_y[1*3 + 0] = -1.0f * element->R_matrix[2*BEAM_DOFS + 2] * element->R_matrix[3*BEAM_DOFS + 2];
+  element->twiss_prop_matrix_y[1*3 + 1] = element->R_matrix[2*BEAM_DOFS + 2] * element->R_matrix[3*BEAM_DOFS + 3] + 
+    element->R_matrix[2*BEAM_DOFS + 3] * element->R_matrix[3*BEAM_DOFS + 2];;
+  element->twiss_prop_matrix_y[1*3 + 2] = -1.0f * element->R_matrix[2*BEAM_DOFS + 3] * element->R_matrix[3*BEAM_DOFS + 3];
+  element->twiss_prop_matrix_y[2*3 + 0] = pow(element->R_matrix[3*BEAM_DOFS + 2], 2);
+  element->twiss_prop_matrix_y[2*3 + 1] = -2.0f * element->R_matrix[3*BEAM_DOFS + 2] * element->R_matrix[3*BEAM_DOFS + 3];
+  element->twiss_prop_matrix_y[2*3 + 2] = pow(element->R_matrix[3*BEAM_DOFS + 3], 2);
 }
 
 static void calc_quad_matrix(Element *element) {
