@@ -639,6 +639,8 @@ CommandLineArgs get_clargs(int argc, char **argv) {
     .harmonic_number = 1,
     .E_0 = 0,
     .file_path = NULL,
+    .save_dispersion = false,
+    .dispersion_filename = NULL,
   };
 
   while (argc > 0) {
