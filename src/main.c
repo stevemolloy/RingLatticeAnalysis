@@ -73,20 +73,17 @@ int main(int argc, char **argv) {
            args.periodicity, radians_to_degrees(total_angle));
   }
 
+  double I_1, I_2, I_3, I_4;//, I_5;
   if (closed_system) {
     double rf_freq = C / (total_length / args.harmonic_number);
 
     double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
-    double I2 = synch_rad_integral_2(line, args.periodicity);
-    double I3 = synch_rad_integral_3(line, args.periodicity);
+    I_2 = synch_rad_integral_2(line, args.periodicity);
+    I_3 = synch_rad_integral_3(line, args.periodicity);
 
     printf("RF frequency for a hamonic number of %d: %0.6f MHz\n", args.harmonic_number, rf_freq/1e6);
     printf("\n");
-    printf("Synchrotron radiation integrals:\n");
-    printf("\tI_2 = %f\n", I2);
-    printf("\tI_3 = %f\n", I3);
-    printf("\n");
-    printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I2, gamma_0) / 1e3);
+    printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I_2, gamma_0) / 1e3);
   }
 
   printf("\n");
@@ -124,20 +121,46 @@ int main(int argc, char **argv) {
     printf("\n");
     printf("eta_x at beginning of the line  = %0.6e\n", eta_x);
 
-    if (args.save_dispersion) {
-      FILE *savefile = fopen(args.dispersion_filename, "w");
-      fprintf(savefile, "S / m, Eta / m\n");
-      double eta_vec[3] = {eta_x, 0.0f, 1.0f};
-      double S = 0.0f;
-      for (size_t i=0; i<arrlenu(line); i++) {
-        double temp_vec[3] = {0};
-        matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_vec, 3, 3, 3, 1);
-        memcpy(eta_vec, temp_vec, 3*sizeof(double));
-        S += element_length(line[i]);
-        fprintf(savefile, "%0.12e, %0.12e\n", S, eta_vec[0]);
-      }
-      fclose(savefile);
+    double *element_etas = {0};
+    double *element_etaps = {0};
+    double eta_vec[3] = {eta_x, 0.0f, 1.0f};
+    arrput(element_etas, eta_vec[0]);
+    arrput(element_etaps, eta_vec[1]);
+    for (size_t i=0; i<arrlenu(line); i++) {
+      double temp_vec[3] = {0};
+      matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_vec, 3, 3, 3, 1);
+      memcpy(eta_vec, temp_vec, 3*sizeof(double));
+      arrput(element_etas, eta_vec[0]);
+      arrput(element_etaps, eta_vec[1]);
     }
+
+    I_1 = 0.0f;
+    I_4 = 0.0f;
+    for (size_t i=0; i<arrlenu(line); i++) {
+      if (line[i].type == ELETYPE_SBEND) {
+        double eta = (element_etas[i]+element_etas[i+1]) / 2;
+        double h = line[i].as.sbend.angle / line[i].as.sbend.length;
+        double K = line[i].as.sbend.K1;
+        double L = line[i].as.sbend.length;
+
+        I_1 += h * L * eta;
+        I_4 += eta * h * L * (2*K + h*h);
+      }
+    }
+
+    I_1 *= args.periodicity;
+
+    printf("\n");
+    printf("Synchrotron radiation integrals:\n");
+    printf("\tI_1 = %0.3e  (%0.3e for the line)\n", I_1, I_1 / args.periodicity);
+    printf("\tI_2 = %0.3e  (%0.3e for the line)\n", I_2, I_2 / args.periodicity);
+    printf("\tI_3 = %0.3e  (%0.3e for the line)\n", I_3, I_3 / args.periodicity);
+    printf("\tI_4 = %0.3e  (%0.3e for the line (should be -2.049e-02))\n", I_4, I_4 / args.periodicity);
+    printf("\n");
+    printf("Momentum compaction = %0.3e\n", I_1 / total_length);
+  
+    arrfree(element_etas);
+    arrfree(element_etaps);
   }
 
   printf("\n");
