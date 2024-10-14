@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
@@ -13,6 +14,11 @@
 
 void usage(const char* program) {
   fprintf(stderr, "USAGE: %s [-p <periodicity>] [-h <harmonic number>] [-E <kinetic energy>] lattice_file\n", program);
+}
+
+double get_curlyH(double eta, double etap, double beta, double alpha) {
+  assert(beta != 0.0 && "Beta of 0.0 does not make sense. Something has gone wrong.");
+  return (pow(eta, 2) + pow((beta*etap + alpha*eta), 2)) / beta;
 }
 
 int main(int argc, char **argv) {
@@ -73,7 +79,7 @@ int main(int argc, char **argv) {
            args.periodicity, radians_to_degrees(total_angle));
   }
 
-  double I_1, I_2, I_3, I_4;//, I_5;
+  double I_1, I_2, I_3, I_4, I_5;
   double gamma_0 = 1;
   if (closed_system) {
     double rf_freq = C / (total_length / args.harmonic_number);
@@ -83,30 +89,18 @@ int main(int argc, char **argv) {
     I_3 = synch_rad_integral_3(line, args.periodicity);
 
     printf("RF frequency for a hamonic number of %d: %0.6f MHz\n", args.harmonic_number, rf_freq/1e6);
-    printf("\n");
-    printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I_2, gamma_0) / 1e3);
   }
 
   printf("\n");
   printf("Total matrix, R, for the line is:\n");
   rmatrix_print(stdout, line_matrix);
 
+  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
+  printf("\n");
+  printf("Total matrix, R, for the full system:\n");
+  rmatrix_print(stdout, total_matrix);
+
   double x_trace, y_trace;
-  if (closed_system) {
-    x_trace = (line_matrix[0*BEAM_DOFS + 0] + line_matrix[1*BEAM_DOFS + 1]) / 2;
-    y_trace = (line_matrix[2*BEAM_DOFS + 2] + line_matrix[3*BEAM_DOFS + 3]) / 2;
-    printf("\n");
-    printf("x fractional tune = %f\n", acos(x_trace) / (2*M_PI));
-    printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
-  }
-
-  if (args.periodicity != 1) {
-    apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
-    printf("\n");
-    printf("Total matrix, R, for the full system:\n");
-    rmatrix_print(stdout, total_matrix);
-  }
-
   if (closed_system) {
     x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]) / 2;
     y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]) / 2;
@@ -129,16 +123,12 @@ int main(int argc, char **argv) {
     const double beta_x = R12 / sin(phi_x);
     const double beta_y = R34 / sin(phi_y);
 
-    printf("\n");
-    printf("eta_x at beginning of the line  = %0.6e\n", eta_x);
-    printf("beta_x at beginning of the line = %0.6e\n", beta_x);
-    printf("beta_y at beginning of the line = %0.6e\n", beta_y);
-
     double *Ss = {0};
     double *element_etas = {0};
     double *element_etaps = {0};
     double *element_beta_xs = {0};
     double *element_beta_ys = {0};
+    double *element_curlyH = {0};
 
     double S = 0.0;
     double eta_vec[3] = {eta_x, 0.0f, 1.0f};
@@ -150,6 +140,7 @@ int main(int argc, char **argv) {
     arrput(element_etaps, eta_vec[1]);
     arrput(element_beta_xs, beta_x);
     arrput(element_beta_ys, beta_y);
+    arrput(element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_x_vec[0], twiss_x_vec[1]));
     for (size_t i=0; i<arrlenu(line); i++) {
       S += element_length(line[i]);
       arrput(Ss, S);
@@ -169,6 +160,8 @@ int main(int argc, char **argv) {
       memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
       arrput(element_etas, eta_vec[0]);
       arrput(element_etaps, eta_vec[1]);
+
+      arrput(element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_x_vec[0], twiss_x_vec[1]));
     }
 
     if (args.save_twiss) {
@@ -181,6 +174,7 @@ int main(int argc, char **argv) {
     }
 
     I_4 = 0.0f;
+    I_5 = 0.0f;
     for (size_t i=0; i<arrlenu(line); i++) {
       if (line[i].type == ELETYPE_SBEND) {
         double eta = (element_etas[i]+element_etas[i+1]) / 2;
@@ -189,11 +183,13 @@ int main(int argc, char **argv) {
         double L = line[i].as.sbend.length;
 
         I_4 += eta * h * L * (2*K + h*h);
+        I_5 += L * pow(fabs(h), 3) * element_curlyH[i];
       }
     }
 
     I_1 = R56;
     I_4 *= args.periodicity;
+    I_5 *= args.periodicity;
 
     printf("\n");
     printf("Synchrotron radiation integrals:\n");
@@ -201,18 +197,24 @@ int main(int argc, char **argv) {
     printf("\tI_2 = %+0.3e  (%+0.3e for the line)\n", I_2, I_2 / args.periodicity);
     printf("\tI_3 = %+0.3e  (%+0.3e for the line)\n", I_3, I_3 / args.periodicity);
     printf("\tI_4 = %+0.3e  (%+0.3e for the line)\n", I_4, I_4 / args.periodicity);
+    printf("\tI_5 = %+0.3e  (%+0.3e for the line)\n", I_5, I_5 / args.periodicity);
     printf("\n");
+    printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I_2, gamma_0) / 1e3);
     printf("Momentum compaction = %0.3e\n", R56 / total_length);
     double j_x = 1.0f - I_4/I_2;
     printf("j_x = %+0.3e\n", j_x);
     double T_0 = total_length / C;
     printf("tau_x = %0.3f ms\n", 
            1e3 * (2 * args.E_0*1e9 * T_0) / (j_x * e_loss_per_turn(I_2, gamma_0)));
+    printf("Natural x emittance = %0.3f pm.rad\n", 
+           1e12 * natural_emittance_x(I_2, I_4, I_5, gamma_0));
+    printf("Natural energy spread = %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
   
     arrfree(element_etas);
     arrfree(element_etaps);
     arrfree(element_beta_xs);
     arrfree(element_beta_ys);
+    arrfree(element_curlyH);
     arrfree(Ss);
   }
 
