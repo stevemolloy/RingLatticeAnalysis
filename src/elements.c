@@ -661,8 +661,8 @@ CommandLineArgs get_clargs(int argc, char **argv) {
     .harmonic_number = 1,
     .E_0 = 0,
     .file_path = NULL,
-    .save_dispersion = false,
-    .dispersion_filename = NULL,
+    .save_twiss = false,
+    .twiss_filename = NULL,
   };
 
   while (argc > 0) {
@@ -673,9 +673,9 @@ CommandLineArgs get_clargs(int argc, char **argv) {
       args.harmonic_number = atoi(nob_shift_args(&argc, &argv));
     } else if (strcmp(next_arg, "-E")==0) {
       args.E_0 = strtod(nob_shift_args(&argc, &argv), NULL);
-    } else if (strcmp(next_arg, "--save_disp")==0) {
-      args.save_dispersion = true;
-      args.dispersion_filename = nob_shift_args(&argc, &argv);
+    } else if (strcmp(next_arg, "--save_twiss")==0) {
+      args.save_twiss = true;
+      args.twiss_filename = nob_shift_args(&argc, &argv);
     } else {
       args.file_path = next_arg;
     }

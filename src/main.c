@@ -171,6 +171,15 @@ int main(int argc, char **argv) {
       arrput(element_etaps, eta_vec[1]);
     }
 
+    if (args.save_twiss) {
+      FILE *twiss_file = fopen(args.twiss_filename, "w");
+      fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
+      for (size_t i=0; i<arrlenu(line); i++) {
+        fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n", Ss[i], element_beta_xs[i], element_beta_ys[i], element_etas[i]);
+      }
+      fclose(twiss_file);
+    }
+
     I_4 = 0.0f;
     for (size_t i=0; i<arrlenu(line); i++) {
       if (line[i].type == ELETYPE_SBEND) {
