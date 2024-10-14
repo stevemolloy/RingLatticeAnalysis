@@ -149,6 +149,7 @@ int main(int argc, char **argv) {
     }
 
     I_1 *= args.periodicity;
+    I_4 *= args.periodicity;
 
     printf("\n");
     printf("Synchrotron radiation integrals:\n");
