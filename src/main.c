@@ -153,10 +153,10 @@ int main(int argc, char **argv) {
 
     printf("\n");
     printf("Synchrotron radiation integrals:\n");
-    printf("\tI_1 = %0.3e  (%0.3e for the line)\n", I_1, I_1 / args.periodicity);
-    printf("\tI_2 = %0.3e  (%0.3e for the line)\n", I_2, I_2 / args.periodicity);
-    printf("\tI_3 = %0.3e  (%0.3e for the line)\n", I_3, I_3 / args.periodicity);
-    printf("\tI_4 = %0.3e  (%0.3e for the line (should be -2.049e-02))\n", I_4, I_4 / args.periodicity);
+    printf("\tI_1 = %+0.3e  (%0.3e for the line)\n", I_1, I_1 / args.periodicity);
+    printf("\tI_2 = %+0.3e  (%0.3e for the line)\n", I_2, I_2 / args.periodicity);
+    printf("\tI_3 = %+0.3e  (%0.3e for the line)\n", I_3, I_3 / args.periodicity);
+    printf("\tI_4 = %+0.3e  (%0.3e for the line)\n", I_4, I_4 / args.periodicity);
     printf("\n");
     printf("Momentum compaction = %0.3e\n", I_1 / total_length);
   
