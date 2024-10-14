@@ -570,6 +570,14 @@ double e_loss_per_turn(double I2, double gamma0) {
   return ERADIUS_TIMES_RESTMASS * I2 * pow(gamma0, 4);
 }
 
+double natural_emittance_x(double I2, double I4, double I5, double gamma0) {
+  return C_Q * pow(gamma0, 2) * I5 / (I2 - I4);
+}
+
+double energy_spread(double I2, double I3, double I4, double gamma0) {
+  return C_Q * pow(gamma0, 2) * I3 / (2*I2 + I4);
+}
+
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2) {
   if (c1 != r2) {
     fprintf(stderr, "Matrix dimensions do not allow for multiplication");

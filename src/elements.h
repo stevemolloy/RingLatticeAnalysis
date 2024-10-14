@@ -9,6 +9,7 @@
 #define ELECTRON_MASS 510998.9499961642f
 #define BEAM_DOFS 6
 #define ERADIUS_TIMES_RESTMASS 0.959976365e-9
+#define C_Q 3.83193864121903e-13
 
 #define SIXBYSIX_IDENTITY (double[]){ \
     1, 0, 0, 0, 0, 0, \
@@ -128,6 +129,8 @@ double calculate_line_length(Element *line);
 double calculate_line_angle(Element *line);
 void create_line(char *cursor, Element **line, ElementLibrary *element_library);
 double e_loss_per_turn(double I2, double gamma0);
+double natural_emittance_x(double I2, double I4, double I5, double gamma0);
+double energy_spread(double I2, double I3, double I4, double gamma0);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
 double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
