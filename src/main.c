@@ -74,10 +74,11 @@ int main(int argc, char **argv) {
   }
 
   double I_1, I_2, I_3, I_4;//, I_5;
+  double gamma_0 = 1;
   if (closed_system) {
     double rf_freq = C / (total_length / args.harmonic_number);
 
-    double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
+    gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
     I_2 = synch_rad_integral_2(line, args.periodicity);
     I_3 = synch_rad_integral_3(line, args.periodicity);
 
@@ -114,12 +115,24 @@ int main(int argc, char **argv) {
     printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
 
     const double R11 = total_matrix[0*BEAM_DOFS + 0];
+    const double R12 = total_matrix[0*BEAM_DOFS + 1];
+    const double R22 = total_matrix[1*BEAM_DOFS + 1];
+    const double R33 = total_matrix[2*BEAM_DOFS + 2];
+    const double R34 = total_matrix[2*BEAM_DOFS + 3];
+    const double R44 = total_matrix[3*BEAM_DOFS + 3];
     const double R16 = total_matrix[0*BEAM_DOFS + 5];
+    const double R56 = total_matrix[4*BEAM_DOFS + 5];
 
     const double eta_x  = R16 / (1 - R11);
+    const double phi_x = acos((R11 + R22) / 2.0f);
+    const double phi_y = acos((R33 + R44) / 2.0f);
+    const double beta_x = R12 / sin(phi_x);
+    const double beta_y = R34 / sin(phi_y);
 
     printf("\n");
     printf("eta_x at beginning of the line  = %0.6e\n", eta_x);
+    printf("beta_x at beginning of the line = %0.6e\n", beta_x);
+    printf("beta_y at beginning of the line = %0.6e\n", beta_y);
 
     double *element_etas = {0};
     double *element_etaps = {0};
@@ -134,7 +147,6 @@ int main(int argc, char **argv) {
       arrput(element_etaps, eta_vec[1]);
     }
 
-    I_1 = 0.0f;
     I_4 = 0.0f;
     for (size_t i=0; i<arrlenu(line); i++) {
       if (line[i].type == ELETYPE_SBEND) {
@@ -143,22 +155,26 @@ int main(int argc, char **argv) {
         double K = line[i].as.sbend.K1;
         double L = line[i].as.sbend.length;
 
-        I_1 += h * L * eta;
         I_4 += eta * h * L * (2*K + h*h);
       }
     }
 
-    I_1 *= args.periodicity;
+    I_1 = R56;
     I_4 *= args.periodicity;
 
     printf("\n");
     printf("Synchrotron radiation integrals:\n");
-    printf("\tI_1 = %+0.3e  (%0.3e for the line)\n", I_1, I_1 / args.periodicity);
-    printf("\tI_2 = %+0.3e  (%0.3e for the line)\n", I_2, I_2 / args.periodicity);
-    printf("\tI_3 = %+0.3e  (%0.3e for the line)\n", I_3, I_3 / args.periodicity);
-    printf("\tI_4 = %+0.3e  (%0.3e for the line)\n", I_4, I_4 / args.periodicity);
+    printf("\tI_1 = %+0.3e  (%+0.3e for the line)\n", I_1, I_1 / args.periodicity);
+    printf("\tI_2 = %+0.3e  (%+0.3e for the line)\n", I_2, I_2 / args.periodicity);
+    printf("\tI_3 = %+0.3e  (%+0.3e for the line)\n", I_3, I_3 / args.periodicity);
+    printf("\tI_4 = %+0.3e  (%+0.3e for the line)\n", I_4, I_4 / args.periodicity);
     printf("\n");
-    printf("Momentum compaction = %0.3e\n", I_1 / total_length);
+    printf("Momentum compaction = %0.3e\n", R56 / total_length);
+    double j_x = 1.0f - I_4/I_2;
+    printf("j_x = %+0.3e\n", j_x);
+    double T_0 = total_length / C;
+    printf("tau_x = %0.3f ms\n", 
+           1e3 * (2 * args.E_0*1e9 * T_0) / (j_x * e_loss_per_turn(I_2, gamma_0)));
   
     arrfree(element_etas);
     arrfree(element_etaps);
