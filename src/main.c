@@ -16,11 +16,6 @@ void usage(const char* program) {
   fprintf(stderr, "USAGE: %s [-p <periodicity>] [-h <harmonic number>] [-E <kinetic energy>] lattice_file\n", program);
 }
 
-double get_curlyH(double eta, double etap, double beta, double alpha) {
-  assert(beta != 0.0 && "Beta of 0.0 does not make sense. Something has gone wrong.");
-  return (pow(eta, 2) + pow((beta*etap + alpha*eta), 2)) / beta;
-}
-
 int main(int argc, char **argv) {
   CommandLineArgs args = get_clargs(argc, argv);
 
@@ -34,25 +29,6 @@ int main(int argc, char **argv) {
   double total_angle = line_angle * args.periodicity;
 
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-
-  // for (size_t i=0; i<arrlenu(line); i++) {
-  //   printf("%s :: ", line[i].name);
-  //   switch (line[i].type) {
-  //     case ELETYPE_DRIFT:     printf("DRIFT\n"); break;
-  //     case ELETYPE_QUAD:      printf("QUAD\n"); break;
-  //     case ELETYPE_CAVITY:    printf("CAVITY\n"); break;
-  //     case ELETYPE_SEXTUPOLE: printf("SEXTUPOLE\n"); break;
-  //     case ELETYPE_OCTUPOLE:  printf("OCTUPOLE\n"); break;
-  //     case ELETYPE_MULTIPOLE: printf("MULTIPOLE\n"); break;
-  //     case ELETYPE_SBEND: {
-  //       printf("SBEND :: h = %0.16e\n", line[i].as.sbend.angle / line[i].as.sbend.length);
-  //     }
-  //       break;
-  //   }
-  //   rmatrix_print(stdout, line[i].R_matrix);
-  //   printf("\n");
-  // }
   get_line_matrix(line_matrix, line);
 
   printf("\nSummary of the lattice defined in %s\n", args.file_path);
@@ -69,25 +45,20 @@ int main(int argc, char **argv) {
   printf("Periodicity: %zu\n", args.periodicity);
   printf("Harmonic number: %d\n", args.harmonic_number);
   printf("Number of elements in the line: %td\n", arrlen(line));
-  printf("Total length of the line: %f m\n", line_length);
   if (args.periodicity != 1) {
-    printf("Total length of %zu lines: %f m\n", args.periodicity, total_length);
+    printf("Total length of the lattice: %0.3f m (%0.3f m for the line)\n", total_length, line_length);
+  } else {
+    printf("Total length of the line: %f m\n", line_length);
   }
-  printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(line_angle));
   if (args.periodicity != 1) {
-    printf("Total bending angle of %zu lines: %0.3f degrees\n", 
-           args.periodicity, radians_to_degrees(total_angle));
+    printf("Total bending angle of the lattice: %0.3f deg (%0.3f deg for the line))\n", 
+           radians_to_degrees(total_angle), radians_to_degrees(line_angle));
+  } else {
+    printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(line_angle));
   }
 
-  double I_1, I_2, I_3, I_4, I_5;
-  double gamma_0 = 1;
   if (closed_system) {
     double rf_freq = C / (total_length / args.harmonic_number);
-
-    gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
-    I_2 = synch_rad_integral_2(line, args.periodicity);
-    I_3 = synch_rad_integral_3(line, args.periodicity);
-
     printf("RF frequency for a hamonic number of %d: %0.6f MHz\n", args.harmonic_number, rf_freq/1e6);
   }
 
@@ -95,6 +66,7 @@ int main(int argc, char **argv) {
   printf("Total matrix, R, for the line is:\n");
   rmatrix_print(stdout, line_matrix);
 
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
   printf("\n");
   printf("Total matrix, R, for the full system:\n");
@@ -104,9 +76,6 @@ int main(int argc, char **argv) {
   if (closed_system) {
     x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]) / 2;
     y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]) / 2;
-    printf("\n");
-    printf("x fractional tune = %f\n", acos(x_trace) / (2*M_PI));
-    printf("y fractional tune = %f\n", acos(y_trace) / (2*M_PI));
 
     const double R11 = total_matrix[0*BEAM_DOFS + 0];
     const double R12 = total_matrix[0*BEAM_DOFS + 1];
@@ -173,8 +142,10 @@ int main(int argc, char **argv) {
       fclose(twiss_file);
     }
 
-    I_4 = 0.0f;
-    I_5 = 0.0f;
+    const double I_1=R56;
+    const double I_2=synch_rad_integral_2(line, args.periodicity);
+    const double I_3=synch_rad_integral_3(line, args.periodicity);
+    double I_4=0.0, I_5=0.0;
     for (size_t i=0; i<arrlenu(line); i++) {
       if (line[i].type == ELETYPE_SBEND) {
         double eta = (element_etas[i]+element_etas[i+1]) / 2;
@@ -187,9 +158,13 @@ int main(int argc, char **argv) {
       }
     }
 
-    I_1 = R56;
+    const double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
+
     I_4 *= args.periodicity;
     I_5 *= args.periodicity;
+
+    double j_x = 1.0f - I_4/I_2;
+    double T_0 = total_length / C;
 
     printf("\n");
     printf("Synchrotron radiation integrals:\n");
@@ -199,16 +174,16 @@ int main(int argc, char **argv) {
     printf("\tI_4 = %+0.3e  (%+0.3e for the line)\n", I_4, I_4 / args.periodicity);
     printf("\tI_5 = %+0.3e  (%+0.3e for the line)\n", I_5, I_5 / args.periodicity);
     printf("\n");
+    printf("x fractional tune:    %f\n", acos(x_trace) / (2*M_PI));
+    printf("y fractional tune:    %f\n", acos(y_trace) / (2*M_PI));
     printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I_2, gamma_0) / 1e3);
-    printf("Momentum compaction = %0.3e\n", R56 / total_length);
-    double j_x = 1.0f - I_4/I_2;
-    printf("j_x = %+0.3e\n", j_x);
-    double T_0 = total_length / C;
-    printf("tau_x = %0.3f ms\n", 
+    printf("Momentum compaction:  %0.3e\n", R56 / total_length);
+    printf("j_x:                  %+0.3e\n", j_x);
+    printf("tau_x:                %0.3f ms\n", 
            1e3 * (2 * args.E_0*1e9 * T_0) / (j_x * e_loss_per_turn(I_2, gamma_0)));
-    printf("Natural x emittance = %0.3f pm.rad\n", 
+    printf("Natural x emittance:  %0.3f pm.rad\n", 
            1e12 * natural_emittance_x(I_2, I_4, I_5, gamma_0));
-    printf("Natural energy spread = %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
+    printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
   
     arrfree(element_etas);
     arrfree(element_etaps);
