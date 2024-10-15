@@ -12,6 +12,11 @@
 
 #include "stb_ds.h"
 
+// TODO: Rationalise memory management. In some places it is dynamic arrays, in other an arena is used. Time to straighten this out.
+// TODO: Spin off a few more functions for the library.  The "main" function should be a list of calls to library functions.
+// TODO: Rationalise organisation of the libraries.
+// TODO: Handle off-energy dynamics.
+
 void usage(const char* program) {
   fprintf(stderr, "USAGE: %s [-p <periodicity>] [-h <harmonic number>] [-E <kinetic energy>] lattice_file\n", program);
 }
