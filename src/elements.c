@@ -49,6 +49,34 @@ double synch_rad_integral_3(Element *line, int periodicity) {
   return I_3 * (double)periodicity;
 }
 
+double synch_rad_integral_4(Element *line, int periodicity, double *element_etas) {
+  double I_4=0.0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    if (line[i].type == ELETYPE_SBEND) {
+      double eta = (element_etas[i]+element_etas[i+1]) / 2;
+      double L = line[i].as.sbend.length;
+      double h = line[i].as.sbend.angle / L;
+      double K = line[i].as.sbend.K1;
+
+      I_4 += periodicity * (eta * h * L * (2*K + h*h));
+    }
+  }
+  return I_4;
+}
+
+double synch_rad_integral_5(Element *line, int periodicity, double *element_curlyH) {
+  double I_5=0.0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    if (line[i].type == ELETYPE_SBEND) {
+      double L = line[i].as.sbend.length;
+      double h = line[i].as.sbend.angle / L;
+
+      I_5 += periodicity * (L * pow(fabs(h), 3) * element_curlyH[i]);
+    }
+  }
+  return I_5;
+}
+
 double element_length(Element element) {
   switch (element.type) {
     case ELETYPE_SBEND:

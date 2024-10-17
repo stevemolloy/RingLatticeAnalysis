@@ -23,6 +23,12 @@
 #define ELENAME_MAX_LEN 64
 
 typedef struct {
+  size_t rows;
+  size_t cols;
+  double *vals;
+} Matrix;
+
+typedef struct {
   size_t periodicity;
   int harmonic_number;
   double E_0;
@@ -118,6 +124,8 @@ typedef struct {
 double synch_rad_integral_1(Element *line, int periodicity);
 double synch_rad_integral_2(Element *line, int periodicity);
 double synch_rad_integral_3(Element *line, int periodicity);
+double synch_rad_integral_4(Element *line, int periodicity, double *element_etas);
+double synch_rad_integral_5(Element *line, int periodicity, double *element_curlyH);
 double element_length(Element element);
 double bending_radius_of_element(Element element);
 Element create_element(char *name, char **cursor);
