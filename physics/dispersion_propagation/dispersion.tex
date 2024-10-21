@@ -1,0 +1,110 @@
+\documentclass[]{article}
+
+\usepackage{amsmath}
+
+\addtolength{\textwidth}{1.0in}
+\addtolength{\textheight}{1.00in}
+\addtolength{\evensidemargin}{-0.75in}
+\addtolength{\oddsidemargin}{-0.75in}
+\addtolength{\topmargin}{-.50in}
+
+\begin{document}
+  \title{Dispersion Propagation}
+  \author{Stephen Molloy}
+  \date{\today}
+  \maketitle
+
+  \section{Introduction}
+  In this document I derive expressions for the evolution of the dispersion, $\eta\left(s\right)$, through a combined function bend.
+
+  \section{Solve Hill's equation}
+  Hill's equation of motion for the evolution of the dispersion, $\eta\left(s\right)$, through a combined function bend with focusing strength, $K$, and bending radius, $\rho=1/h$, is shown in the following.  Notice that the focusing strength, $K$, is a combination of the focusing provided by the field gradient as well as the weak focusing provided by the pure dipole field.
+
+  \begin{equation}
+    \eta''\left(s\right) + K\eta\left(s\right) = h
+    \label{eq:hillseqn}
+  \end{equation}
+
+  Note that the prime operator indicates a differential with respect to the path length, $s$, along the accelerator.
+
+  This is a second-order nonhomogeneous differential equation and so can be solved by summing the solution for the homogeneous equation (i.e., that where $h$ is set to zero), and the particular solution that includes the non-zero right-hand side.  The solution is as follows.
+
+  \begin{equation}
+    \eta\left(s\right) = C_1e^{i\omega s} + C_2e^{-i\omega s} + \frac{h}{K}
+    \label{eq:generalsoln}
+  \end{equation}
+
+  Here I have defined, $\omega = \sqrt K$, and so a negative value for $K$ will result in $\omega$ being imaginary.
+
+  We now apply the most general initial conditions, $\eta\left(s\right) = \eta_0$ and $\eta'\left(s\right) = \eta'_0$, and find that the constants of integration, $C_1$ and $C_2$ are as follows.
+
+  \begin{eqnarray}
+    C_1 = \frac{1}{2}\left(\eta_0 + \frac{1}{i\omega}\eta'_0 - \frac{h}{k}\right) \\
+    C_2 = \frac{1}{2}\left(\eta_0 - \frac{1}{i\omega}\eta'_0 - \frac{h}{k}\right)
+  \end{eqnarray}
+  
+  From here, we can write down the general solution for the dependence of the dispersion on $s$.
+
+  \begin{equation}
+    \eta\left(s\right) = \frac{1}{2}\left(e^{i\omega s} + e^{-i\omega s}\right)\eta_0
+            + \frac{1}{2}\frac{1}{i\omega}\left(e^{i\omega s} + e^{-i\omega s}\right)\eta_0
+            + \frac{1}{2}\frac{h}{k}\left(e^{i\omega s} + e^{-i\omega s}\right)
+            + \frac{h}{k}
+    \label{eq:mainsoln}
+  \end{equation}
+
+  \subsection{Solution where $K\geq 0$}
+  In this case $\omega$ is a real number, and so the exponentials keep their complex character. Using Euler's formula we can rewrite equation \ref{eq:mainsoln} using elliptical trigonometric functions.
+
+  \begin{equation}
+    \eta\left(s\right) = \eta_0\cos\left(\omega s\right) + \eta'_0\frac{\sin\left(\omega s\right)}{\omega} + \frac{h}{K}\left(1 - \cos\left(\omega s\right)\right)
+    \label{eq:K_positive}
+  \end{equation}
+  
+  \subsection{Solution where $K\leq 0$}
+  In this case $\omega$ is imaginary, and so the exponentials become real. Using Euler's formula we can rewrite equation \ref{eq:mainsoln} using hyperbolic trigonometric functions.
+
+  \begin{equation}
+    \eta\left(s\right) = \eta_0\cosh\left(\omega s\right) + \eta'_0\frac{\sinh\left(\omega s\right)}{\omega} + \frac{h}{K}\left(1 - \cosh\left(\omega s\right)\right)
+    \label{eq:K_negative}
+  \end{equation}
+
+  \section{Integral over the entire element}
+  To determine the average value of the dispersion over the length, $L$, of a combined function bend, it is necessary to integrate these solutions over the length of the element.  This can be done using equation \ref{eq:mainsoln} and then specialising the solution based on the sign of $K$, or by integrating equations~\ref{eq:K_positive} and \ref{eq:K_negative} directly.
+
+  \subsection{Solution where $K\geq 0$}
+  \begin{equation}
+    \displaystyle\int_{0}^{L}\eta\left(s\right)ds = \frac{\sin\left(\omega L\right)}{\omega}\eta_0
+                + \frac{\left(1 - \cos\left(\omega L\right)\right)}{\omega^2}\eta'_0
+                + \frac{h}{K}\left(L - \frac{\sin\left(\omega L\right)}{\omega}\right)
+    \label{eq:K_pos_integ}
+  \end{equation}
+
+  \subsection{Solution where $K\leq 0$}
+  \begin{equation}
+    \displaystyle\int_{0}^{L}\eta\left(s\right)ds = \frac{\sinh\left(\omega L\right)}{\omega}\eta_0
+                - \frac{\left(1 - \cosh\left(\omega L\right)\right)}{\omega^2}\eta'_0
+                + \frac{h}{K}\left(L - \frac{\sinh\left(\omega L\right)}{\omega}\right)
+    \label{eq:K_neg_integ}
+  \end{equation}
+
+  \section{Mean value over the element}
+  The average value, $\left<\eta\right>$, over the length of the element is as follows.
+  
+  \subsection{For $K\geq 0$}
+  \begin{equation}
+    \left<\eta\right> = \frac{\sin\left(\omega L\right)}{\omega L}\eta_0
+                + \frac{\left(1 - \cos\left(\omega L\right)\right)}{\omega^2 L}\eta'_0
+                + \frac{h}{K}\left(1 - \frac{\sin\left(\omega L\right)}{\omega L}\right)
+    \label{eq:K_pos_mean}
+  \end{equation}
+
+  \subsection{For $K\leq 0$}
+  \begin{equation}
+    \left<\eta\right> = \frac{\sinh\left(\omega L\right)}{\omega L}\eta_0
+                - \frac{\left(1 - \cosh\left(\omega L\right)\right)}{\omega^2 L}\eta'_0
+                + \frac{h}{K}\left(1 - \frac{\sinh\left(\omega L\right)}{\omega L}\right)
+    \label{eq:K_neg_mean}
+  \end{equation}
+
+\end{document}

@@ -27,6 +27,8 @@ TESTBIN = $(BINDIR)/test
 
 all: $(BIN) $(TESTBIN)
 
+docs: physics/dispersion_propagation/dispersion.pdf
+
 $(BIN): $(MAIN_OBJS)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CINCLUDES) $^ -o $@ $(CLIBS)
@@ -38,6 +40,10 @@ $(TESTBIN): $(TEST_OBJS)
 $(OBJ)/%.o: $(SRC)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CINCLUDES) -c $< -o $@
+
+physics/dispersion_propagation/dispersion.pdf: physics/dispersion_propagation/dispersion.tex
+	pdflatex -output-directory=physics/dispersion_propagation physics/dispersion_propagation/dispersion.tex
+	pdflatex -output-directory=physics/dispersion_propagation physics/dispersion_propagation/dispersion.tex
 
 clean:
 	rm -rf $(BINDIR) $(OBJ) tests/*result*
