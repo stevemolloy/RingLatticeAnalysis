@@ -153,12 +153,33 @@ int main(int argc, char **argv) {
     double I_4=0.0, I_5=0.0;
     for (size_t i=0; i<arrlenu(line); i++) {
       if (line[i].type == ELETYPE_SBEND) {
-        double eta = (element_etas[i]+element_etas[i+1]) / 2;
+        double angle = line[i].as.sbend.angle;
         double L = line[i].as.sbend.length;
-        double h = line[i].as.sbend.angle / L;
-        double K = line[i].as.sbend.K1;
+        double K1 = line[i].as.sbend.K1;
+        double h = angle / L;
+#if 0
+        double eta = (element_etas[i]+element_etas[i+1]) / 2;
+#else
+        double (*sinlike_func)(double);
+        double (*coslike_func)(double);
+        double omega_sqr = pow(h, 2) + K1;
+        double omega = sqrt(fabs(omega_sqr));
+        double sign = 0.0;
+        if (omega_sqr > 0.0) {
+          sinlike_func = sin;
+          coslike_func = cos;
+          sign = 1.0;
+        } else {
+          sinlike_func = sinh;
+          coslike_func = cosh;
+          sign = -1.0;
+        }
+        double eta = element_etas[i] * sinlike_func(omega*L) / (omega*L);
+        eta += sign * element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L);
+        eta += (h/K1) * (L - sinlike_func(omega*L)/omega);
+#endif
 
-        I_4 += args.periodicity * (eta * h * L * (2*K + h*h));
+        I_4 += args.periodicity * (eta * h * L * (2*K1 + h*h));
         I_5 += args.periodicity * (L * pow(fabs(h), 3) * element_curlyH[i]);
       }
     }
