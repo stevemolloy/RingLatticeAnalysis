@@ -23,22 +23,6 @@
 #define ELENAME_MAX_LEN 64
 
 typedef struct {
-  size_t rows;
-  size_t cols;
-  double *vals;
-} Matrix;
-
-typedef struct {
-  size_t periodicity;
-  int harmonic_number;
-  double E_0;
-  char *file_path;
-  char *programname;
-  char *twiss_filename;
-  bool save_twiss;
-} CommandLineArgs;
-
-typedef struct {
   double length;
 } Drift;
 
@@ -116,36 +100,31 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
-typedef struct {
-  char* key;
-  double value;
-} str2dbl_hashmap;
-
 double synch_rad_integral_1(Element *line, int periodicity);
 double synch_rad_integral_2(Element *line, int periodicity);
 double synch_rad_integral_3(Element *line, int periodicity);
 double synch_rad_integral_4(Element *line, int periodicity, double *element_etas);
 double synch_rad_integral_5(Element *line, int periodicity, double *element_curlyH);
-double element_length(Element element);
-double bending_radius_of_element(Element element);
-Element create_element(char *name, char **cursor);
-void element_print(Element element);
-void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
-bool isvalididchar(char c);
-char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor);
-double calculate_line_length(Element *line);
-double calculate_line_angle(Element *line);
-void create_line(char *cursor, Element **line, ElementLibrary *element_library);
 double e_loss_per_turn(double I2, double gamma0);
 double natural_emittance_x(double I2, double I4, double I5, double gamma0);
 double energy_spread(double I2, double I3, double I4, double gamma0);
 double get_curlyH(double eta, double etap, double beta, double alpha);
+
+void generate_lattice(const char *filename, Element **line);
+void create_line(char *cursor, Element **line, ElementLibrary *element_library);
+char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor);
+void get_line_matrix(double *matrix, Element *line);
+Element create_element(char *name, char **cursor);
+void element_print(Element element);
+double element_length(Element element);
+double bending_radius_of_element(Element element);
+double calculate_line_length(Element *line);
+double calculate_line_angle(Element *line);
+
+void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
 double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
-void get_line_matrix(double *matrix, Element *line);
-CommandLineArgs get_clargs(int argc, char **argv);
-void generate_lattice(const char *filename, Element **line);
 
 #endif // !ELEMENTS_H
 

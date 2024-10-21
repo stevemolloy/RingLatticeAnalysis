@@ -2,11 +2,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <ctype.h>
 #include <assert.h>
 
 #include "lib.h"
 
+#define NOB_IMPLEMENTATION
+#include "nob.h"
+
 #define PI 3.14159265358979323846
+
+CommandLineArgs get_clargs(int argc, char **argv) {
+  CommandLineArgs args = {
+    .programname = nob_shift_args(&argc, &argv),
+    .periodicity = 1,
+    .harmonic_number = 1,
+    .E_0 = 0,
+    .file_path = NULL,
+    .save_twiss = false,
+    .twiss_filename = NULL,
+  };
+
+  while (argc > 0) {
+    char *next_arg = nob_shift_args(&argc, &argv);
+    if (strcmp(next_arg, "-p")==0) {
+      args.periodicity = (size_t)atoi(nob_shift_args(&argc, &argv));
+    } else if (strcmp(next_arg, "-h")==0) {
+      args.harmonic_number = atoi(nob_shift_args(&argc, &argv));
+    } else if (strcmp(next_arg, "-E")==0) {
+      args.E_0 = strtod(nob_shift_args(&argc, &argv), NULL);
+    } else if (strcmp(next_arg, "--save_twiss")==0) {
+      args.save_twiss = true;
+      args.twiss_filename = nob_shift_args(&argc, &argv);
+    } else {
+      args.file_path = next_arg;
+    }
+  }
+
+  return args;
+}
+
+bool isvalididchar(char c) {
+  return isalnum(c) | (c == '_');
+}
 
 Arena make_arena(void) {
   Arena result = {0};
