@@ -114,7 +114,7 @@ double bending_radius_of_element(Element element) {
   return rho;
 }
 
-static void make_r_matrix(Element *element) {
+void make_r_matrix(Element *element) {
   double ele_length = element_length(*element);
 
   memset(element->R_matrix, 0, sizeof(element->R_matrix));

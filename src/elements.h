@@ -120,6 +120,7 @@ double element_length(Element element);
 double bending_radius_of_element(Element element);
 double calculate_line_length(Element *line);
 double calculate_line_angle(Element *line);
+void make_r_matrix(Element *element);
 
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
