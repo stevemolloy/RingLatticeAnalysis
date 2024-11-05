@@ -12,6 +12,7 @@
 
 #include "stb_ds.h"
 
+// TODO: Factor out the twiss propagation stuff into diagonalised 2x2 instead of the 3x3 stuff
 // TODO: Rationalise memory management. In some places it is dynamic arrays, in other an arena is used. Time to straighten this out.
 // TODO: Spin off a few more functions for the library.  The "main" function should be a list of calls to library functions.
 // TODO: Rationalise organisation of the libraries.
