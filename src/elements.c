@@ -17,7 +17,6 @@
 
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
-static void make_r_matrix(Element *element);
 static void getMinor(double* matrix, double* minor, int n, int r, int c);
 
 double synch_rad_integral_1(Element *line, int periodicity) {
