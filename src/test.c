@@ -18,10 +18,17 @@ bool test_sbend(void);
 bool test_full_lat_all_mats(void);
 bool compare_with_matlab(void);
 bool test_threebythree(void);
+bool test_twiss_propagation(void);
 
 typedef bool (*TestFunction)(void);
 
-TestFunction test_functions[] = {test_matmul, test_sbend, /*test_full_lat_all_mats, compare_with_matlab*/ test_threebythree};
+TestFunction test_functions[] = {
+  test_matmul,
+  test_sbend,
+  /*test_full_lat_all_mats, compare_with_matlab*/
+  test_threebythree,
+  test_twiss_propagation,
+};
 
 int main(void) {
   bool result = true;
@@ -235,6 +242,48 @@ bool test_full_lat_all_mats(void) {
   arrfree(line);
 
   return comparison_result;
+}
+
+bool test_twiss_propagation(void) {
+  const char *test_name = "TWISS PROP TEST";
+  const char *expected_filename = "./tests/twissprop_expected.txt";
+  const char *result_filename =   "./tests/twissprop_result.txt";
+
+  char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
+
+  Element *line = {0};
+  generate_lattice(file_path, &line);
+
+  const double periodicity = 20;
+
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+
+  get_line_matrix(line_matrix, line);
+  apply_matrix_n_times(total_matrix, line_matrix, periodicity);
+
+  LinOptsParams lin_opt_params = {
+    .Ss = NULL,
+    .element_beta_xs = NULL,
+    .element_beta_ys = NULL,
+    .element_etas = NULL,
+    .element_etaps = NULL,
+    .element_curlyH = NULL,
+  };
+  propagate_linear_optics(line, total_matrix, &lin_opt_params);
+
+  FILE *twiss_file = fopen(result_filename, "w");
+  fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
+  for (size_t i=0; i<arrlenu(line); i++) {
+    fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
+				lin_opt_params.Ss[i],
+				lin_opt_params.element_beta_xs[i],
+				lin_opt_params.element_beta_ys[i],
+				lin_opt_params.element_etas[i]);
+  }
+  fclose(twiss_file);
+
+  return compare_files(test_name, expected_filename, result_filename);
 }
 
 bool compare_arrays(double *correct_mat, double *compare_mat, size_t n) {

@@ -83,67 +83,27 @@ int main(int argc, char **argv) {
     double x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]);
     double y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]);
 
-    const double R11 = total_matrix[0*BEAM_DOFS + 0];
-    const double R12 = total_matrix[0*BEAM_DOFS + 1];
-    const double R22 = total_matrix[1*BEAM_DOFS + 1];
-    const double R33 = total_matrix[2*BEAM_DOFS + 2];
-    const double R34 = total_matrix[2*BEAM_DOFS + 3];
-    const double R44 = total_matrix[3*BEAM_DOFS + 3];
-    const double R16 = total_matrix[0*BEAM_DOFS + 5];
     const double R56 = total_matrix[4*BEAM_DOFS + 5];
 
-    const double eta_x  = R16 / (1 - R11);
-    const double phi_x = acos((R11 + R22) / 2.0f);
-    const double phi_y = acos((R33 + R44) / 2.0f);
-    const double beta_x = R12 / sin(phi_x);
-    const double beta_y = R34 / sin(phi_y);
-
-    double *Ss = {0};
-    double *element_etas = {0};
-    double *element_etaps = {0};
-    double *element_beta_xs = {0};
-    double *element_beta_ys = {0};
-    double *element_curlyH = {0};
-
-    double S = 0.0;
-    double eta_vec[3] = {eta_x, 0.0f, 1.0f};
-    double twiss_x_vec[3] = {beta_x, 0.0f, 1/beta_x};
-    double twiss_y_vec[3] = {beta_y, 0.0f, 1/beta_y};
-
-    arrput(Ss, 0.0);
-    arrput(element_etas, eta_vec[0]);
-    arrput(element_etaps, eta_vec[1]);
-    arrput(element_beta_xs, beta_x);
-    arrput(element_beta_ys, beta_y);
-    arrput(element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_x_vec[0], twiss_x_vec[1]));
-    for (size_t i=0; i<arrlenu(line); i++) {
-      S += element_length(line[i]);
-      arrput(Ss, S);
-
-      double temp_twiss_x_vec[3] = {0};
-      matrix_multiply(line[i].twiss_prop_matrix_x, twiss_x_vec, temp_twiss_x_vec, 3, 3, 3, 1);
-      memcpy(twiss_x_vec, temp_twiss_x_vec, 3*sizeof(double));
-      arrput(element_beta_xs, twiss_x_vec[0]);
-
-      double temp_twiss_y_vec[3] = {0};
-      matrix_multiply(line[i].twiss_prop_matrix_y, twiss_y_vec, temp_twiss_y_vec, 3, 3, 3, 1);
-      memcpy(twiss_y_vec, temp_twiss_y_vec, 3*sizeof(double));
-      arrput(element_beta_ys, twiss_y_vec[0]);
-
-      double temp_eta_vec[3] = {0};
-      matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
-      memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
-      arrput(element_etas, eta_vec[0]);
-      arrput(element_etaps, eta_vec[1]);
-
-      arrput(element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_x_vec[0], twiss_x_vec[1]));
-    }
+    LinOptsParams lin_opt_params = {
+      .Ss = NULL,
+      .element_beta_xs = NULL,
+      .element_beta_ys = NULL,
+      .element_etas = NULL,
+      .element_etaps = NULL,
+      .element_curlyH = NULL,
+    };
+    propagate_linear_optics(line, total_matrix, &lin_opt_params);
 
     if (args.save_twiss) {
       FILE *twiss_file = fopen(args.twiss_filename, "w");
       fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
       for (size_t i=0; i<arrlenu(line); i++) {
-        fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n", Ss[i], element_beta_xs[i], element_beta_ys[i], element_etas[i]);
+        fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
+		    		lin_opt_params.Ss[i],
+		    		lin_opt_params.element_beta_xs[i],
+		    		lin_opt_params.element_beta_ys[i],
+		    		lin_opt_params.element_etas[i]);
       }
       fclose(twiss_file);
     }
@@ -158,9 +118,7 @@ int main(int argc, char **argv) {
         double L = line[i].as.sbend.length;
         double K1 = line[i].as.sbend.K1;
         double h = angle / L;
-#if 0
-        double eta = (element_etas[i]+element_etas[i+1]) / 2;
-#else
+
         double (*sinlike_func)(double);
         double (*coslike_func)(double);
         double omega_sqr = pow(h, 2) + K1;
@@ -175,13 +133,12 @@ int main(int argc, char **argv) {
           coslike_func = cosh;
           sign = -1.0;
         }
-        double eta = element_etas[i] * sinlike_func(omega*L) / (omega*L);
-        eta += sign * element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L);
+        double eta = lin_opt_params.element_etas[i] * sinlike_func(omega*L) / (omega*L);
+        eta += sign * lin_opt_params.element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L);
         eta += (h/K1) * (L - sinlike_func(omega*L)/omega);
-#endif
 
         I_4 += args.periodicity * (eta * h * L * (2*K1 + h*h));
-        I_5 += args.periodicity * (L * pow(fabs(h), 3) * element_curlyH[i]);
+        I_5 += args.periodicity * (L * pow(fabs(h), 3) * lin_opt_params.element_curlyH[i]);
       }
     }
 
@@ -208,12 +165,12 @@ int main(int argc, char **argv) {
            1e12 * natural_emittance_x(I_2, I_4, I_5, gamma_0));
     printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
   
-    arrfree(element_etas);
-    arrfree(element_etaps);
-    arrfree(element_beta_xs);
-    arrfree(element_beta_ys);
-    arrfree(element_curlyH);
-    arrfree(Ss);
+    arrfree(lin_opt_params.element_etas);
+    arrfree(lin_opt_params.element_etaps);
+    arrfree(lin_opt_params.element_beta_xs);
+    arrfree(lin_opt_params.element_beta_ys);
+    arrfree(lin_opt_params.element_curlyH);
+    arrfree(lin_opt_params.Ss);
   }
 
   printf("\n");

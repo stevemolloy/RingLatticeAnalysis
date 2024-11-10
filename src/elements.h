@@ -81,6 +81,7 @@ typedef struct {
   char name[ELENAME_MAX_LEN];
   EleType type;
   double R_matrix[BEAM_DOFS*BEAM_DOFS];
+  double transpose_R_matrix[BEAM_DOFS*BEAM_DOFS];
   double eta_prop_matrix[9];
   double twiss_prop_matrix_x[9];
   double twiss_prop_matrix_y[9];
@@ -100,6 +101,15 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
+typedef struct {
+  double *Ss;
+  double *element_beta_xs;
+  double *element_beta_ys;
+  double *element_etas;
+  double *element_etaps;
+  double *element_curlyH;
+} LinOptsParams;
+
 double synch_rad_integral_1(Element *line, int periodicity);
 double synch_rad_integral_2(Element *line, int periodicity);
 double synch_rad_integral_3(Element *line, int periodicity);
@@ -109,6 +119,7 @@ double e_loss_per_turn(double I2, double gamma0);
 double natural_emittance_x(double I2, double I4, double I5, double gamma0);
 double energy_spread(double I2, double I3, double I4, double gamma0);
 double get_curlyH(double eta, double etap, double beta, double alpha);
+void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params);
 
 void generate_lattice(const char *filename, Element **line);
 void create_line(char *cursor, Element **line, ElementLibrary *element_library);
@@ -124,6 +135,8 @@ void make_r_matrix(Element *element);
 
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
+bool inverse6x6(const double *matrix, double *inverse);
+void transpose6x6(const double *matrix, double *transpose);
 double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
 

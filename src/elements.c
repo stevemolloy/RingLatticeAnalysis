@@ -138,6 +138,9 @@ void make_r_matrix(Element *element) {
       break;
   }
 
+  memset(element->transpose_R_matrix, 0, sizeof(element->transpose_R_matrix));
+  transpose6x6(element->R_matrix, element->transpose_R_matrix);
+
   element->eta_prop_matrix[0*3 + 0] = element->R_matrix[0*BEAM_DOFS + 0];
   element->eta_prop_matrix[0*3 + 1] = element->R_matrix[0*BEAM_DOFS + 1];
   element->eta_prop_matrix[0*3 + 2] = element->R_matrix[0*BEAM_DOFS + 5];
@@ -603,6 +606,57 @@ double get_curlyH(double eta, double etap, double beta, double alpha) {
   return (pow(eta, 2) + pow((beta*etap + alpha*eta), 2)) / beta;
 }
 
+void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params) {
+  double S = 0.0;
+  arrput(lin_opt_params->Ss, 0.0);
+
+  const double R11 = total_matrix[0*BEAM_DOFS + 0];
+  const double R12 = total_matrix[0*BEAM_DOFS + 1];
+  const double R22 = total_matrix[1*BEAM_DOFS + 1];
+  const double R33 = total_matrix[2*BEAM_DOFS + 2];
+  const double R34 = total_matrix[2*BEAM_DOFS + 3];
+  const double R44 = total_matrix[3*BEAM_DOFS + 3];
+  const double R16 = total_matrix[0*BEAM_DOFS + 5];
+
+  const double eta_x  = R16 / (1 - R11);
+  const double phi_x = acos((R11 + R22) / 2.0f);
+  const double phi_y = acos((R33 + R44) / 2.0f);
+  const double beta_x = R12 / sin(phi_x);
+  const double beta_y = R34 / sin(phi_y);
+
+  double eta_vec[3] = {eta_x, 0.0f, 1.0f};
+  double twiss_x_vec[3] = {beta_x, 0.0f, 1/beta_x};
+  double twiss_y_vec[3] = {beta_y, 0.0f, 1/beta_y};
+
+  arrput(lin_opt_params->element_beta_xs, beta_x);
+  arrput(lin_opt_params->element_beta_ys, beta_y);
+  arrput(lin_opt_params->element_etas, eta_vec[0]);
+  arrput(lin_opt_params->element_etaps, eta_vec[1]);
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    S += element_length(line[i]);
+    arrput(lin_opt_params->Ss, S);
+
+    double temp_twiss_x_vec[3] = {0};
+    matrix_multiply(line[i].twiss_prop_matrix_x, twiss_x_vec, temp_twiss_x_vec, 3, 3, 3, 1);
+    memcpy(twiss_x_vec, temp_twiss_x_vec, 3*sizeof(double));
+    arrput(lin_opt_params->element_beta_xs, twiss_x_vec[0]);
+
+    double temp_twiss_y_vec[3] = {0};
+    matrix_multiply(line[i].twiss_prop_matrix_y, twiss_y_vec, temp_twiss_y_vec, 3, 3, 3, 1);
+    memcpy(twiss_y_vec, temp_twiss_y_vec, 3*sizeof(double));
+    arrput(lin_opt_params->element_beta_ys, twiss_y_vec[0]);
+
+    double temp_eta_vec[3] = {0};
+    matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
+    memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
+    arrput(lin_opt_params->element_etas, eta_vec[0]);
+    arrput(lin_opt_params->element_etaps, eta_vec[1]);
+
+    arrput(lin_opt_params->element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_x_vec[0], twiss_x_vec[1]));
+  }
+}
+
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2) {
   if (c1 != r2) {
     fprintf(stderr, "Matrix dimensions do not allow for multiplication");
@@ -619,6 +673,60 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
 
       for (size_t k=0; k<c1; k++) {
         result[output_ind] += mat1[row*c1 + k] * mat2[k*c2 + col];
+      }
+    }
+  }
+
+  return true;
+}
+
+void transpose6x6(const double *matrix, double *transpose) {
+  for (size_t i=0; i<6; i++) {
+    for (size_t j=0; j<6; j++) {
+      transpose[i*6 + j] = matrix[j*6 + i];
+    }
+  }
+}
+
+// Courtesy ChatGPT
+bool inverse6x6(const double *matrix, double *inverse) {
+  const int size = 6;
+  int i, j, k;
+  double temp;
+
+  // Temporary matrix to work on, copied from the original matrix
+  double temp_matrix[size * size];
+  memcpy(temp_matrix, matrix, size * size * sizeof(double));
+
+  // Initialize the inverse matrix as an identity matrix
+  for (i = 0; i < size; i++) {
+    for (j = 0; j < size; j++) {
+      inverse[(i * size + j)] = (i == j) ? 1.0 : 0.0;
+    }
+  }
+
+  // Apply Gaussian elimination on temp_matrix to compute the inverse
+  for (i = 0; i < size; i++) {
+    // Check for a non-zero pivot element
+    if (temp_matrix[(i * size + j)] == 0.0) {
+      return false; // Singular matrix, no inverse exists
+    }
+
+    // Normalize the pivot row
+    temp = temp_matrix[(i * size + j)];
+    for (j = 0; j < size; j++) {
+      temp_matrix[(i * size + j)] /= temp;
+      inverse[(i * size + j)] /= temp;
+    }
+
+    // Make other rows zero in current column
+    for (j = 0; j < size; j++) {
+      if (i != j) {
+        temp = temp_matrix[(i * size + j)];
+        for (k = 0; k < size; k++) {
+          temp_matrix[(i * size + j)] -= temp_matrix[(i * size + j)] * temp;
+          inverse[(i * size + j)] -= inverse[(i * size + j)] * temp;
+        }
       }
     }
   }
