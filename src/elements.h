@@ -83,8 +83,6 @@ typedef struct {
   double R_matrix[BEAM_DOFS*BEAM_DOFS];
   double transpose_R_matrix[BEAM_DOFS*BEAM_DOFS];
   double eta_prop_matrix[9];
-  double twiss_prop_matrix_x[9];
-  double twiss_prop_matrix_y[9];
   union {
     Drift drift;
     Quad quad;

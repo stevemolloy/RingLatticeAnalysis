@@ -150,28 +150,6 @@ void make_r_matrix(Element *element) {
   element->eta_prop_matrix[2*3 + 0] = 0.0f;
   element->eta_prop_matrix[2*3 + 1] = 0.0f;
   element->eta_prop_matrix[2*3 + 2] = 1.0f;
-
-  element->twiss_prop_matrix_x[0*3 + 0] = pow(element->R_matrix[0*BEAM_DOFS + 0], 2);
-  element->twiss_prop_matrix_x[0*3 + 1] = -2.0f * element->R_matrix[0*BEAM_DOFS + 0] * element->R_matrix[0*BEAM_DOFS + 1];
-  element->twiss_prop_matrix_x[0*3 + 2] = pow(element->R_matrix[0*BEAM_DOFS + 1], 2);
-  element->twiss_prop_matrix_x[1*3 + 0] = -1.0f * element->R_matrix[0*BEAM_DOFS + 0] * element->R_matrix[1*BEAM_DOFS + 0];
-  element->twiss_prop_matrix_x[1*3 + 1] = element->R_matrix[0*BEAM_DOFS + 0] * element->R_matrix[1*BEAM_DOFS + 1] + 
-    element->R_matrix[0*BEAM_DOFS + 1] * element->R_matrix[1*BEAM_DOFS + 0];
-  element->twiss_prop_matrix_x[1*3 + 2] = -1.0f * element->R_matrix[0*BEAM_DOFS + 1] * element->R_matrix[1*BEAM_DOFS + 1];
-  element->twiss_prop_matrix_x[2*3 + 0] = pow(element->R_matrix[1*BEAM_DOFS + 0], 2);
-  element->twiss_prop_matrix_x[2*3 + 1] = -2.0f * element->R_matrix[1*BEAM_DOFS + 0] * element->R_matrix[1*BEAM_DOFS + 1];
-  element->twiss_prop_matrix_x[2*3 + 2] = pow(element->R_matrix[1*BEAM_DOFS + 1], 2);
-
-  element->twiss_prop_matrix_y[0*3 + 0] = pow(element->R_matrix[2*BEAM_DOFS + 2], 2);
-  element->twiss_prop_matrix_y[0*3 + 1] = -2.0f * element->R_matrix[2*BEAM_DOFS + 2] * element->R_matrix[2*BEAM_DOFS + 3];
-  element->twiss_prop_matrix_y[0*3 + 2] = pow(element->R_matrix[2*BEAM_DOFS + 3], 2);
-  element->twiss_prop_matrix_y[1*3 + 0] = -1.0f * element->R_matrix[2*BEAM_DOFS + 2] * element->R_matrix[3*BEAM_DOFS + 2];
-  element->twiss_prop_matrix_y[1*3 + 1] = element->R_matrix[2*BEAM_DOFS + 2] * element->R_matrix[3*BEAM_DOFS + 3] + 
-    element->R_matrix[2*BEAM_DOFS + 3] * element->R_matrix[3*BEAM_DOFS + 2];;
-  element->twiss_prop_matrix_y[1*3 + 2] = -1.0f * element->R_matrix[2*BEAM_DOFS + 3] * element->R_matrix[3*BEAM_DOFS + 3];
-  element->twiss_prop_matrix_y[2*3 + 0] = pow(element->R_matrix[3*BEAM_DOFS + 2], 2);
-  element->twiss_prop_matrix_y[2*3 + 1] = -2.0f * element->R_matrix[3*BEAM_DOFS + 2] * element->R_matrix[3*BEAM_DOFS + 3];
-  element->twiss_prop_matrix_y[2*3 + 2] = pow(element->R_matrix[3*BEAM_DOFS + 3], 2);
 }
 
 static void calc_quad_matrix(Element *element) {
@@ -625,8 +603,15 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
   const double beta_y = R34 / sin(phi_y);
 
   double eta_vec[3] = {eta_x, 0.0f, 1.0f};
-  double twiss_x_vec[3] = {beta_x, 0.0f, 1/beta_x};
-  double twiss_y_vec[3] = {beta_y, 0.0f, 1/beta_y};
+
+  double twiss_mat[BEAM_DOFS*BEAM_DOFS] = {
+    beta_x, 0,        0,      0,        0,     0,
+    0,      1/beta_x, 0,      0,        0,     0,
+    0,      0,        beta_y, 0,        0,     0,
+    0,      0,        0,      1/beta_y, 0,     0,
+    0,      0,        0,      0,        0,     0,
+    0,      0,        0,      0,        0,     0,
+  };
 
   arrput(lin_opt_params->element_beta_xs, beta_x);
   arrput(lin_opt_params->element_beta_ys, beta_y);
@@ -637,15 +622,15 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
     S += element_length(line[i]);
     arrput(lin_opt_params->Ss, S);
 
-    double temp_twiss_x_vec[3] = {0};
-    matrix_multiply(line[i].twiss_prop_matrix_x, twiss_x_vec, temp_twiss_x_vec, 3, 3, 3, 1);
-    memcpy(twiss_x_vec, temp_twiss_x_vec, 3*sizeof(double));
-    arrput(lin_opt_params->element_beta_xs, twiss_x_vec[0]);
+    double intermed_twiss_mat[BEAM_DOFS*BEAM_DOFS] = {0};
+    double temp_twiss_mat[BEAM_DOFS*BEAM_DOFS] = {0};
 
-    double temp_twiss_y_vec[3] = {0};
-    matrix_multiply(line[i].twiss_prop_matrix_y, twiss_y_vec, temp_twiss_y_vec, 3, 3, 3, 1);
-    memcpy(twiss_y_vec, temp_twiss_y_vec, 3*sizeof(double));
-    arrput(lin_opt_params->element_beta_ys, twiss_y_vec[0]);
+    matrix_multiply(twiss_mat, line[i].transpose_R_matrix, intermed_twiss_mat, 6, 6, 6, 6);
+    matrix_multiply(line[i].R_matrix, intermed_twiss_mat, temp_twiss_mat, 6, 6, 6, 6);
+    memcpy(twiss_mat, temp_twiss_mat, BEAM_DOFS*BEAM_DOFS*sizeof(temp_twiss_mat[0]));
+
+    arrput(lin_opt_params->element_beta_xs, twiss_mat[0*BEAM_DOFS + 0]);
+    arrput(lin_opt_params->element_beta_ys, twiss_mat[2*BEAM_DOFS + 2]);
 
     double temp_eta_vec[3] = {0};
     matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
@@ -653,7 +638,7 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
     arrput(lin_opt_params->element_etas, eta_vec[0]);
     arrput(lin_opt_params->element_etaps, eta_vec[1]);
 
-    arrput(lin_opt_params->element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_x_vec[0], twiss_x_vec[1]));
+    arrput(lin_opt_params->element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
   }
 }
 
