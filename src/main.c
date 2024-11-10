@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
   }
 
   printf("Periodicity: %zu\n", args.periodicity);
-  printf("Harmonic number: %d\n", args.harmonic_number);
   printf("Number of elements in the line: %td\n", arrlen(line));
   if (args.periodicity != 1) {
     printf("Total length of the lattice: %0.3f m (%0.3f m for the line)\n", total_length, line_length);
@@ -64,11 +63,6 @@ int main(int argc, char **argv) {
            radians_to_degrees(total_angle), radians_to_degrees(line_angle));
   } else {
     printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(line_angle));
-  }
-
-  if (closed_system) {
-    double rf_freq = C / (total_length / args.harmonic_number);
-    printf("RF frequency for a hamonic number of %d: %0.6f MHz\n", args.harmonic_number, rf_freq/1e6);
   }
 
   printf("\nTotal matrix, R, for the line is:\n");

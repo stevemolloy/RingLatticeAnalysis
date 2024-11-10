@@ -19,7 +19,6 @@ typedef struct {
 
 typedef struct {
   size_t periodicity;
-  int harmonic_number;
   double E_0;
   char *file_path;
   char *programname;

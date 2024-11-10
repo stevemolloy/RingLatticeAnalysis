@@ -16,7 +16,6 @@ CommandLineArgs get_clargs(int argc, char **argv) {
   CommandLineArgs args = {
     .programname = nob_shift_args(&argc, &argv),
     .periodicity = 1,
-    .harmonic_number = 1,
     .E_0 = 0,
     .file_path = NULL,
     .save_twiss = false,
@@ -27,8 +26,6 @@ CommandLineArgs get_clargs(int argc, char **argv) {
     char *next_arg = nob_shift_args(&argc, &argv);
     if (strcmp(next_arg, "-p")==0) {
       args.periodicity = (size_t)atoi(nob_shift_args(&argc, &argv));
-    } else if (strcmp(next_arg, "-h")==0) {
-      args.harmonic_number = atoi(nob_shift_args(&argc, &argv));
     } else if (strcmp(next_arg, "-E")==0) {
       args.E_0 = strtod(nob_shift_args(&argc, &argv), NULL);
     } else if (strcmp(next_arg, "--save_twiss")==0) {
