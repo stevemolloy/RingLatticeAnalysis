@@ -55,5 +55,5 @@ test: $(TESTBIN)
 	$(TESTBIN)
 
 run: $(BIN)
-	$(BIN) ./lattices/m4U_f02020101_lattice.mad8 -p 20 -h 176 -E 3.0
+	$(BIN) ./lattices/m4U_f02020101_lattice.mad8 -p 20 -E 3.0
 
