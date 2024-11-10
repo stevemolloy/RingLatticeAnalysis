@@ -283,11 +283,6 @@ void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
     }
     fprintf(file, "\n");
   }
-
-  // double R = determinant(mat, BEAM_DOFS);
-  // printf("|R| - 1 = %0.6e     ", R - 1);
-  // if ((fabs(R - 1) > EPSILON)) printf("\n****** Non-unity determinant! ******");
-  // printf("\n");
 }
 
 Element create_element(char *name, char **cursor) {
