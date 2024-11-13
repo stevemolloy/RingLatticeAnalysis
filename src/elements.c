@@ -18,7 +18,6 @@
 
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
-static void getMinor(double* matrix, double* minor, int n, int r, int c);
 
 double synch_rad_integral_1(Element *line, int periodicity) {
   (void)line;
@@ -673,52 +672,6 @@ void transpose6x6(const double *matrix, double *transpose) {
   }
 }
 
-// Courtesy ChatGPT
-bool inverse6x6(const double *matrix, double *inverse) {
-  const int size = 6;
-  int i, j, k;
-  double temp;
-
-  // Temporary matrix to work on, copied from the original matrix
-  double temp_matrix[size * size];
-  memcpy(temp_matrix, matrix, size * size * sizeof(double));
-
-  // Initialize the inverse matrix as an identity matrix
-  for (i = 0; i < size; i++) {
-    for (j = 0; j < size; j++) {
-      inverse[(i * size + j)] = (i == j) ? 1.0 : 0.0;
-    }
-  }
-
-  // Apply Gaussian elimination on temp_matrix to compute the inverse
-  for (i = 0; i < size; i++) {
-    // Check for a non-zero pivot element
-    if (temp_matrix[(i * size + j)] == 0.0) {
-      return false; // Singular matrix, no inverse exists
-    }
-
-    // Normalize the pivot row
-    temp = temp_matrix[(i * size + j)];
-    for (j = 0; j < size; j++) {
-      temp_matrix[(i * size + j)] /= temp;
-      inverse[(i * size + j)] /= temp;
-    }
-
-    // Make other rows zero in current column
-    for (j = 0; j < size; j++) {
-      if (i != j) {
-        temp = temp_matrix[(i * size + j)];
-        for (k = 0; k < size; k++) {
-          temp_matrix[(i * size + j)] -= temp_matrix[(i * size + j)] * temp;
-          inverse[(i * size + j)] -= inverse[(i * size + j)] * temp;
-        }
-      }
-    }
-  }
-
-  return true;
-}
-
 void apply_matrix_n_times(double* result, double *matrix, size_t N) {
   memcpy(result, SIXBYSIX_IDENTITY, BEAM_DOFS*BEAM_DOFS*sizeof(double));
 
@@ -738,46 +691,6 @@ void get_line_matrix(double *matrix, Element *line) {
     memcpy(matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
 
   }
-}
-
-// Courtesy ChatGPT
-// Function to get the minor matrix by removing row `r` and column `c`
-static void getMinor(double* matrix, double* minor, int n, int r, int c) {
-    int minorRow = 0, minorCol = 0;
-    for (int i = 0; i < n; i++) {
-        if (i == r) continue; // Skip the row `r`
-        minorCol = 0;
-        for (int j = 0; j < n; j++) {
-            if (j == c) continue; // Skip the column `c`
-            minor[minorRow * (n - 1) + minorCol] = matrix[i * n + j];
-            minorCol++;
-        }
-        minorRow++;
-    }
-}
-
-// Courtesy ChatGPT
-// Recursive function to calculate the determinant
-double determinant(double* matrix, int n) {
-    // Base case: if matrix is 2x2, return determinant directly
-    if (n == 2) return matrix[0] * matrix[3] - matrix[1] * matrix[2];
-    
-    double det = 0.0;
-    double minor[(n - 1) * (n - 1)]; // Minor matrix will be (n-1)x(n-1)
-
-    // Cofactor expansion along the first row (i = 0)
-    for (int j = 0; j < n; j++) {
-        // Get the minor matrix for element at (0, j)
-        getMinor(matrix, minor, n, 0, j);
-
-        // Compute cofactor (-1)^(i+j) * element * determinant of minor
-        double cofactor = (j % 2 == 0 ? 1 : -1) * matrix[j] * determinant(minor, n - 1);
-
-        // Add cofactor to the determinant
-        det += cofactor;
-    }
-
-    return det;
 }
 
 void generate_lattice(const char *filename, Element **line) {

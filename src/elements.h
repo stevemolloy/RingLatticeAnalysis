@@ -133,9 +133,7 @@ void make_r_matrix(Element *element);
 
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
-bool inverse6x6(const double *matrix, double *inverse);
 void transpose6x6(const double *matrix, double *transpose);
-double determinant(double* matrix, int n);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
 
 #endif // !ELEMENTS_H
