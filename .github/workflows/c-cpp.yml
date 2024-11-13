@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: install_cblas
-      run: sudo apt update && sudo apt install libatlas-base-dev libblas-dev liblapack-dev
+      run: sudo apt update && sudo apt install libatlas3-base libatlas-dev libgfortran3 libblas-dev libblas3
     - name: make
       run: make && ./bin/test
   build_test_windows:
@@ -23,3 +23,5 @@ jobs:
       run: make
     # - name: test
     #   run: ./bin/test
+    #
+
