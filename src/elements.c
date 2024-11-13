@@ -649,13 +649,13 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
   //           const CBLAS_INT K, const double alpha, const double *A,
   //           const CBLAS_INT lda, const double *B, const CBLAS_INT ldb,
   //           const double beta, double *C, const CBLAS_INT ldc);
-  enum CBLAS_LAYOUT layout = CblasRowMajor;
-  enum CBLAS_TRANSPOSE TransA = CblasNoTrans, TransB = CblasNoTrans;
+  // enum CBLAS_LAYOUT layout = CblasRowMajor;
+  // enum CBLAS_TRANSPOSE TransA = CblasNoTrans, TransB = CblasNoTrans;
   const int M = r1, N = c2, K = c1;
   const int lda = c1, ldb = c2;
   const double alpha = 1.0, beta = 0.0;
 
-  cblas_dgemm(layout, TransA, TransB, M, N, K, alpha, mat1, lda, mat2, ldb, beta, result, ldb);
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha, mat1, lda, mat2, ldb, beta, result, ldb);
 
   return true;
 }
