@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-#include <idontexistcblas.h>
+#include <cblas.h>
 
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
@@ -649,8 +649,8 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
   //           const CBLAS_INT K, const double alpha, const double *A,
   //           const CBLAS_INT lda, const double *B, const CBLAS_INT ldb,
   //           const double beta, double *C, const CBLAS_INT ldc);
-  CBLAS_LAYOUT layout = CblasRowMajor;
-  CBLAS_TRANSPOSE TransA = CblasNoTrans, TransB = CblasNoTrans;
+  enum CBLAS_LAYOUT layout = CblasRowMajor;
+  enum CBLAS_TRANSPOSE TransA = CblasNoTrans, TransB = CblasNoTrans;
   const int M = r1, N = c2, K = c1;
   const int lda = c1, ldb = c2;
   const double alpha = 1.0, beta = 0.0;
