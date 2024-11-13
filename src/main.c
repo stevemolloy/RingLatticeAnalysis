@@ -28,6 +28,9 @@ bool lattice_is_closed(double total_angle) {
 
 int main(int argc, char **argv) {
   CommandLineArgs args = get_clargs(argc, argv);
+  if (args.error) {
+    return 1;
+  }
 
   Element *line = {0};
   generate_lattice(args.file_path, &line);

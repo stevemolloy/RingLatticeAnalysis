@@ -24,6 +24,7 @@ typedef struct {
   char *programname;
   char *twiss_filename;
   bool save_twiss;
+  bool error;
 } CommandLineArgs;
 
 Arena make_arena(void);

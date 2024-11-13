@@ -20,6 +20,7 @@ CommandLineArgs get_clargs(int argc, char **argv) {
     .file_path = NULL,
     .save_twiss = false,
     .twiss_filename = NULL,
+    .error = false,
   };
 
   while (argc > 0) {
@@ -31,8 +32,17 @@ CommandLineArgs get_clargs(int argc, char **argv) {
     } else if (strcmp(next_arg, "--save_twiss")==0) {
       args.save_twiss = true;
       args.twiss_filename = nob_shift_args(&argc, &argv);
+    } else if (*next_arg == '-') {
+      args.error = true;
+      fprintf(stderr, "WARNING: Argument flag '%s' not valid\n", next_arg);
     } else {
-      args.file_path = next_arg;
+      if (args.file_path == NULL) {
+        args.file_path = next_arg;
+      } else {
+        args.error = true;
+        fprintf(stderr, "WARNING: %s provided for the lattice file, but %s was already given. ", next_arg, args.file_path);
+        fprintf(stderr, "Check the command line arguments.\n");
+      }
     }
   }
 
