@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include <cblas.h>
 
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
@@ -643,19 +644,23 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
     return false;
   }
 
-  size_t r3 = r1;
-  size_t c3 = c2;
-
-  for (size_t row=0; row<r3; row++) {
-    for (size_t col=0; col<c3; col++) {
-      size_t output_ind = row*c3 + col;
-      result[output_ind] = 0;
-
-      for (size_t k=0; k<c1; k++) {
-        result[output_ind] += mat1[row*c1 + k] * mat2[k*c2 + col];
-      }
-    }
-  }
+  // C = alpha.A*B + beta.C
+  //  void cblas_dgemm(CBLAS_LAYOUT layout, CBLAS_TRANSPOSE TransA,
+  //           CBLAS_TRANSPOSE TransB, const CBLAS_INT M, const CBLAS_INT N,
+  //           const CBLAS_INT K, const double alpha, const double *A,
+  //           const CBLAS_INT lda, const double *B, const CBLAS_INT ldb,
+  //           const double beta, double *C, const CBLAS_INT ldc);
+  CBLAS_LAYOUT layout = CblasRowMajor;
+  CBLAS_TRANSPOSE TransA = CblasNoTrans;
+  CBLAS_TRANSPOSE TransB = CblasNoTrans;
+  const CBLAS_INT M = r1;
+  const CBLAS_INT N = c2;
+  const CBLAS_INT K = c1;
+  const CBLAS_INT lda = c1;
+  const CBLAS_INT ldb = c2;
+  const double alpha = 1.0;
+  const double beta = 0.0;
+  cblas_dgemm(layout, TransA, TransB, M, N, K, alpha, mat1, lda, mat2, ldb, beta, result, ldb);
 
   return true;
 }

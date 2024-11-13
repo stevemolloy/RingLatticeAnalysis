@@ -3,10 +3,10 @@ CINCLUDES = -I./third_party/
 ifeq ($(OS),Windows_NT)
 	CC = gcc
 	CFLAGS += -D__USE_MINGW_ANSI_STDIO
-	CLIBS = 
+	CLIBS = -lcblas
 else
 	CC ?= clang
-	CLIBS = -lm
+	CLIBS = -lm -lcblas
 endif
 
 SRC = src
