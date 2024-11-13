@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: install_cblas
+      run: apt update && apt install openblas
     - name: make
       run: make && ./bin/test
   build_test_windows:
