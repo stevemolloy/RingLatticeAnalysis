@@ -571,9 +571,48 @@ double energy_spread(double I2, double I3, double I4, double gamma0) {
   return C_Q * pow(gamma0, 2) * I3 / (2*I2 + I4);
 }
 
-double get_curlyH(double eta, double etap, double beta, double alpha) {
+double get_curlyH(Element element, double eta, double etap, double beta, double alpha) {
   assert(beta != 0.0 && "Beta of 0.0 does not make sense. Something has gone wrong.");
-  return (pow(eta, 2) + pow((beta*etap + alpha*eta), 2)) / beta;
+  double gamma = (1/beta) * (1 + alpha*alpha);
+
+  double H = gamma*eta*eta + 2*alpha*eta*etap + beta*etap*etap;
+
+  if ((element.type == ELETYPE_SBEND) && element.as.sbend.angle != 0.0) {
+    double K1 = element.as.sbend.K1;
+    double L = element.as.sbend.length;
+    double angle = element.as.sbend.angle;
+    double h = angle / L;
+
+    double k_sqr = pow(h, 2) + K1;
+    double k = sqrt(fabs(k_sqr));
+    double k_L = k * L;
+
+    double (*sinlike_func)(double);
+    double (*coslike_func)(double);
+    double sign = (k_sqr>0) ? 1.0 : -1.0;
+    if (sign > 0) {
+      sinlike_func = &sin;
+      coslike_func = &cos;
+    } else {
+      sinlike_func = &sinh;
+      coslike_func = &cosh;
+    }
+    double Skl = sinlike_func(k_L);
+    double Ckl = coslike_func(k_L);
+    double SklCkl = Skl * Ckl;
+ 
+    H += 2 * angle * (
+      -(gamma*eta + alpha*etap) * ((k_L - Skl) / (sign*pow(k,3)*pow(L,2)))
+      +(alpha*eta + beta*etap) * ((1 - Ckl) / (sign*pow(k,2)*pow(L,2)))
+    );
+    H += pow(angle,2) * (
+      gamma * ((3*k_L - 4*Skl + SklCkl) / (2*pow(k,5)*pow(L,3)))
+      -alpha * pow((1 - Ckl),2) / (pow(k,4)*pow(L,3))
+      +beta * ((k_L - SklCkl) / (2*sign*pow(k,3)*pow(L,3)))
+    );
+  }
+  
+  return H;
 }
 
 void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params) {
@@ -625,7 +664,7 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
     arrput(lin_opt_params->element_etas, eta_vec[0]);
     arrput(lin_opt_params->element_etaps, eta_vec[1]);
 
-    arrput(lin_opt_params->element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
+    arrput(lin_opt_params->element_curlyH, get_curlyH(line[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
   }
 }
 
