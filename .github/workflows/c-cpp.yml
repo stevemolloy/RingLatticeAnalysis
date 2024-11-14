@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: get_openblas
-      run: choco install wget && mkdir openblas && cd openblas && wget https://sourceforge.net/projects/openblas/files/v0.3.28/OpenBLAS-0.3.28-x64-64.zip/download && unzip download && cp -v include/cblas.h C:\mingw64\include\ && cp -v bin/libopenblas.dll ../src/ && which gcc && gcc --version
+      run: choco install wget && mkdir openblas && cd openblas && wget https://sourceforge.net/projects/openblas/files/v0.3.28/OpenBLAS-0.3.28-x64-64.zip/download && unzip download && touch empty.c && gcc -v empty.c && cp -v include/cblas.h C:\mingw64\include\ && cp -v bin/libopenblas.dll ../src/ && which gcc && gcc --version
     - name: make
       run: make
     # - name: test
