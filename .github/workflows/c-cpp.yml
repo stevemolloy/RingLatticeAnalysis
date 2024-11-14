@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: get_openblas
-      run: git clone git@github.com:xianyi/OpenBLAS.git
+      run: git clone https://github.com/OpenMathLib/OpenBLAS.git
     - name: compile_openblas
       run: cd OpenBLAS && make
     - name: make
