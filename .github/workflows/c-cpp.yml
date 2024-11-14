@@ -20,9 +20,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: get_openblas
-      run: git clone https://github.com/OpenMathLib/OpenBLAS.git
+      run: mkdir openblas && cd openblas && wget https://sourceforge.net/projects/openblas/files/v0.3.28/OpenBLAS-0.3.28-x64-64.zip/download && unzip download
     - name: compile_openblas
-      run: cd OpenBLAS && make && make install
+      run: cp include/cblas.h /usr/include/ && cp bin/libopenblas.dll /lib/
     - name: make
       run: make
     # - name: test
