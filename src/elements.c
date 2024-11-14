@@ -138,9 +138,6 @@ void make_r_matrix(Element *element) {
       break;
   }
 
-  memset(element->transpose_R_matrix, 0, sizeof(element->transpose_R_matrix));
-  transpose6x6(element->R_matrix, element->transpose_R_matrix);
-
   element->eta_prop_matrix[0*3 + 0] = element->R_matrix[0*BEAM_DOFS + 0];
   element->eta_prop_matrix[0*3 + 1] = element->R_matrix[0*BEAM_DOFS + 1];
   element->eta_prop_matrix[0*3 + 2] = element->R_matrix[0*BEAM_DOFS + 5];
@@ -617,12 +614,7 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
     S += element_length(line[i]);
     arrput(lin_opt_params->Ss, S);
 
-    double intermed_twiss_mat[BEAM_DOFS*BEAM_DOFS] = {0};
-    double temp_twiss_mat[BEAM_DOFS*BEAM_DOFS] = {0};
-
-    matrix_multiply(twiss_mat, line[i].transpose_R_matrix, intermed_twiss_mat, 6, 6, 6, 6);
-    matrix_multiply(line[i].R_matrix, intermed_twiss_mat, temp_twiss_mat, 6, 6, 6, 6);
-    memcpy(twiss_mat, temp_twiss_mat, BEAM_DOFS*BEAM_DOFS*sizeof(temp_twiss_mat[0]));
+    advance_twiss_matrix(twiss_mat, line[i]);
 
     arrput(lin_opt_params->element_beta_xs, twiss_mat[0*BEAM_DOFS + 0]);
     arrput(lin_opt_params->element_beta_ys, twiss_mat[2*BEAM_DOFS + 2]);
@@ -635,6 +627,15 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
 
     arrput(lin_opt_params->element_curlyH, get_curlyH(eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
   }
+}
+
+void advance_twiss_matrix(double *twiss_mat, Element element) {
+  double intermed_twiss_mat[BEAM_DOFS*BEAM_DOFS] = {0};
+  double input_twiss[BEAM_DOFS*BEAM_DOFS] = {0};
+  memcpy(input_twiss, twiss_mat, BEAM_DOFS*BEAM_DOFS * sizeof(double));
+
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans,   BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, 1.0, input_twiss,      BEAM_DOFS, element.R_matrix,   BEAM_DOFS, 0.0, intermed_twiss_mat, BEAM_DOFS);
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, 1.0, element.R_matrix, BEAM_DOFS, intermed_twiss_mat, BEAM_DOFS, 0.0, twiss_mat,          BEAM_DOFS);
 }
 
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2) {
@@ -658,14 +659,6 @@ bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size
   cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha, mat1, lda, mat2, ldb, beta, result, ldb);
 
   return true;
-}
-
-void transpose6x6(const double *matrix, double *transpose) {
-  for (size_t i=0; i<6; i++) {
-    for (size_t j=0; j<6; j++) {
-      transpose[i*6 + j] = matrix[j*6 + i];
-    }
-  }
 }
 
 void apply_matrix_n_times(double* result, double *matrix, size_t N) {

@@ -81,7 +81,6 @@ typedef struct {
   char name[ELENAME_MAX_LEN];
   EleType type;
   double R_matrix[BEAM_DOFS*BEAM_DOFS];
-  double transpose_R_matrix[BEAM_DOFS*BEAM_DOFS];
   double eta_prop_matrix[9];
   union {
     Drift drift;
@@ -133,7 +132,7 @@ void make_r_matrix(Element *element);
 
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]);
 bool matrix_multiply(double *mat1, double *mat2, double *result, size_t r1, size_t c1, size_t r2, size_t c2);
-void transpose6x6(const double *matrix, double *transpose);
+void advance_twiss_matrix(double *twiss_mat, Element element);
 void apply_matrix_n_times(double* result, double *matrix, size_t N);
 
 #endif // !ELEMENTS_H
