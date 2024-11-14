@@ -22,7 +22,7 @@ jobs:
     - name: get_openblas
       run: git clone https://github.com/OpenMathLib/OpenBLAS.git
     - name: compile_openblas
-      run: cd OpenBLAS && make
+      run: cd OpenBLAS && make && make install
     - name: make
       run: make
     # - name: test
