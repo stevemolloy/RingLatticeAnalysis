@@ -68,7 +68,7 @@ typedef struct {
 } Cavity;
 
 typedef enum {
-  ELETYPE_DRIFT,
+  ELETYPE_DRIFT = 0,
   ELETYPE_QUAD,
   ELETYPE_SBEND,
   ELETYPE_MULTIPOLE,
@@ -76,6 +76,8 @@ typedef enum {
   ELETYPE_OCTUPOLE,
   ELETYPE_CAVITY,
 } EleType;
+
+const char* get_element_type(EleType t);
 
 typedef struct {
   char name[ELENAME_MAX_LEN];

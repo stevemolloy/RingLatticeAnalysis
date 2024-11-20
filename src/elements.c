@@ -94,6 +94,19 @@ double element_length(Element element) {
   exit(1);
 }
 
+const char* get_element_type(EleType t) {
+  switch (t) {
+    case ELETYPE_DRIFT: return "DRIFT";
+    case ELETYPE_QUAD: return "QUAD";
+    case ELETYPE_SBEND: return "SBEND";
+    case ELETYPE_MULTIPOLE: return "MULTIPOLE";
+    case ELETYPE_SEXTUPOLE: return "SEXTUPOLE";
+    case ELETYPE_OCTUPOLE: return "OCTUPOLE";
+    case ELETYPE_CAVITY: return "CAVITY";
+  }
+  return "";
+}
+
 double bending_radius_of_element(Element element) {
   double rho = DBL_MAX;
   switch (element.type) {
