@@ -46,6 +46,10 @@ CommandLineArgs get_clargs(int argc, char **argv) {
     }
   }
 
+  if (args.file_path == NULL) {
+    args.error = true;
+  }
+
   return args;
 }
 

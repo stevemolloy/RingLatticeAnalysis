@@ -55,6 +55,8 @@ int main(int argc, char **argv) {
     printf("System does not close, so not calculating ring parameters.\n\n");
   }
 
+  if (args.E_0 == 0) 
+    printf("WARNING: Kinetic energy not provided, so not calculating all parameters\n\n");
   printf("Periodicity: %zu\n", args.periodicity);
   printf("Number of elements in the line: %td\n", arrlen(line));
   if (args.periodicity != 1) {
@@ -74,8 +76,10 @@ int main(int argc, char **argv) {
 
   double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
-  printf("\nTotal matrix, R, for the full system:\n");
-  rmatrix_print(stdout, total_matrix);
+  if (args.periodicity > 1) {
+    printf("\nTotal matrix, R, for the full system:\n");
+    rmatrix_print(stdout, total_matrix);
+  }
 
   if (closed_system) {
     double x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]);
@@ -154,15 +158,17 @@ int main(int argc, char **argv) {
     printf("\n");
     printf("x fractional tune:    %f\n", acos(x_trace / 2) / (2*M_PI));
     printf("y fractional tune:    %f\n", acos(y_trace / 2) / (2*M_PI));
-    printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I_2, gamma_0) / 1e3);
+    if (gamma_0 > 0)
+      printf("Energy loss per turn: %0.3f keV\n", e_loss_per_turn(I_2, gamma_0) / 1e3);
     printf("Momentum compaction:  %0.3e\n", R56 / total_length);
     printf("j_x:                  %+0.3e\n", j_x);
-    printf("tau_x:                %0.3f ms\n", 
+    if (gamma_0 > 0) {
+      printf("tau_x:                %0.3f ms\n", 
            1e3 * (2 * args.E_0*1e9 * T_0) / (j_x * e_loss_per_turn(I_2, gamma_0)));
-    printf("Natural x emittance:  %0.3f pm.rad\n", 
+      printf("Natural x emittance:  %0.3f pm.rad\n", 
            1e12 * natural_emittance_x(I_2, I_4, I_5, gamma_0));
-    printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
-  
+      printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
+    }
     arrfree(lin_opt_params.element_etas);
     arrfree(lin_opt_params.element_etaps);
     arrfree(lin_opt_params.element_beta_xs);
