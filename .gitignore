@@ -15,3 +15,5 @@ physics/dispersion_propagation/dispersion.log
 
 twiss_output.csv
 twiss_output.xlsx
+
+*.csv
