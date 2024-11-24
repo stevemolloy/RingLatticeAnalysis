@@ -296,7 +296,7 @@ void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
   }
 }
 
-Element create_element(sdm_arena_t mem_arena, char *name, char **cursor) {
+Element create_element(sdm_arena_t *mem_arena, char *name, char **cursor) {
   Element result = {0};
   size_t name_len = strlen(name);
   memcpy(result.name, name, name_len >= ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
@@ -334,7 +334,7 @@ Element create_element(sdm_arena_t mem_arena, char *name, char **cursor) {
 
   bool finding_key = true;
   bool finding_val = false;
-  char *key = sdm_arena_alloc(&mem_arena, 100*sizeof(char));
+  char *key = sdm_arena_alloc(mem_arena, 100*sizeof(char));
   size_t key_index = 0;
   double val = 0.0;
   for (;;) {
@@ -364,7 +364,7 @@ Element create_element(sdm_arena_t mem_arena, char *name, char **cursor) {
       shput(kv_pairs, key, val);
       finding_key = true;
       finding_val = false;
-      key = sdm_arena_alloc(&mem_arena, 100*sizeof(char));
+      key = sdm_arena_alloc(mem_arena, 100*sizeof(char));
       key_index = 0;
       val = 0.0;
       while ((**cursor==',') | (**cursor==' ')) {
@@ -469,7 +469,7 @@ char *populate_element_library(ElementLibrary **element_library, Element **eleme
       // fprintf(stderr, "%s\n", element_name);
 
       shput(*element_library, element_name, arrput(*element_list, 
-                                                  create_element(mem_arena, element_name, &cursor)));
+                                                  create_element(&mem_arena, element_name, &cursor)));
     } else {
       cursor++;
     }

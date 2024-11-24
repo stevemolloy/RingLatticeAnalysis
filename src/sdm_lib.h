@@ -348,7 +348,7 @@ void sdm_arena_init(sdm_arena_t *arena, size_t capacity) {
     fprintf(stderr, "Memory problem. Aborting.\n");
     exit(1);
   }
-  memset(arena->start, 0, capacity);
+  // memset(arena->start, 0, capacity);
   arena->next = malloc(sizeof(*arena->next));
   if (arena->next == NULL) {
     fprintf(stderr, "Memory problem. Aborting.\n");
@@ -379,6 +379,8 @@ void *sdm_arena_alloc(sdm_arena_t *arena, size_t size) {
     arena->length += size;
   else
     arena->length += 1;
+
+  memset(return_val, 0, size);
 
   return return_val;
 }

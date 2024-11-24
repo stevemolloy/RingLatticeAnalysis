@@ -126,7 +126,7 @@ void generate_lattice(const char *filename, Element **line);
 void create_line(char *cursor, Element **line, ElementLibrary *element_library);
 char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor);
 void get_line_matrix(double *matrix, Element *line);
-Element create_element(sdm_arena_t mem_arena, char *name, char **cursor);
+Element create_element(sdm_arena_t *mem_arena, char *name, char **cursor);
 void element_print(Element element);
 double element_length(Element element);
 double bending_radius_of_element(Element element);
