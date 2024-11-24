@@ -1,3 +1,4 @@
+#include "sdm_lib.h"
 #define _GNU_SOURCE
 #include <math.h>
 #include <assert.h>
@@ -295,12 +296,11 @@ void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
   }
 }
 
-Element create_element(char *name, char **cursor) {
+Element create_element(sdm_arena_t mem_arena, char *name, char **cursor) {
   Element result = {0};
   size_t name_len = strlen(name);
   memcpy(result.name, name, name_len >= ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
 
-  Arena mem_arena = make_arena();
   str2dbl_hashmap* kv_pairs = NULL;
 
   while ((**cursor == ' ') | (**cursor == ':')) (*cursor)++;
@@ -323,7 +323,6 @@ Element create_element(char *name, char **cursor) {
   else if (strcmp(type, "RFCAVITY") == 0)   result.type = ELETYPE_CAVITY;
   else if (strcmp(type, "LINE") == 0) {
     *cursor -= 4; // Safe since we just extracted "LINE" from this, so this puts the cursor back there.
-    arena_free(&mem_arena);
     return result;
   } else {
     fprintf(stderr, "ERROR: Unable to parse elements of type %s\n", type);
@@ -335,7 +334,7 @@ Element create_element(char *name, char **cursor) {
 
   bool finding_key = true;
   bool finding_val = false;
-  char *key = arena_alloc(&mem_arena, 100*sizeof(char));
+  char *key = sdm_arena_alloc(&mem_arena, 100*sizeof(char));
   size_t key_index = 0;
   double val = 0.0;
   for (;;) {
@@ -365,7 +364,7 @@ Element create_element(char *name, char **cursor) {
       shput(kv_pairs, key, val);
       finding_key = true;
       finding_val = false;
-      key = arena_alloc(&mem_arena, 100*sizeof(char));
+      key = sdm_arena_alloc(&mem_arena, 100*sizeof(char));
       key_index = 0;
       val = 0.0;
       while ((**cursor==',') | (**cursor==' ')) {
@@ -377,7 +376,6 @@ Element create_element(char *name, char **cursor) {
   if (kv_pairs == NULL) {
     shfree(kv_pairs);
     make_r_matrix(&result);
-    arena_free(&mem_arena);
     return result;
   }
 
@@ -451,12 +449,11 @@ Element create_element(char *name, char **cursor) {
   make_r_matrix(&result);
 
   shfree(kv_pairs);
-  arena_free(&mem_arena);
 
   return result;
 }
 
-char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor) {
+char *populate_element_library(sdm_arena_t mem_arena, ElementLibrary **element_library, Element **element_list, char *cursor) {
   while (*cursor != '\0') {
     if (isalpha(*cursor)) {
       char *element_name = cursor;
@@ -466,8 +463,10 @@ char *populate_element_library(ElementLibrary **element_library, Element **eleme
       *cursor = '\0';
       cursor++;
 
+      // fprintf(stderr, "%s\n", element_name);
+
       shput(*element_library, element_name, arrput(*element_list, 
-                                                  create_element(element_name, &cursor)));
+                                                  create_element(mem_arena, element_name, &cursor)));
     } else {
       cursor++;
     }
@@ -734,7 +733,7 @@ void get_line_matrix(double *matrix, Element *line) {
   }
 }
 
-void generate_lattice(const char *filename, Element **line) {
+void generate_lattice(sdm_arena_t mem_arena, const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   char *cursor = buffer;
 
@@ -742,7 +741,7 @@ void generate_lattice(const char *filename, Element **line) {
 
   Element *element_list = NULL;
   ElementLibrary *element_library = NULL;
-  cursor = populate_element_library(&element_library, &element_list, cursor);
+  cursor = populate_element_library(mem_arena, &element_library, &element_list, cursor);
 
   create_line(cursor, line, element_library);
 
