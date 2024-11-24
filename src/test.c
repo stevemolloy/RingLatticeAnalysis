@@ -173,9 +173,6 @@ bool test_matmul(void) {
 }
 
 bool test_sbend(void) {
-  sdm_arena_t mem_arena = {0};
-  sdm_arena_init(&mem_arena, 1024*1024);
-
   const char *test_name = "SBEND ELEMENT TEST";
   const char *expected_filename = "./tests/sbend_expected.txt";
   const char *result_filename =   "./tests/sbend_result.txt";
@@ -183,7 +180,7 @@ bool test_sbend(void) {
   const char *filename = "./lattices/whiskey.mad8";
 
   Element *line = {0};
-  generate_lattice(mem_arena, filename, &line);
+  generate_lattice(filename, &line);
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   get_line_matrix(line_matrix, line);
 
@@ -207,9 +204,6 @@ bool test_sbend(void) {
 }
 
 bool test_full_lat_all_mats(void) {
-  sdm_arena_t mem_arena = {0};
-  sdm_arena_init(&mem_arena, 1024*1024);
-
   const char *test_name = "FULL LAT ALL MATS TEST";
   const char *expected_filename = "./tests/fulllat_allmats_expected.txt";
   const char *result_filename =   "./tests/fulllat_allmats_result.txt";
@@ -217,7 +211,7 @@ bool test_full_lat_all_mats(void) {
   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
 
   Element *line = {0};
-  generate_lattice(mem_arena, filename, &line);
+  generate_lattice(filename, &line);
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
   FILE *result_file;
@@ -251,9 +245,6 @@ bool test_full_lat_all_mats(void) {
 }
 
 bool test_twiss_propagation(void) {
-  sdm_arena_t mem_arena = {0};
-  sdm_arena_init(&mem_arena, 1024*1024);
-
   const char *test_name = "TWISS PROP TEST";
   const char *expected_filename = "./tests/twissprop_expected.txt";
   const char *result_filename =   "./tests/twissprop_result.txt";
@@ -261,7 +252,7 @@ bool test_twiss_propagation(void) {
   char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
 
   Element *line = {0};
-  generate_lattice(mem_arena, file_path, &line);
+  generate_lattice(file_path, &line);
 
   const double periodicity = 20;
 
@@ -310,15 +301,12 @@ bool compare_arrays(double *correct_mat, double *compare_mat, size_t n) {
 }
 
 bool compare_with_matlab(void) {
-  sdm_arena_t mem_arena = {0};
-  sdm_arena_init(&mem_arena, 1024*1024);
-  
   const char *test_name = "MATLAB_COMPARISON TEST";
 
   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
 
   Element *line = {0};
-  generate_lattice(mem_arena, filename, &line);
+  generate_lattice(filename, &line);
 
   const char *matlab_output_filename = "./tests/matlab_output.txt";
   char *matlab_output_buffer = read_entire_file(matlab_output_filename);

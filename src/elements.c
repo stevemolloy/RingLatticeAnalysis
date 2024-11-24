@@ -453,7 +453,10 @@ Element create_element(sdm_arena_t mem_arena, char *name, char **cursor) {
   return result;
 }
 
-char *populate_element_library(sdm_arena_t mem_arena, ElementLibrary **element_library, Element **element_list, char *cursor) {
+char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor) {
+  sdm_arena_t mem_arena = {0};
+  sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
+
   while (*cursor != '\0') {
     if (isalpha(*cursor)) {
       char *element_name = cursor;
@@ -474,6 +477,8 @@ char *populate_element_library(sdm_arena_t mem_arena, ElementLibrary **element_l
       break;
     }
   }
+
+  sdm_arena_free(&mem_arena);
   return cursor;
 }
 
@@ -733,7 +738,7 @@ void get_line_matrix(double *matrix, Element *line) {
   }
 }
 
-void generate_lattice(sdm_arena_t mem_arena, const char *filename, Element **line) {
+void generate_lattice(const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   char *cursor = buffer;
 
@@ -741,7 +746,7 @@ void generate_lattice(sdm_arena_t mem_arena, const char *filename, Element **lin
 
   Element *element_list = NULL;
   ElementLibrary *element_library = NULL;
-  cursor = populate_element_library(mem_arena, &element_library, &element_list, cursor);
+  cursor = populate_element_library(&element_library, &element_list, cursor);
 
   create_line(cursor, line, element_library);
 

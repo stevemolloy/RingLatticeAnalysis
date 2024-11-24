@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
 
   Element *line = {0};
-  generate_lattice(mem_arena, args.file_path, &line);
+  generate_lattice(args.file_path, &line);
 
   double line_length = calculate_line_length(line);
   double total_length = line_length * args.periodicity;
@@ -184,6 +184,10 @@ int main(int argc, char **argv) {
   }
 
   printf("\n");
+
+  // for (size_t i=0; i<arrlenu(line); i++) {
+  //   printf("%s: %s, L = %e\n", line[i].name, get_element_type(line[i].type), element_length(line[i]));
+  // }
 
   arrfree(line);
 
