@@ -177,6 +177,12 @@ int main(int argc, char **argv) {
     arrfree(lin_opt_params.Ss);
   }
 
+  // for (size_t i=0; i<arrlenu(line); i++) {
+  //   printf("%s: %s, L = %e\n", line[i].name, get_element_type(line[i].type), element_length(line[i]));
+  //   rmatrix_print(stdout, line[i].R_matrix);
+  //   printf("\n");
+  // }
+
   printf("\n");
 
   arrfree(line);
