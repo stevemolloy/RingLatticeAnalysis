@@ -12,6 +12,10 @@
 
 #include "stb_ds.h"
 
+#include "sdm_lib.h"
+
+sdm_arena_t mem_arena = {0};
+
 // TODO: Factor out the twiss propagation stuff into diagonalised 2x2 instead of the 3x3 stuff
 // TODO: Rationalise memory management. In some places it is dynamic arrays, in other an arena is used. Time to straighten this out.
 // TODO: Spin off a few more functions for the library.  The "main" function should be a list of calls to library functions.
@@ -32,6 +36,8 @@ int main(int argc, char **argv) {
     usage(args.programname);
     return 1;
   }
+
+  sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
 
   Element *line = {0};
   generate_lattice(args.file_path, &line);
@@ -184,6 +190,12 @@ int main(int argc, char **argv) {
   // }
 
   printf("\n");
+
+  // for (size_t i=0; i<arrlenu(line); i++) {
+  //   printf("%s: %s, L = %e\n", line[i].name, get_element_type(line[i].type), element_length(line[i]));
+  //   rmatrix_print(stdout, line[i].R_matrix);
+  //   printf("\n");
+  // }
 
   arrfree(line);
 

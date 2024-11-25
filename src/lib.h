@@ -4,14 +4,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define ARENA_CAP 1024 * 1024
-
-typedef struct {
-  size_t capacity;
-  size_t size;
-  void *data;
-} Arena;
-
 typedef struct {
   char* key;
   double value;
@@ -26,10 +18,6 @@ typedef struct {
   bool save_twiss;
   bool error;
 } CommandLineArgs;
-
-Arena make_arena(void);
-void arena_free(Arena *arena);
-void *arena_alloc(Arena *arena, size_t size);
 
 CommandLineArgs get_clargs(int argc, char **argv);
 bool isvalididchar(char c);
