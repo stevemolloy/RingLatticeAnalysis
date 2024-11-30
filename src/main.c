@@ -121,6 +121,9 @@ int main(int argc, char **argv) {
     const double I_3=synch_rad_integral_3(line, args.periodicity);
     double I_4=0.0, I_5=0.0;
     for (size_t i=0; i<arrlenu(line); i++) {
+      // if (line[i].type == ELETYPE_SBEND) {
+      //   element_print(line[i]);
+      // }
       if (line[i].type == ELETYPE_SBEND) {
         double angle = line[i].as.sbend.angle;
         double L = line[i].as.sbend.length;
@@ -184,7 +187,7 @@ int main(int argc, char **argv) {
   }
 
   // for (size_t i=0; i<arrlenu(line); i++) {
-  //   printf("%s: %s, L = %e\n", line[i].name, get_element_type(line[i].type), element_length(line[i]));
+  //   element_print(line[i]);
   //   rmatrix_print(stdout, line[i].R_matrix);
   //   printf("\n");
   // }

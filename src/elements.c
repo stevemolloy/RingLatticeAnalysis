@@ -171,7 +171,7 @@ static void calc_quad_matrix(Element *element) {
 
   if (element->as.quad.K1 == 0) {
     element->R_matrix[0*BEAM_DOFS + 1] = L;
-    element->R_matrix[0*BEAM_DOFS + 1] = L;
+    element->R_matrix[2*BEAM_DOFS + 3] = L;
     return;
   }
 
@@ -466,7 +466,10 @@ char *populate_element_library(ElementLibrary **element_library, Element **eleme
       *cursor = '\0';
       cursor++;
 
-      // fprintf(stderr, "%s\n", element_name);
+      if (strcmp(element_name, "RF_ON") == 0) {
+        while (*cursor != '\n') cursor++;
+        continue;
+      }
 
       shput(*element_library, element_name, arrput(*element_list, 
                                                   create_element(&mem_arena, element_name, &cursor)));
@@ -589,8 +592,39 @@ double energy_spread(double I2, double I3, double I4, double gamma0) {
 }
 
 double get_curlyH(Element element, double eta, double etap, double beta, double alpha) {
-  assert(beta != 0.0 && "Beta of 0.0 does not make sense. Something has gone wrong.");
+  assert(beta > 0.0 && "Beta of 0.0 or less does not make sense. Something has gone wrong.");
   double gamma = (1/beta) * (1 + alpha*alpha);
+
+ //  if (K > 0e0) {
+ //    Cell.dI[4] =
+ //      h/K*(2e0*b2+sqr(h))
+ //      *((eta*sqrt(K)*sin(psi)+etap*(1e0-cos(psi)))
+	// + h/sqrt(K)*(psi-sin(psi)));
+	//
+ //    Cell.dI[5] =
+ //      L*fabs(cube(h))
+ //      *(gamma*sqr(eta)+2e0*alpha*eta*etap+beta*sqr(etap))
+ //      - 2e0*pow(h, 4)/(pow(K, 3e0/2e0))
+ //      *(sqrt(K)*(alpha*eta+beta*etap)*(cos(psi)-1e0)
+	// +(gamma*eta+alpha*etap)*(psi-sin(psi)))
+ //      + fabs(pow(h, 5))/(4e0*pow(K, 5e0/2e0))
+ //      *(2e0*alpha*sqrt(K)*(4e0*cos(psi)-cos(2e0*psi)-3e0)
+	// +beta*K*(2e0*psi-sin(2e0*psi))
+	// +gamma*(6e0*psi-8e0*sin(psi)+sin(2e0*psi)));
+ //  } else {
+ //    K = fabs(K);
+	//
+ //    Cell.dI[4] =
+ //      h/K*(2e0*b2+sqr(h))
+ //      *((eta*sqrt(K)*sinh(psi)-etap*(1e0-cosh(psi)))
+	// - h/sqrt(K)*(psi-sinh(psi)));
+	//
+  // Note (SDM) psi = k_L and K = k_sqr
+ //    Cell.dI[5] =
+ //      L*fabs(cube(h)) * (gamma*sqr(eta)+2e0*alpha*eta*etap+beta*sqr(etap))
+ //      + 2e0*pow(h, 4)/(pow(K, 3e0/2e0)) * (sqrt(K)*(alpha*eta+beta*etap)*(cosh(psi)-1e0) +(gamma*eta+alpha*etap)*(psi-sinh(psi)))
+ //      + fabs(pow(h, 5))/(4e0*pow(K, 5e0/2e0)) * (2e0*alpha*sqrt(K)*(4e0*cosh(psi)-cosh(2e0*psi)-3e0) -beta*K*(2e0*psi-sinh(2e0*psi)) +gamma*(6e0*psi-8e0*sinh(psi)+sinh(2e0*psi)));
+ //  }
 
   double H = gamma*eta*eta + 2*alpha*eta*etap + beta*etap*etap;
 
@@ -620,7 +654,7 @@ double get_curlyH(Element element, double eta, double etap, double beta, double 
  
     H += 2 * angle * (
       -(gamma*eta + alpha*etap) * ((k_L - Skl) / (sign*pow(k,3)*pow(L,2)))
-      +(alpha*eta + beta*etap) * ((1 - Ckl) / (sign*pow(k,2)*pow(L,2)))
+      +(alpha*eta + beta*etap) * ((Ckl - 1) / (sign*pow(k,2)*pow(L,2)))
     );
     H += pow(angle,2) * (
       gamma * ((3*k_L - 4*Skl + SklCkl) / (2*pow(k,5)*pow(L,3)))
@@ -647,8 +681,8 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
   const double eta_x  = R16 / (1 - R11);
   const double phi_x = acos((R11 + R22) / 2.0f);
   const double phi_y = acos((R33 + R44) / 2.0f);
-  const double beta_x = R12 / sin(phi_x);
-  const double beta_y = R34 / sin(phi_y);
+  const double beta_x = fabs(R12 / sin(phi_x));
+  const double beta_y = fabs(R34 / sin(phi_y));
 
   double eta_vec[3] = {eta_x, 0.0f, 1.0f};
 
