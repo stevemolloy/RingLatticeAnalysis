@@ -591,79 +591,46 @@ double energy_spread(double I2, double I3, double I4, double gamma0) {
   return C_Q * pow(gamma0, 2) * I3 / (2*I2 + I4);
 }
 
-double get_curlyH(Element element, double eta, double etap, double beta, double alpha) {
-  assert(beta > 0.0 && "Beta of 0.0 or less does not make sense. Something has gone wrong.");
-  double gamma = (1/beta) * (1 + alpha*alpha);
+double cube(double val) {
+  return pow(val, 3);
+}
 
- //  if (K > 0e0) {
- //    Cell.dI[4] =
- //      h/K*(2e0*b2+sqr(h))
- //      *((eta*sqrt(K)*sin(psi)+etap*(1e0-cos(psi)))
-	// + h/sqrt(K)*(psi-sin(psi)));
-	//
- //    Cell.dI[5] =
- //      L*fabs(cube(h))
- //      *(gamma*sqr(eta)+2e0*alpha*eta*etap+beta*sqr(etap))
- //      - 2e0*pow(h, 4)/(pow(K, 3e0/2e0))
- //      *(sqrt(K)*(alpha*eta+beta*etap)*(cos(psi)-1e0)
-	// +(gamma*eta+alpha*etap)*(psi-sin(psi)))
- //      + fabs(pow(h, 5))/(4e0*pow(K, 5e0/2e0))
- //      *(2e0*alpha*sqrt(K)*(4e0*cos(psi)-cos(2e0*psi)-3e0)
-	// +beta*K*(2e0*psi-sin(2e0*psi))
-	// +gamma*(6e0*psi-8e0*sin(psi)+sin(2e0*psi)));
- //  } else {
- //    K = fabs(K);
-	//
- //    Cell.dI[4] =
- //      h/K*(2e0*b2+sqr(h))
- //      *((eta*sqrt(K)*sinh(psi)-etap*(1e0-cosh(psi)))
-	// - h/sqrt(K)*(psi-sinh(psi)));
-	//
-  // Note (SDM) psi = k_L and K = k_sqr
- //    Cell.dI[5] =
- //      L*fabs(cube(h)) * (gamma*sqr(eta)+2e0*alpha*eta*etap+beta*sqr(etap))
- //      + 2e0*pow(h, 4)/(pow(K, 3e0/2e0)) * (sqrt(K)*(alpha*eta+beta*etap)*(cosh(psi)-1e0) +(gamma*eta+alpha*etap)*(psi-sinh(psi)))
- //      + fabs(pow(h, 5))/(4e0*pow(K, 5e0/2e0)) * (2e0*alpha*sqrt(K)*(4e0*cosh(psi)-cosh(2e0*psi)-3e0) -beta*K*(2e0*psi-sinh(2e0*psi)) +gamma*(6e0*psi-8e0*sinh(psi)+sinh(2e0*psi)));
- //  }
+double sqr(double val) {
+  return val*val;
+}
 
-  double H = gamma*eta*eta + 2*alpha*eta*etap + beta*etap*etap;
+double get_curlyH(Element element, double eta0, double etap0, double beta0, double alpha0) {
+  assert(beta0 > 0.0 && "Beta of 0.0 or less does not make sense. Something has gone wrong.");
+  double gamma0 = (1/beta0) * (1 + alpha0*alpha0);
 
-  if ((element.type == ELETYPE_SBEND) && element.as.sbend.angle != 0.0) {
-    double K1 = element.as.sbend.K1;
-    double L = element.as.sbend.length;
-    double angle = element.as.sbend.angle;
-    double h = angle / L;
-
-    double k_sqr = pow(h, 2) + K1;
-    double k = sqrt(fabs(k_sqr));
-    double k_L = k * L;
-
-    double (*sinlike_func)(double);
-    double (*coslike_func)(double);
-    double sign = (k_sqr>0) ? 1.0 : -1.0;
-    if (sign > 0) {
-      sinlike_func = &sin;
-      coslike_func = &cos;
-    } else {
-      sinlike_func = &sinh;
-      coslike_func = &cosh;
-    }
-    double Skl = sinlike_func(k_L);
-    double Ckl = coslike_func(k_L);
-    double SklCkl = Skl * Ckl;
- 
-    H += 2 * angle * (
-      -(gamma*eta + alpha*etap) * ((k_L - Skl) / (sign*pow(k,3)*pow(L,2)))
-      +(alpha*eta + beta*etap) * ((Ckl - 1) / (sign*pow(k,2)*pow(L,2)))
-    );
-    H += pow(angle,2) * (
-      gamma * ((3*k_L - 4*Skl + SklCkl) / (2*pow(k,5)*pow(L,3)))
-      -alpha * pow((1 - Ckl),2) / (pow(k,4)*pow(L,3))
-      +beta * ((k_L - SklCkl) / (2*sign*pow(k,3)*pow(L,3)))
-    );
+  if (element.type != ELETYPE_SBEND || ((element.type == ELETYPE_SBEND) && element.as.sbend.angle == 0.0)) {
+    return gamma0*eta0*eta0 + 2*alpha0*eta0*etap0 + beta0*etap0*etap0;
   }
-  
-  return H;
+
+  double K1 = element.as.sbend.K1;
+  double L = element.as.sbend.length;
+  double angle = element.as.sbend.angle;
+  double h = fabs(angle / L);
+
+  double k_sqr = pow(h, 2) + K1;
+  double k = sqrt(fabs(k_sqr));
+
+  double I5 = 0;
+  double K = fabs(k_sqr);
+  double psi = k * L;
+  if (k_sqr > 0) {
+    I5 =
+        L*fabs(cube(h)) * (gamma0*sqr(eta0)+2e0*alpha0*eta0*etap0+beta0*sqr(etap0))
+        - 2e0*pow(h, 4)/(pow(K, 3e0/2e0)) * (sqrt(K)*(alpha0*eta0+beta0*etap0)*(cos(psi)-1e0) + (gamma0*eta0+alpha0*etap0)*(psi-sin(psi)))
+        + fabs(pow(h, 5))/(4e0*pow(K, 5e0/2e0)) * (2e0*alpha0*sqrt(K)*(4e0*cos(psi)-cos(2e0*psi)-3e0) + beta0*K*(2e0*psi-sin(2e0*psi)) +gamma0*(6e0*psi-8e0*sin(psi)+sin(2e0*psi)));
+  } else {
+    I5 = 
+        L*fabs(cube(h)) * (gamma0*sqr(eta0)+2e0*alpha0*eta0*etap0+beta0*sqr(etap0))
+        + 2e0*pow(h, 4)/(pow(K, 3e0/2e0)) * (sqrt(K)*(alpha0*eta0+beta0*etap0)*(cosh(psi)-1e0) + (gamma0*eta0+alpha0*etap0)*(psi-sinh(psi)))
+        + fabs(pow(h, 5))/(4e0*pow(K, 5e0/2e0)) * (2e0*alpha0*sqrt(K)*(4e0*cosh(psi)-cosh(2e0*psi)-3e0) -beta0*K*(2e0*psi-sinh(2e0*psi)) +gamma0*(6e0*psi-8e0*sinh(psi)+sinh(2e0*psi)));
+  }
+
+  return I5 / (L*fabs(cube(h)));
 }
 
 void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params) {
