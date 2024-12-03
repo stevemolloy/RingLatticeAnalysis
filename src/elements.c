@@ -485,14 +485,14 @@ char *populate_element_library(ElementLibrary **element_library, Element **eleme
   return cursor;
 }
 
-void element_print(Element element) {
-  printf("%s: ", element.name);
+void element_print(FILE *sink, Element element) {
+  fprintf(sink, "%s: ", element.name);
   switch (element.type) {
     case ELETYPE_DRIFT:
-      printf("Drift: L = %f\n", element.as.drift.length);
+      fprintf(sink, "Drift: L = %f\n", element.as.drift.length);
       break;
     case ELETYPE_SBEND:
-      printf("SBend: L = %f, Angle = %f, K1 = %f, E1 = %f, E2 = %f\n", 
+      fprintf(sink, "SBend: L = %f, Angle = %f, K1 = %f, E1 = %f, E2 = %f\n", 
              element.as.sbend.length,
              element.as.sbend.angle,
              element.as.sbend.K1,
@@ -500,29 +500,29 @@ void element_print(Element element) {
              element.as.sbend.E2);
       break;
     case ELETYPE_QUAD:
-      printf("Quad: L = %f, K1 = %f\n", 
+      fprintf(sink, "Quad: L = %f, K1 = %f\n", 
              element.as.quad.length,
              element.as.quad.K1);
       break;
     case ELETYPE_MULTIPOLE:
-      printf("Multipole: L = %f, K1L = %f, K2L = %f, K3L = %f\n", 
+      fprintf(sink, "Multipole: L = %f, K1L = %f, K2L = %f, K3L = %f\n", 
              element.as.multipole.length,
              element.as.multipole.K1L,
              element.as.multipole.K2L,
              element.as.multipole.K3L);
       break;
     case ELETYPE_SEXTUPOLE:
-      printf("Sextupole: L = %f, K2 = %f\n", 
+      fprintf(sink, "Sextupole: L = %f, K2 = %f\n", 
              element.as.sextupole.length,
              element.as.sextupole.K2);
       break;
     case ELETYPE_OCTUPOLE:
-      printf("Sextupole: L = %f, K2 = %f\n", 
+      fprintf(sink, "Sextupole: L = %f, K2 = %f\n", 
              element.as.octupole.length,
              element.as.octupole.K3);
       break;
     case ELETYPE_CAVITY:
-      printf("Cavity; L = %f, V = %f, harmonic = %f, lag = %f\n",
+      fprintf(sink, "Cavity; L = %f, V = %f, harmonic = %f, lag = %f\n",
              element.as.cavity.length,
              element.as.cavity.voltage,
              element.as.cavity.harmonic,
