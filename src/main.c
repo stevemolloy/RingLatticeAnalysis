@@ -144,11 +144,11 @@ int main(int argc, char **argv) {
           coslike_func = cosh;
           sign = -1.0;
         }
-        double eta = lin_opt_params.element_etas[i] * sinlike_func(omega*L) / (omega*L);
-        eta += sign * lin_opt_params.element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L);
-        eta += (h/K1) * (L - sinlike_func(omega*L)/omega);
+        double mean_eta = lin_opt_params.element_etas[i] * sinlike_func(omega*L) / (omega*L)
+                  + sign * lin_opt_params.element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L)
+                  + sign* h * (omega*L - sinlike_func(omega*L))/(pow(omega,3)*L);
 
-        I_4 += args.periodicity * (eta * h * L * (2*K1 + h*h));
+        I_4 += args.periodicity * (mean_eta * h * L * (2*K1 + h*h));
         I_5 += args.periodicity * (L * pow(fabs(h), 3) * lin_opt_params.element_curlyH[i]);
       }
     }
@@ -178,6 +178,15 @@ int main(int argc, char **argv) {
            1e12 * natural_emittance_x(I_2, I_4, I_5, gamma_0));
       printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
     }
+
+    assert(arrlenu(line) == arrlenu(lin_opt_params.element_curlyH));
+
+    FILE *curlyhfile = fopen("curlyH.csv", "w");
+    for (size_t i=0; i<arrlenu(lin_opt_params.element_curlyH); i++) {
+      fprintf(curlyhfile, "%e, %e\n", element_length(line[i]), lin_opt_params.element_curlyH[i]);
+    }
+    fclose(curlyhfile);
+
     arrfree(lin_opt_params.element_etas);
     arrfree(lin_opt_params.element_etaps);
     arrfree(lin_opt_params.element_beta_xs);
@@ -193,12 +202,6 @@ int main(int argc, char **argv) {
   // }
 
   printf("\n");
-
-  // for (size_t i=0; i<arrlenu(line); i++) {
-  //   printf("%s: %s, L = %e\n", line[i].name, get_element_type(line[i].type), element_length(line[i]));
-  //   rmatrix_print(stdout, line[i].R_matrix);
-  //   printf("\n");
-  // }
 
   arrfree(line);
 
