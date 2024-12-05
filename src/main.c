@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
 
     FILE *curlyhfile = fopen("curlyH.csv", "w");
     for (size_t i=0; i<arrlenu(lin_opt_params.element_curlyH); i++) {
-      fprintf(curlyhfile, "%e, %e\n", element_length(line[i]), lin_opt_params.element_curlyH[i]);
+      fprintf(curlyhfile, "%f, %e\n", lin_opt_params.Ss[i] - element_length(line[i]), lin_opt_params.element_curlyH[i]);
     }
     fclose(curlyhfile);
 

@@ -668,6 +668,8 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
   arrput(lin_opt_params->element_etaps, eta_vec[1]);
 
   for (size_t i=0; i<arrlenu(line); i++) {
+    arrput(lin_opt_params->element_curlyH, get_curlyH(line[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
+
     S += element_length(line[i]);
     arrput(lin_opt_params->Ss, S);
 
@@ -681,8 +683,6 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
     memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
     arrput(lin_opt_params->element_etas, eta_vec[0]);
     arrput(lin_opt_params->element_etaps, eta_vec[1]);
-
-    arrput(lin_opt_params->element_curlyH, get_curlyH(line[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
   }
 }
 
