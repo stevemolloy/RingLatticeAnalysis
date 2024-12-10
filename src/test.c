@@ -299,14 +299,7 @@ bool test_twiss_propagation(void) {
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
 
-  LinOptsParams lin_opt_params = {
-    .Ss = NULL,
-    .element_beta_xs = NULL,
-    .element_beta_ys = NULL,
-    .element_etas = NULL,
-    .element_etaps = NULL,
-    .element_curlyH = NULL,
-  };
+  LinOptsParams lin_opt_params = { 0 };
   double I[5] = {0};
   propagate_linear_optics(line, total_matrix, &lin_opt_params, I);
 

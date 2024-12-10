@@ -47,11 +47,6 @@ int main(int argc, char **argv) {
   double total_angle = line_angle * args.periodicity;
   bool closed_system = lattice_is_closed(total_angle);
 
-  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-
-  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
-
   printf("\nSummary of the lattice defined in %s\n\n", args.file_path);
 
   if (!closed_system) {
@@ -60,22 +55,18 @@ int main(int argc, char **argv) {
     printf("System does not close, so not calculating ring parameters.\n\n");
   }
 
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   double x_trace, y_trace, I[5] = {0};
   double I_1, I_2, I_3, I_4, I_5;
   double j_x, T_0;
-  LinOptsParams lin_opt_params = {
-    .Ss = NULL,
-    .element_beta_xs = NULL,
-    .element_beta_ys = NULL,
-    .element_etas = NULL,
-    .element_etaps = NULL,
-    .element_curlyH = NULL,
-  };
+  LinOptsParams lin_opt_params = {0};
   if (closed_system) {
+    propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
+    apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
+
     x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]);
     y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]);
-
-    propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
 
     if (args.save_twiss) {
       FILE *twiss_file = fopen(args.twiss_filename, "w");
@@ -106,6 +97,7 @@ int main(int argc, char **argv) {
     arrfree(lin_opt_params.Ss);
   } else {
     get_line_matrix(line_matrix, line);
+    apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
   }
 
   if (args.E_0 == 0) 
