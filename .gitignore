@@ -17,3 +17,5 @@ twiss_output.csv
 twiss_output.xlsx
 
 *.csv
+physics/curlyH_integral
+physics/sympy
