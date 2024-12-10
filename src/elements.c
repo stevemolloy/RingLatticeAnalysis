@@ -20,58 +20,24 @@
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
 
-double synch_rad_integral_1(Element *line, int periodicity) {
-  (void)line;
-  (void)periodicity;
-  return 0;
-}
-
-double synch_rad_integral_2(Element *line, int periodicity) {
+double synch_rad_integral_2(Element *line) {
   double I_2 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     double rho = bending_radius_of_element(line[i]);
     I_2 += element_length(line[i]) / pow(rho, 2);
   }
 
-  return I_2 * (double)periodicity;
+  return I_2;
 }
 
-double synch_rad_integral_3(Element *line, int periodicity) {
+double synch_rad_integral_3(Element *line) {
   double I_3 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
     double rho_abs = fabs(bending_radius_of_element(line[i]));
     I_3 += element_length(line[i]) / pow(rho_abs, 3);
   }
 
-  return I_3 * (double)periodicity;
-}
-
-double synch_rad_integral_4(Element *line, int periodicity, double *element_etas) {
-  double I_4=0.0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    if (line[i].type == ELETYPE_SBEND) {
-      double eta = (element_etas[i]+element_etas[i+1]) / 2;
-      double L = line[i].as.sbend.length;
-      double h = line[i].as.sbend.angle / L;
-      double K = line[i].as.sbend.K1;
-
-      I_4 += periodicity * (eta * h * L * (2*K + h*h));
-    }
-  }
-  return I_4;
-}
-
-double synch_rad_integral_5(Element *line, int periodicity, double *element_curlyH) {
-  double I_5=0.0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    if (line[i].type == ELETYPE_SBEND) {
-      double L = line[i].as.sbend.length;
-      double h = line[i].as.sbend.angle / L;
-
-      I_5 += periodicity * (L * pow(fabs(h), 3) * element_curlyH[i]);
-    }
-  }
-  return I_5;
+  return I_3;
 }
 
 double element_length(Element element) {
@@ -633,17 +599,20 @@ double get_curlyH(Element element, double eta0, double etap0, double beta0, doub
   return I5 / (L*fabs(cube(h)));
 }
 
-void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params) {
+void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *lin_opt_params, double *I) {
   double S = 0.0;
   arrput(lin_opt_params->Ss, 0.0);
 
-  const double R11 = total_matrix[0*BEAM_DOFS + 0];
-  const double R12 = total_matrix[0*BEAM_DOFS + 1];
-  const double R22 = total_matrix[1*BEAM_DOFS + 1];
-  const double R33 = total_matrix[2*BEAM_DOFS + 2];
-  const double R34 = total_matrix[2*BEAM_DOFS + 3];
-  const double R44 = total_matrix[3*BEAM_DOFS + 3];
-  const double R16 = total_matrix[0*BEAM_DOFS + 5];
+  get_line_matrix(line_matrix, line);
+
+  const double R11 = line_matrix[0*BEAM_DOFS + 0];
+  const double R12 = line_matrix[0*BEAM_DOFS + 1];
+  const double R22 = line_matrix[1*BEAM_DOFS + 1];
+  const double R33 = line_matrix[2*BEAM_DOFS + 2];
+  const double R34 = line_matrix[2*BEAM_DOFS + 3];
+  const double R44 = line_matrix[3*BEAM_DOFS + 3];
+  const double R16 = line_matrix[0*BEAM_DOFS + 5];
+  const double R56 = line_matrix[4*BEAM_DOFS + 5];
 
   const double eta_x  = R16 / (1 - R11);
   const double phi_x = acos((R11 + R22) / 2.0f);
@@ -683,6 +652,41 @@ void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams 
     memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
     arrput(lin_opt_params->element_etas, eta_vec[0]);
     arrput(lin_opt_params->element_etaps, eta_vec[1]);
+  }
+
+  I[0] = R56;
+  I[1] = synch_rad_integral_2(line);
+  I[2] = synch_rad_integral_3(line);
+  I[3] = 0.0;
+  I[4] = 0.0;
+  for (size_t i=0; i<arrlenu(line); i++) {
+    if (line[i].type == ELETYPE_SBEND) {
+      double angle = line[i].as.sbend.angle;
+      double L = line[i].as.sbend.length;
+      double K1 = line[i].as.sbend.K1;
+      double h = angle / L;
+
+      double (*sinlike_func)(double);
+      double (*coslike_func)(double);
+      double omega_sqr = pow(h, 2) + K1;
+      double omega = sqrt(fabs(omega_sqr));
+      double sign = 0.0;
+      if (omega_sqr > 0.0) {
+        sinlike_func = sin;
+        coslike_func = cos;
+        sign = 1.0;
+      } else {
+        sinlike_func = sinh;
+        coslike_func = cosh;
+        sign = -1.0;
+      }
+      double mean_eta = lin_opt_params->element_etas[i] * sinlike_func(omega*L) / (omega*L)
+                + sign * lin_opt_params->element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L)
+                + sign* h * (omega*L - sinlike_func(omega*L))/(pow(omega,3)*L);
+
+      I[3] += (mean_eta * h * L * (2*K1 + h*h));
+      I[4] += (L * pow(fabs(h), 3) * lin_opt_params->element_curlyH[i]);
+    }
   }
 }
 

@@ -19,6 +19,7 @@ bool test_full_lat_all_mats(void);
 bool compare_with_matlab(void);
 bool test_threebythree(void);
 bool test_twiss_propagation(void);
+bool test_synchrad_integrals(void);
 
 typedef bool (*TestFunction)(void);
 
@@ -28,6 +29,7 @@ TestFunction test_functions[] = {
   /*test_full_lat_all_mats, compare_with_matlab*/
   test_threebythree,
   test_twiss_propagation,
+  test_synchrad_integrals,
 };
 
 int main(void) {
@@ -244,12 +246,12 @@ bool test_full_lat_all_mats(void) {
   return comparison_result;
 }
 
-bool test_twiss_propagation(void) {
-  const char *test_name = "TWISS PROP TEST";
-  const char *expected_filename = "./tests/twissprop_expected.txt";
-  const char *result_filename =   "./tests/twissprop_result.txt";
+bool test_synchrad_integrals(void) {
+  const char *test_name = "SYNCH RAD INTEGRALS TEST";
+  const char *expected_filename = "./tests/synchradintegrals_expected.txt";
+  const char *result_filename =   "./tests/synchradintegrals_result.txt";
 
-  char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
+  char *file_path = "./lattices/max4_r3_lattice.mad8";
 
   Element *line = {0};
   generate_lattice(file_path, &line);
@@ -270,7 +272,45 @@ bool test_twiss_propagation(void) {
     .element_etaps = NULL,
     .element_curlyH = NULL,
   };
-  propagate_linear_optics(line, total_matrix, &lin_opt_params);
+  double I[5] = {0};
+  propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
+
+  FILE *synradint_file = fopen(result_filename, "w");
+  for (size_t i=0; i<5; i++) {
+    fprintf(synradint_file, "I[%zu] = %e\n", i+1, I[i]);
+  }
+  fclose(synradint_file);
+
+  return compare_files(test_name, expected_filename, result_filename);
+}
+
+bool test_twiss_propagation(void) {
+  const char *test_name = "TWISS PROP TEST";
+  const char *expected_filename = "./tests/twissprop_expected.txt";
+  const char *result_filename =   "./tests/twissprop_result.txt";
+
+  char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
+
+  Element *line = {0};
+  generate_lattice(file_path, &line);
+
+  const double periodicity = 20;
+
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+
+  LinOptsParams lin_opt_params = {
+    .Ss = NULL,
+    .element_beta_xs = NULL,
+    .element_beta_ys = NULL,
+    .element_etas = NULL,
+    .element_etaps = NULL,
+    .element_curlyH = NULL,
+  };
+  double I[5] = {0};
+  propagate_linear_optics(line, total_matrix, &lin_opt_params, I);
+
+  apply_matrix_n_times(total_matrix, line_matrix, periodicity);
 
   FILE *twiss_file = fopen(result_filename, "w");
   fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");

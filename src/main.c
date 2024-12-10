@@ -35,6 +35,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  const double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
+
   Element *line = {0};
   generate_lattice(args.file_path, &line);
 
@@ -43,21 +45,67 @@ int main(int argc, char **argv) {
 
   double line_angle = calculate_line_angle(line);
   double total_angle = line_angle * args.periodicity;
+  bool closed_system = lattice_is_closed(total_angle);
 
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-  get_line_matrix(line_matrix, line);
 
   double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
 
   printf("\nSummary of the lattice defined in %s\n\n", args.file_path);
 
-  bool closed_system = lattice_is_closed(total_angle);
-
   if (!closed_system) {
     printf("Total bending angle (%0.3f degrees) is not within %0.1e degrees of a circle.\n", 
            radians_to_degrees(total_angle), radians_to_degrees(ANGLE_EPSILON));
     printf("System does not close, so not calculating ring parameters.\n\n");
+  }
+
+  double x_trace, y_trace, I[5] = {0};
+  double I_1, I_2, I_3, I_4, I_5;
+  double j_x, T_0;
+  LinOptsParams lin_opt_params = {
+    .Ss = NULL,
+    .element_beta_xs = NULL,
+    .element_beta_ys = NULL,
+    .element_etas = NULL,
+    .element_etaps = NULL,
+    .element_curlyH = NULL,
+  };
+  if (closed_system) {
+    x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]);
+    y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]);
+
+    propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
+
+    if (args.save_twiss) {
+      FILE *twiss_file = fopen(args.twiss_filename, "w");
+      fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
+      for (size_t i=0; i<arrlenu(line); i++) {
+        fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
+		    		lin_opt_params.Ss[i],
+		    		lin_opt_params.element_beta_xs[i],
+		    		lin_opt_params.element_beta_ys[i],
+		    		lin_opt_params.element_etas[i]);
+      }
+      fclose(twiss_file);
+    }
+    I_1 = I[0] * args.periodicity;
+    I_2 = I[1] * args.periodicity;
+    I_3 = I[2] * args.periodicity;
+    I_4 = I[3] * args.periodicity;
+    I_5 = I[4] * args.periodicity;
+
+    j_x = 1.0f - I_4/I_2;
+    T_0 = total_length / C;
+
+    arrfree(lin_opt_params.element_etas);
+    arrfree(lin_opt_params.element_etaps);
+    arrfree(lin_opt_params.element_beta_xs);
+    arrfree(lin_opt_params.element_beta_ys);
+    arrfree(lin_opt_params.element_curlyH);
+    arrfree(lin_opt_params.Ss);
+  } else {
+    get_line_matrix(line_matrix, line);
   }
 
   if (args.E_0 == 0) 
@@ -86,72 +134,7 @@ int main(int argc, char **argv) {
   }
 
   if (closed_system) {
-    double x_trace = (total_matrix[0*BEAM_DOFS + 0] + total_matrix[1*BEAM_DOFS + 1]);
-    double y_trace = (total_matrix[2*BEAM_DOFS + 2] + total_matrix[3*BEAM_DOFS + 3]);
-
     const double R56 = total_matrix[4*BEAM_DOFS + 5];
-
-    LinOptsParams lin_opt_params = {
-      .Ss = NULL,
-      .element_beta_xs = NULL,
-      .element_beta_ys = NULL,
-      .element_etas = NULL,
-      .element_etaps = NULL,
-      .element_curlyH = NULL,
-    };
-    propagate_linear_optics(line, total_matrix, &lin_opt_params);
-
-    if (args.save_twiss) {
-      FILE *twiss_file = fopen(args.twiss_filename, "w");
-      fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
-      for (size_t i=0; i<arrlenu(line); i++) {
-        fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
-		    		lin_opt_params.Ss[i],
-		    		lin_opt_params.element_beta_xs[i],
-		    		lin_opt_params.element_beta_ys[i],
-		    		lin_opt_params.element_etas[i]);
-      }
-      fclose(twiss_file);
-    }
-
-    const double I_1=R56;
-    const double I_2=synch_rad_integral_2(line, args.periodicity);
-    const double I_3=synch_rad_integral_3(line, args.periodicity);
-    double I_4=0.0, I_5=0.0;
-    for (size_t i=0; i<arrlenu(line); i++) {
-      if (line[i].type == ELETYPE_SBEND) {
-        double angle = line[i].as.sbend.angle;
-        double L = line[i].as.sbend.length;
-        double K1 = line[i].as.sbend.K1;
-        double h = angle / L;
-
-        double (*sinlike_func)(double);
-        double (*coslike_func)(double);
-        double omega_sqr = pow(h, 2) + K1;
-        double omega = sqrt(fabs(omega_sqr));
-        double sign = 0.0;
-        if (omega_sqr > 0.0) {
-          sinlike_func = sin;
-          coslike_func = cos;
-          sign = 1.0;
-        } else {
-          sinlike_func = sinh;
-          coslike_func = cosh;
-          sign = -1.0;
-        }
-        double mean_eta = lin_opt_params.element_etas[i] * sinlike_func(omega*L) / (omega*L)
-                  + sign * lin_opt_params.element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L)
-                  + sign* h * (omega*L - sinlike_func(omega*L))/(pow(omega,3)*L);
-
-        I_4 += args.periodicity * (mean_eta * h * L * (2*K1 + h*h));
-        I_5 += args.periodicity * (L * pow(fabs(h), 3) * lin_opt_params.element_curlyH[i]);
-      }
-    }
-
-    const double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
-
-    double j_x = 1.0f - I_4/I_2;
-    double T_0 = total_length / C;
 
     printf("\nSynchrotron radiation integrals:\n");
     printf("\tI_1 = %+0.3e  (%+0.3e for the line)\n", I_1, I_1 / args.periodicity);
@@ -173,14 +156,6 @@ int main(int argc, char **argv) {
            1e12 * natural_emittance_x(I_2, I_4, I_5, gamma_0));
       printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
     }
-
-    assert(arrlenu(line) == arrlenu(lin_opt_params.element_curlyH));
-
-    FILE *curlyhfile = fopen("curlyH.csv", "w");
-    for (size_t i=0; i<arrlenu(lin_opt_params.element_curlyH); i++) {
-      fprintf(curlyhfile, "%f, %e\n", lin_opt_params.Ss[i] - element_length(line[i]), lin_opt_params.element_curlyH[i]);
-    }
-    fclose(curlyhfile);
 
     arrfree(lin_opt_params.element_etas);
     arrfree(lin_opt_params.element_etaps);
