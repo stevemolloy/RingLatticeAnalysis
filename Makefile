@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wpedantic -Wextra -std=c18 -ggdb
+CFLAGS = -Wall -Wpedantic -Wextra -std=c99 -ggdb
 CINCLUDES = -I./third_party/
 ifeq ($(OS),Windows_NT)
 	CC = gcc
