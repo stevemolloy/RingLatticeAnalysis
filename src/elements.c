@@ -424,6 +424,11 @@ char *populate_element_library(ElementLibrary **element_library, Element **eleme
   sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
 
   while (*cursor != '\0') {
+    if (*cursor == '!') {
+      while (*cursor != '\n') cursor++;
+      cursor++;
+      continue;
+    }
     if (isalpha(*cursor)) {
       char *element_name = cursor;
       while (isvalididchar(*cursor)) {
