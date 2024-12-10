@@ -14,8 +14,6 @@
 
 #include "sdm_lib.h"
 
-sdm_arena_t mem_arena = {0};
-
 // TODO: Factor out the twiss propagation stuff into diagonalised 2x2 instead of the 3x3 stuff
 // TODO: Rationalise memory management. In some places it is dynamic arrays, in other an arena is used. Time to straighten this out.
 // TODO: Spin off a few more functions for the library.  The "main" function should be a list of calls to library functions.
@@ -37,8 +35,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
-
   Element *line = {0};
   generate_lattice(args.file_path, &line);
 
@@ -50,6 +46,9 @@ int main(int argc, char **argv) {
 
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   get_line_matrix(line_matrix, line);
+
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
 
   printf("\nSummary of the lattice defined in %s\n\n", args.file_path);
 
@@ -63,6 +62,7 @@ int main(int argc, char **argv) {
 
   if (args.E_0 == 0) 
     printf("WARNING: Kinetic energy not provided, so not calculating all parameters\n\n");
+
   printf("Periodicity: %zu\n", args.periodicity);
   printf("Number of elements in the line: %td\n", arrlen(line));
   if (args.periodicity != 1) {
@@ -80,8 +80,6 @@ int main(int argc, char **argv) {
   printf("\nTotal matrix, R, for the line is:\n");
   rmatrix_print(stdout, line_matrix);
 
-  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-  apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
   if (args.periodicity > 1) {
     printf("\nTotal matrix, R, for the full system:\n");
     rmatrix_print(stdout, total_matrix);
@@ -121,9 +119,6 @@ int main(int argc, char **argv) {
     const double I_3=synch_rad_integral_3(line, args.periodicity);
     double I_4=0.0, I_5=0.0;
     for (size_t i=0; i<arrlenu(line); i++) {
-      // if (line[i].type == ELETYPE_SBEND) {
-      //   element_print(line[i]);
-      // }
       if (line[i].type == ELETYPE_SBEND) {
         double angle = line[i].as.sbend.angle;
         double L = line[i].as.sbend.length;
@@ -194,12 +189,6 @@ int main(int argc, char **argv) {
     arrfree(lin_opt_params.element_curlyH);
     arrfree(lin_opt_params.Ss);
   }
-
-  // for (size_t i=0; i<arrlenu(line); i++) {
-  //   element_print(line[i]);
-  //   rmatrix_print(stdout, line[i].R_matrix);
-  //   printf("\n");
-  // }
 
   printf("\n");
 
