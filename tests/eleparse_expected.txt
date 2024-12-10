@@ -1,0 +1,340 @@
+element_001: Drift: L = 0.000000
+element_002: Drift: L = 0.500000
+element_003: Drift: L = 0.500000
+element_004: Drift: L = 0.500000
+element_005: Drift: L = 0.500000
+element_006: Drift: L = 0.321000
+element_007: Drift: L = 0.000000
+element_008: Drift: L = 0.025000
+element_009: Drift: L = 0.000000
+element_010: Drift: L = 0.025000
+element_011: Drift: L = 0.010000
+element_012: Drift: L = 0.000000
+element_013: Drift: L = 0.000000
+element_014: Drift: L = 0.048000
+element_015: Drift: L = 0.025000
+element_016: Drift: L = 0.000000
+element_017: Drift: L = 0.025000
+element_018: Drift: L = 0.025000
+element_019: Drift: L = 0.000000
+element_020: Drift: L = 0.025000
+element_021: Drift: L = 0.021000
+element_022: Sextupole: L = 0.050000, K2 = -9891.480000
+element_023: Sextupole: L = 0.050000, K2 = -9891.480000
+element_024: Drift: L = 0.025000
+element_025: Quad: L = 0.250000, K1 = 3.653849
+element_026: Drift: L = 0.025000
+element_027: Sextupole: L = 0.050000, K2 = 19620.840000
+element_028: Sextupole: L = 0.050000, K2 = 19620.840000
+element_029: Drift: L = 0.100000
+element_030: Quad: L = 0.250000, K1 = -2.503663
+element_031: Drift: L = 0.006080
+element_032: SBend: L = 0.050000, Angle = 0.000019, K1 = 0.006608, E1 = 0.000000, E2 = 0.000000
+element_033: SBend: L = 0.050000, Angle = 0.000885, K1 = -0.271428, E1 = 0.000000, E2 = 0.000000
+element_034: SBend: L = 0.050000, Angle = 0.001303, K1 = -0.425119, E1 = 0.000000, E2 = 0.000000
+element_035: SBend: L = 0.050000, Angle = 0.001331, K1 = -0.426048, E1 = 0.000000, E2 = 0.000000
+element_036: SBend: L = 0.050000, Angle = 0.002007, K1 = -0.584884, E1 = 0.000000, E2 = 0.000000
+element_037: SBend: L = 0.050000, Angle = 0.002654, K1 = -0.870351, E1 = 0.000000, E2 = 0.000000
+element_038: SBend: L = 0.204240, Angle = 0.010851, K1 = -0.870701, E1 = 0.000000, E2 = 0.000000
+element_039: SBend: L = 0.050000, Angle = 0.002657, K1 = -0.870751, E1 = 0.000000, E2 = 0.000000
+element_040: SBend: L = 0.050000, Angle = 0.002655, K1 = -0.871910, E1 = 0.000000, E2 = 0.000000
+element_041: SBend: L = 0.050000, Angle = 0.001790, K1 = -0.555557, E1 = 0.000000, E2 = 0.000000
+element_042: SBend: L = 0.050000, Angle = 0.000028, K1 = 0.011839, E1 = 0.000000, E2 = 0.000000
+element_043: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000129, E1 = 0.000000, E2 = 0.000000
+element_044: Sextupole: L = 0.050000, K2 = -8521.320000
+element_045: Sextupole: L = 0.050000, K2 = -8521.320000
+element_046: Drift: L = 0.092680
+element_047: Drift: L = 0.025000
+element_048: Drift: L = 0.025000
+element_049: Drift: L = 0.025000
+element_050: Drift: L = 0.000000
+element_051: Drift: L = 0.025000
+element_052: Drift: L = 0.025000
+element_053: Drift: L = 0.000000
+element_054: Drift: L = 0.025000
+element_055: Drift: L = 0.020000
+element_056: Sextupole: L = 0.050000, K2 = -340.000000
+element_057: Sextupole: L = 0.050000, K2 = -340.000000
+element_058: Drift: L = 0.000000
+element_059: Drift: L = 0.500000
+element_060: Drift: L = 0.151000
+element_061: Drift: L = 0.000000
+element_062: Drift: L = 0.000000
+element_063: Drift: L = 0.151000
+element_064: Drift: L = 0.500000
+element_065: Drift: L = 0.000000
+element_066: Quad: L = 0.150000, K1 = 3.773995
+element_067: Drift: L = 0.075000
+element_068: Sextupole: L = 0.050000, K2 = 340.000000
+element_069: Sextupole: L = 0.050000, K2 = 340.000000
+element_070: Drift: L = 0.012500
+element_071: Drift: L = 0.025000
+element_072: Drift: L = 0.000000
+element_073: Drift: L = 0.025000
+element_074: Drift: L = 0.012500
+element_075: Quad: L = 0.150000, K1 = 3.773995
+element_076: Drift: L = 0.100000
+element_077: Drift: L = 0.025000
+element_078: Drift: L = 0.000000
+element_079: Drift: L = 0.025000
+element_080: Drift: L = 0.025000
+element_081: Drift: L = 0.000000
+element_082: Drift: L = 0.025000
+element_083: Drift: L = 0.203110
+element_084: Sextupole: L = 0.050000, K2 = -233.250458
+element_085: Sextupole: L = 0.050000, K2 = -233.250458
+element_086: Drift: L = 0.010000
+element_087: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_088: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_089: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_090: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_091: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_092: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_093: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_094: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_095: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_096: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_097: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_098: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_099: Drift: L = 0.010000
+element_100: Sextupole: L = 0.050000, K2 = -233.250458
+element_101: Sextupole: L = 0.050000, K2 = -233.250458
+element_102: Drift: L = 0.000000
+element_103: Drift: L = 0.403110
+element_104: Drift: L = 0.000000
+element_105: Quad: L = 0.150000, K1 = 4.030076
+element_106: Drift: L = 0.075000
+element_107: Sextupole: L = 0.050000, K2 = 348.000000
+element_108: Sextupole: L = 0.050000, K2 = 348.000000
+element_109: Drift: L = 0.012500
+element_110: Drift: L = 0.025000
+element_111: Drift: L = 0.000000
+element_112: Drift: L = 0.025000
+element_113: Drift: L = 0.012500
+element_114: Quad: L = 0.150000, K1 = 4.030076
+element_115: Drift: L = 0.100000
+element_116: Drift: L = 0.025000
+element_117: Drift: L = 0.000000
+element_118: Drift: L = 0.025000
+element_119: Drift: L = 0.025000
+element_120: Drift: L = 0.000000
+element_121: Drift: L = 0.025000
+element_122: Drift: L = 0.203110
+element_123: Sextupole: L = 0.050000, K2 = -233.250458
+element_124: Sextupole: L = 0.050000, K2 = -233.250458
+element_125: Drift: L = 0.010000
+element_126: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_127: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_128: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_129: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_130: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_131: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_132: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_133: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_134: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_135: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_136: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_137: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_138: Drift: L = 0.010000
+element_139: Sextupole: L = 0.050000, K2 = -233.250458
+element_140: Sextupole: L = 0.050000, K2 = -233.250458
+element_141: Drift: L = 0.000000
+element_142: Drift: L = 0.403110
+element_143: Drift: L = 0.000000
+element_144: Quad: L = 0.150000, K1 = 4.030076
+element_145: Drift: L = 0.075000
+element_146: Sextupole: L = 0.050000, K2 = 414.824076
+element_147: Sextupole: L = 0.050000, K2 = 414.824076
+element_148: Drift: L = 0.012500
+element_149: Drift: L = 0.025000
+element_150: Drift: L = 0.000000
+element_151: Drift: L = 0.025000
+element_152: Drift: L = 0.012500
+element_153: Quad: L = 0.150000, K1 = 4.030076
+element_154: Drift: L = 0.100000
+element_155: Drift: L = 0.025000
+element_156: Drift: L = 0.000000
+element_157: Drift: L = 0.025000
+element_158: Drift: L = 0.025000
+element_159: Drift: L = 0.000000
+element_160: Drift: L = 0.025000
+element_161: Drift: L = 0.203110
+element_162: Sextupole: L = 0.050000, K2 = -233.250458
+element_163: Sextupole: L = 0.050000, K2 = -233.250458
+element_164: Drift: L = 0.010000
+element_165: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_166: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_167: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_168: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_169: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_170: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_171: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_172: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_173: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_174: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_175: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_176: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_177: Drift: L = 0.010000
+element_178: Sextupole: L = 0.050000, K2 = -233.250458
+element_179: Sextupole: L = 0.050000, K2 = -233.250458
+element_180: Drift: L = 0.203110
+element_181: Drift: L = 0.025000
+element_182: Drift: L = 0.000000
+element_183: Drift: L = 0.025000
+element_184: Drift: L = 0.025000
+element_185: Drift: L = 0.000000
+element_186: Drift: L = 0.025000
+element_187: Drift: L = 0.100000
+element_188: Quad: L = 0.150000, K1 = 4.030076
+element_189: Drift: L = 0.012500
+element_190: Drift: L = 0.025000
+element_191: Drift: L = 0.000000
+element_192: Drift: L = 0.025000
+element_193: Drift: L = 0.012500
+element_194: Sextupole: L = 0.050000, K2 = 414.824076
+element_195: Sextupole: L = 0.050000, K2 = 414.824076
+element_196: Drift: L = 0.075000
+element_197: Quad: L = 0.150000, K1 = 4.030076
+element_198: Drift: L = 0.000000
+element_199: Drift: L = 0.403110
+element_200: Drift: L = 0.000000
+element_201: Sextupole: L = 0.050000, K2 = -233.250458
+element_202: Sextupole: L = 0.050000, K2 = -233.250458
+element_203: Drift: L = 0.010000
+element_204: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_205: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_206: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_207: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_208: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_209: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_210: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_211: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_212: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_213: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_214: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_215: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_216: Drift: L = 0.010000
+element_217: Sextupole: L = 0.050000, K2 = -233.250458
+element_218: Sextupole: L = 0.050000, K2 = -233.250458
+element_219: Drift: L = 0.203110
+element_220: Drift: L = 0.025000
+element_221: Drift: L = 0.000000
+element_222: Drift: L = 0.025000
+element_223: Drift: L = 0.025000
+element_224: Drift: L = 0.000000
+element_225: Drift: L = 0.025000
+element_226: Drift: L = 0.100000
+element_227: Quad: L = 0.150000, K1 = 4.030076
+element_228: Drift: L = 0.012500
+element_229: Drift: L = 0.025000
+element_230: Drift: L = 0.000000
+element_231: Drift: L = 0.025000
+element_232: Drift: L = 0.012500
+element_233: Sextupole: L = 0.050000, K2 = 348.000000
+element_234: Sextupole: L = 0.050000, K2 = 348.000000
+element_235: Drift: L = 0.075000
+element_236: Quad: L = 0.150000, K1 = 4.030076
+element_237: Drift: L = 0.000000
+element_238: Drift: L = 0.403110
+element_239: Drift: L = 0.000000
+element_240: Sextupole: L = 0.050000, K2 = -233.250458
+element_241: Sextupole: L = 0.050000, K2 = -233.250458
+element_242: Drift: L = 0.010000
+element_243: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_244: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_245: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_246: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_247: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_248: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_249: SBend: L = 0.361890, Angle = 0.019097, K1 = -0.864858, E1 = 0.000000, E2 = 0.000000
+element_250: SBend: L = 0.050000, Angle = 0.002639, K1 = -0.864908, E1 = 0.000000, E2 = 0.000000
+element_251: SBend: L = 0.050000, Angle = 0.002637, K1 = -0.866059, E1 = 0.000000, E2 = 0.000000
+element_252: SBend: L = 0.050000, Angle = 0.001778, K1 = -0.551829, E1 = 0.000000, E2 = 0.000000
+element_253: SBend: L = 0.050000, Angle = 0.000027, K1 = 0.011759, E1 = 0.000000, E2 = 0.000000
+element_254: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000128, E1 = 0.000000, E2 = 0.000000
+element_255: Drift: L = 0.010000
+element_256: Sextupole: L = 0.050000, K2 = -233.250458
+element_257: Sextupole: L = 0.050000, K2 = -233.250458
+element_258: Drift: L = 0.203110
+element_259: Drift: L = 0.025000
+element_260: Drift: L = 0.000000
+element_261: Drift: L = 0.025000
+element_262: Drift: L = 0.025000
+element_263: Drift: L = 0.000000
+element_264: Drift: L = 0.025000
+element_265: Drift: L = 0.100000
+element_266: Quad: L = 0.150000, K1 = 3.773995
+element_267: Drift: L = 0.012500
+element_268: Drift: L = 0.025000
+element_269: Drift: L = 0.000000
+element_270: Drift: L = 0.025000
+element_271: Drift: L = 0.012500
+element_272: Sextupole: L = 0.050000, K2 = 340.000000
+element_273: Sextupole: L = 0.050000, K2 = 340.000000
+element_274: Drift: L = 0.075000
+element_275: Quad: L = 0.150000, K1 = 3.773995
+element_276: Drift: L = 0.000000
+element_277: Drift: L = 0.500000
+element_278: Drift: L = 0.151000
+element_279: Drift: L = 0.500000
+element_280: Drift: L = 0.000000
+element_281: Drift: L = 0.000000
+element_282: Drift: L = 0.151000
+element_283: Drift: L = 0.000000
+element_284: Sextupole: L = 0.050000, K2 = -340.000000
+element_285: Sextupole: L = 0.050000, K2 = -340.000000
+element_286: Drift: L = 0.020000
+element_287: Drift: L = 0.025000
+element_288: Drift: L = 0.000000
+element_289: Drift: L = 0.025000
+element_290: Drift: L = 0.025000
+element_291: Drift: L = 0.000000
+element_292: Drift: L = 0.025000
+element_293: Drift: L = 0.025000
+element_294: Drift: L = 0.000000
+element_295: Drift: L = 0.025000
+element_296: Drift: L = 0.092680
+element_297: Sextupole: L = 0.050000, K2 = -8521.320000
+element_298: Sextupole: L = 0.050000, K2 = -8521.320000
+element_299: SBend: L = 0.050000, Angle = 0.000002, K1 = -0.000129, E1 = 0.000000, E2 = 0.000000
+element_300: SBend: L = 0.050000, Angle = 0.000028, K1 = 0.011839, E1 = 0.000000, E2 = 0.000000
+element_301: SBend: L = 0.050000, Angle = 0.001790, K1 = -0.555557, E1 = 0.000000, E2 = 0.000000
+element_302: SBend: L = 0.050000, Angle = 0.002655, K1 = -0.871910, E1 = 0.000000, E2 = 0.000000
+element_303: SBend: L = 0.050000, Angle = 0.002657, K1 = -0.870751, E1 = 0.000000, E2 = 0.000000
+element_304: SBend: L = 0.204240, Angle = 0.010851, K1 = -0.870701, E1 = 0.000000, E2 = 0.000000
+element_305: SBend: L = 0.050000, Angle = 0.002654, K1 = -0.870351, E1 = 0.000000, E2 = 0.000000
+element_306: SBend: L = 0.050000, Angle = 0.002007, K1 = -0.584884, E1 = 0.000000, E2 = 0.000000
+element_307: SBend: L = 0.050000, Angle = 0.001331, K1 = -0.426048, E1 = 0.000000, E2 = 0.000000
+element_308: SBend: L = 0.050000, Angle = 0.001303, K1 = -0.425119, E1 = 0.000000, E2 = 0.000000
+element_309: SBend: L = 0.050000, Angle = 0.000885, K1 = -0.271428, E1 = 0.000000, E2 = 0.000000
+element_310: SBend: L = 0.050000, Angle = 0.000019, K1 = 0.006608, E1 = 0.000000, E2 = 0.000000
+element_311: Drift: L = 0.006080
+element_312: Quad: L = 0.250000, K1 = -2.503663
+element_313: Drift: L = 0.100000
+element_314: Sextupole: L = 0.050000, K2 = 19620.840000
+element_315: Sextupole: L = 0.050000, K2 = 19620.840000
+element_316: Drift: L = 0.025000
+element_317: Quad: L = 0.250000, K1 = 3.653849
+element_318: Drift: L = 0.025000
+element_319: Sextupole: L = 0.050000, K2 = -9891.480000
+element_320: Sextupole: L = 0.050000, K2 = -9891.480000
+element_321: Drift: L = 0.021000
+element_322: Drift: L = 0.025000
+element_323: Drift: L = 0.000000
+element_324: Drift: L = 0.025000
+element_325: Drift: L = 0.025000
+element_326: Drift: L = 0.000000
+element_327: Drift: L = 0.025000
+element_328: Drift: L = 0.048000
+element_329: Drift: L = 0.000000
+element_330: Drift: L = 0.000000
+element_331: Drift: L = 0.010000
+element_332: Drift: L = 0.025000
+element_333: Drift: L = 0.000000
+element_334: Drift: L = 0.025000
+element_335: Drift: L = 0.000000
+element_336: Drift: L = 0.321000
+element_337: Drift: L = 0.500000
+element_338: Drift: L = 0.500000
+element_339: Drift: L = 0.500000
+element_340: Drift: L = 0.500000

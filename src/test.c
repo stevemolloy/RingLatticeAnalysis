@@ -20,6 +20,7 @@ bool compare_with_matlab(void);
 bool test_threebythree(void);
 bool test_twiss_propagation(void);
 bool test_synchrad_integrals(void);
+bool test_populate_element_library(void);
 
 typedef bool (*TestFunction)(void);
 
@@ -30,6 +31,7 @@ TestFunction test_functions[] = {
   test_threebythree,
   test_twiss_propagation,
   test_synchrad_integrals,
+  test_populate_element_library,
 };
 
 int main(void) {
@@ -280,6 +282,25 @@ bool test_synchrad_integrals(void) {
     fprintf(synradint_file, "I[%zu] = %e\n", i+1, I[i]);
   }
   fclose(synradint_file);
+
+  return compare_files(test_name, expected_filename, result_filename);
+}
+
+bool test_populate_element_library(void) {
+  const char *test_name = "ELEMENT PARSING TEST";
+  const char *expected_filename = "./tests/eleparse_expected.txt";
+  const char *result_filename =   "./tests/eleparse_result.txt";
+
+  char *file_path = "./lattices/max4_r3_lattice.mad8";
+
+  Element *line = {0};
+  generate_lattice(file_path, &line);
+
+  FILE *element_file = fopen(result_filename, "w");
+  for (size_t i=0; i<arrlenu(line); i++) {
+    element_print(element_file, line[i]);
+  }
+  fclose(element_file);
 
   return compare_files(test_name, expected_filename, result_filename);
 }
