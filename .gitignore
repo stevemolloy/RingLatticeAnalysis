@@ -2,6 +2,7 @@ bin
 obj
 .cache/clangd/index
 compile_commands.json
+callgrind*.out*
 
 tests/*result.txt
 
