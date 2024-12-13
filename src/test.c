@@ -21,7 +21,8 @@ bool test_threebythree(void);
 bool test_twiss_propagation(void);
 bool test_synchrad_integrals(void);
 bool test_populate_element_library(void);
-bool test_tracking(void);
+bool test_individual_ele_tracking(void);
+bool test_full_lattice_tracking(void);
 
 typedef bool (*TestFunction)(void);
 
@@ -33,7 +34,8 @@ TestFunction test_functions[] = {
   test_twiss_propagation,
   test_synchrad_integrals,
   test_populate_element_library,
-  test_tracking,
+  test_individual_ele_tracking,
+  test_full_lattice_tracking,
 };
 
 int main(void) {
@@ -342,7 +344,31 @@ bool test_twiss_propagation(void) {
   return compare_files(test_name, expected_filename, result_filename);
 }
 
-bool test_tracking(void) {
+bool test_full_lattice_tracking(void) {
+  const char *test_name = "TRACKING THRU R3 TEST";
+  bool retval = true;
+
+  const char *file_path = "./lattices/max4_r3_lattice.mad8";
+  Element *line = {0};
+  generate_lattice(file_path, &line);
+
+  double beam[6] = {0};
+  beam[0] = 0.01;
+  track(beam, 1, line, arrlenu(line));
+
+  for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
+    if (beam[i] != 0.0) {
+      printf("%s FAILED\n", test_name);
+      retval = false;
+      break;
+    }
+  }
+
+  if (retval) printf("%s PASSED\n", test_name);
+  return retval;
+}
+
+bool test_individual_ele_tracking(void) {
   const char *test_name = "TRACKING ON-AXIS PARTICLE TEST";
   bool retval = true;
 

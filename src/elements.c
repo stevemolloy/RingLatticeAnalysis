@@ -20,10 +20,58 @@
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
 
+bool element_is_nonlinear(Element ele) {
+  return ((ele.type == ELETYPE_OCTUPOLE) ||
+          (ele.type == ELETYPE_SEXTUPOLE) ||
+          (ele.type == ELETYPE_MULTIPOLE));
+}
+
 void track_thru(double *beam, size_t n_particles, Element element) {
   double temp_result[BEAM_DOFS] = {0};
-  matrix_multiply(element.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
-  memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+  if (!element_is_nonlinear(element)) {
+    matrix_multiply(element.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
+    memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+  } else if (element.type == ELETYPE_SEXTUPOLE) {
+    Element half_ele = (Element){
+      .type = ELETYPE_DRIFT, 
+      .as.drift = {.length = element_length(element) / 2.0}
+    };
+    make_r_matrix(&half_ele);
+
+    matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
+    memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+
+    for (size_t i=0; i<n_particles; i++) {
+      double x = beam[0*n_particles + i];
+      double y = beam[2*n_particles + i];
+      beam[1*n_particles + i] += -0.5 * element.as.sextupole.K2 * (x*x - y*y);
+      beam[3*n_particles + i] += element.as.sextupole.K2 * x * y;
+    }
+
+    matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
+    memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+  } else if (element.type == ELETYPE_OCTUPOLE) {
+    Element half_ele = (Element){
+      .type = ELETYPE_DRIFT, 
+      .as.drift = {.length = element_length(element) / 2.0}
+    };
+    make_r_matrix(&half_ele);
+
+    matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
+    memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+
+    for (size_t i=0; i<n_particles; i++) {
+      double x = beam[0*n_particles + i];
+      double y = beam[2*n_particles + i];
+      beam[1*n_particles + i] += -(1.0/6.0) * element.as.octupole.K3 * (x*x*x - 3*x*y*y);
+      beam[3*n_particles + i] += -(1.0/6.0) * element.as.octupole.K3 * (y*y*y - 3*x*x*y);
+    }
+
+    matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
+    memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+  } else {
+    assert(0 && "Can't track nonlinear elements yet");
+  }
 }
 
 void track(double *beam, size_t n_particles, Element *line, size_t n_elements) {
