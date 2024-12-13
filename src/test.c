@@ -21,6 +21,7 @@ bool test_threebythree(void);
 bool test_twiss_propagation(void);
 bool test_synchrad_integrals(void);
 bool test_populate_element_library(void);
+bool test_tracking(void);
 
 typedef bool (*TestFunction)(void);
 
@@ -32,6 +33,7 @@ TestFunction test_functions[] = {
   test_twiss_propagation,
   test_synchrad_integrals,
   test_populate_element_library,
+  test_tracking,
 };
 
 int main(void) {
@@ -338,6 +340,59 @@ bool test_twiss_propagation(void) {
   fclose(twiss_file);
 
   return compare_files(test_name, expected_filename, result_filename);
+}
+
+bool test_tracking(void) {
+  const char *test_name = "TRACKING ON-AXIS PARTICLE TEST";
+  bool retval = true;
+
+  double beam[6] = {0};
+  Element ele = (Element){
+    .type = ELETYPE_DRIFT, .name = "test_drift",
+    .as.drift = { .length = 0.1 }
+  };
+  make_r_matrix(&ele);
+  track_thru(beam, 1, ele);
+  for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
+    if (beam[i] != 0.0) {
+      printf("%s FAILED for element %s\n", test_name, ele.name);
+      retval = false;
+      break;
+    }
+  }
+
+  memset(beam, 0, 6 * sizeof(double));
+  ele = (Element){
+    .type = ELETYPE_QUAD, .name = "test_quad",
+    .as.quad = {.length = 0.1, .K1 = 1.0}
+  };
+  make_r_matrix(&ele);
+  track_thru(beam, 1, ele);
+  for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
+    if (beam[i] != 0.0) {
+      printf("%s FAILED for element %s\n", test_name, ele.name);
+      retval = false;
+      break;
+    }
+  }
+
+  memset(beam, 0, 6 * sizeof(double));
+  ele = (Element){
+    .type = ELETYPE_SBEND, .name = "test_sbend",
+    .as.sbend = {.length = 0.1, .K1 = 0.1, .angle = 0.05}
+  };
+  make_r_matrix(&ele);
+  track_thru(beam, 1, ele);
+  for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
+    if (beam[i] != 0.0) {
+      printf("%s FAILED for element %s\n", test_name, ele.name);
+      retval = false;
+      break;
+    }
+  }
+
+  if (retval) printf("%s PASSED\n", test_name);
+  return retval;
 }
 
 bool compare_arrays(double *correct_mat, double *compare_mat, size_t n) {

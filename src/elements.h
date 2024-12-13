@@ -111,6 +111,9 @@ typedef struct {
   double *element_curlyH;
 } LinOptsParams;
 
+void track_thru(double *beam, size_t n_particles, Element element);
+void track(double *beam, size_t n_particles, Element *line, size_t n_elements);
+
 double synch_rad_integral_2(Element *line);
 double synch_rad_integral_3(Element *line);
 double synch_rad_integral_4(Element *line, int periodicity, double *element_etas);

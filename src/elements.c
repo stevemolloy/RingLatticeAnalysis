@@ -20,6 +20,18 @@
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
 
+void track_thru(double *beam, size_t n_particles, Element element) {
+  double temp_result[BEAM_DOFS] = {0};
+  matrix_multiply(element.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
+  memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
+}
+
+void track(double *beam, size_t n_particles, Element *line, size_t n_elements) {
+  for (size_t i=0; i<n_elements; i++) {
+    track_thru(beam, n_particles, line[i]);
+  }
+}
+
 double synch_rad_integral_2(Element *line) {
   double I_2 = 0;
   for (size_t i=0; i<arrlenu(line); i++) {
