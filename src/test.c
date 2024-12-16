@@ -353,7 +353,6 @@ bool test_full_lattice_tracking(void) {
   generate_lattice(file_path, &line);
 
   double beam[6] = {0};
-  beam[0] = 0.01;
   track(beam, 1, line, arrlenu(line));
 
   for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {

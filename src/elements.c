@@ -41,11 +41,12 @@ void track_thru(double *beam, size_t n_particles, Element element) {
     matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
     memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
 
+    double K2L = element.as.sextupole.K2 * element.as.sextupole.length;
     for (size_t i=0; i<n_particles; i++) {
       double x = beam[0*n_particles + i];
       double y = beam[2*n_particles + i];
-      beam[1*n_particles + i] += -0.5 * element.as.sextupole.K2 * (x*x - y*y);
-      beam[3*n_particles + i] += element.as.sextupole.K2 * x * y;
+      beam[1*n_particles + i] += -0.5 * K2L * (x*x - y*y);
+      beam[3*n_particles + i] += K2L * x * y;
     }
 
     matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
@@ -60,17 +61,18 @@ void track_thru(double *beam, size_t n_particles, Element element) {
     matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
     memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
 
+    double K3L = element.as.octupole.K3 * element.as.octupole.length;
     for (size_t i=0; i<n_particles; i++) {
       double x = beam[0*n_particles + i];
       double y = beam[2*n_particles + i];
-      beam[1*n_particles + i] += -(1.0/6.0) * element.as.octupole.K3 * (x*x*x - 3*x*y*y);
-      beam[3*n_particles + i] += -(1.0/6.0) * element.as.octupole.K3 * (y*y*y - 3*x*x*y);
+      beam[1*n_particles + i] += -(1.0/6.0) * K3L * (x*x*x - 3*x*y*y);
+      beam[3*n_particles + i] += -(1.0/6.0) * K3L * (y*y*y - 3*x*x*y);
     }
 
     matrix_multiply(half_ele.R_matrix, beam, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, n_particles);
     memcpy(beam, temp_result, BEAM_DOFS * sizeof(double));
   } else {
-    assert(0 && "Can't track nonlinear elements yet");
+    assert(0 && "Can't track this element yet");
   }
 }
 
