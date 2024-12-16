@@ -159,6 +159,29 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
+  size_t num_turns = 1000 * args.periodicity;
+  FILE *aperture_search = fopen("aperture.csv", "w");
+  for (double starting_x = -0.03; starting_x < 0.031; starting_x += 0.0005) {
+    for (double starting_y = 0.0; starting_y < 0.008; starting_y += 0.0001) {
+      double beam[6] = {0};
+      beam[0] = starting_x;
+      beam[2] = starting_y;
+      printf("Tracking %0.3e, %0.3e %zu times", beam[0], beam[2], num_turns);
+      size_t turn;
+      for (turn=0; turn<num_turns; turn++) {
+        track(beam, 1, line, arrlenu(line));
+        if ((fabs(beam[0]) > 1.0) || (fabs(beam[2]) > 1.0) || (isnan(beam[0])) || isnan(beam[2])) {
+          break;
+        }
+      }
+      printf(": Survived %zu periods\n", turn);
+      fprintf(aperture_search, "%0.6e, %0.6e, %zu\n", starting_x, starting_y, turn);
+    }
+  }
+  fclose(aperture_search);
+
+  printf("\n");
+
   arrfree(line);
 
   return 0;
