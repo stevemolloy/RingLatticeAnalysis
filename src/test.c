@@ -23,6 +23,7 @@ bool test_synchrad_integrals(void);
 bool test_populate_element_library(void);
 bool test_individual_ele_tracking(void);
 bool test_full_lattice_tracking(void);
+bool test_generate_from_tracy_file(void);
 
 typedef bool (*TestFunction)(void);
 
@@ -36,6 +37,7 @@ TestFunction test_functions[] = {
   test_populate_element_library,
   test_individual_ele_tracking,
   test_full_lattice_tracking,
+  test_generate_from_tracy_file,
 };
 
 int main(void) {
@@ -57,6 +59,22 @@ int main(void) {
 
   if (!result) return 1;
   return 0;
+}
+
+bool test_generate_from_tracy_file(void) {
+  const char *test_name = "LOAD LATTICE FROM TRACY FILE TEST";
+
+  const char *filename = "./lattices/max_4u_sp_jb_5.lat";
+
+  Element *line = {0};
+  generate_lattice_from_tracy_file(filename, &line);
+
+  for (size_t i=0; i<arrlenu(line); i++) {
+    printf("%zu: %s\n", i, get_element_type(line[i].type));
+  }
+
+  printf("%s PASSED\n", test_name);
+  return true;
 }
 
 bool test_threebythree(void) {
@@ -188,7 +206,7 @@ bool test_sbend(void) {
   const char *filename = "./lattices/whiskey.mad8";
 
   Element *line = {0};
-  generate_lattice(filename, &line);
+  generate_lattice_from_mad8_file(filename, &line);
   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
   get_line_matrix(line_matrix, line);
 
@@ -219,7 +237,7 @@ bool test_full_lat_all_mats(void) {
   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
 
   Element *line = {0};
-  generate_lattice(filename, &line);
+  generate_lattice_from_mad8_file(filename, &line);
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
   FILE *result_file;
@@ -260,7 +278,7 @@ bool test_synchrad_integrals(void) {
   char *file_path = "./lattices/max4_r3_lattice.mad8";
 
   Element *line = {0};
-  generate_lattice(file_path, &line);
+  generate_lattice_from_mad8_file(file_path, &line);
 
   const double periodicity = 20;
 
@@ -298,7 +316,7 @@ bool test_populate_element_library(void) {
   char *file_path = "./lattices/max4_r3_lattice.mad8";
 
   Element *line = {0};
-  generate_lattice(file_path, &line);
+  generate_lattice_from_mad8_file(file_path, &line);
 
   FILE *element_file = fopen(result_filename, "w");
   for (size_t i=0; i<arrlenu(line); i++) {
@@ -317,7 +335,7 @@ bool test_twiss_propagation(void) {
   char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
 
   Element *line = {0};
-  generate_lattice(file_path, &line);
+  generate_lattice_from_mad8_file(file_path, &line);
 
   const double periodicity = 20;
 
@@ -350,7 +368,7 @@ bool test_full_lattice_tracking(void) {
 
   const char *file_path = "./lattices/max4_r3_lattice.mad8";
   Element *line = {0};
-  generate_lattice(file_path, &line);
+  generate_lattice_from_mad8_file(file_path, &line);
 
   double beam[6] = {0};
   track(beam, 1, line, arrlenu(line));
@@ -440,7 +458,7 @@ bool compare_with_matlab(void) {
   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
 
   Element *line = {0};
-  generate_lattice(filename, &line);
+  generate_lattice_from_mad8_file(filename, &line);
 
   const char *matlab_output_filename = "./tests/matlab_output.txt";
   char *matlab_output_buffer = read_entire_file(matlab_output_filename);
