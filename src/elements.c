@@ -1,8 +1,10 @@
 #include "sdm_lib.h"
 #define _GNU_SOURCE
 #include <math.h>
+#include <errno.h>
 #include <assert.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +21,13 @@
 
 static void calc_sbend_matrix(Element *element);
 static void calc_quad_matrix(Element *element);
+
+typedef struct {
+  char *key;
+  double value;
+} ParsingVar;
+
+ParsingVar *variables = NULL;
 
 bool element_is_nonlinear(Element ele) {
   return ((ele.type == ELETYPE_OCTUPOLE) ||
@@ -810,7 +819,7 @@ void get_line_matrix(double *matrix, Element *line) {
   }
 }
 
-void generate_lattice(const char *filename, Element **line) {
+void generate_lattice_from_mad8_file(const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   char *cursor = buffer;
 
@@ -825,6 +834,419 @@ void generate_lattice(const char *filename, Element **line) {
   arrfree(element_list);
   shfree(element_library);
 
+  free(buffer);
+}
+
+typedef enum {
+  LEXEME_TYPE_SYMBOL,
+  LEXEME_TYPE_NUMBER,
+  LEXEME_TYPE_ASSIGNMENT,
+  LEXEME_TYPE_ADD,
+  LEXEME_TYPE_MULT,
+  LEXEME_TYPE_SUB,
+  LEXEME_TYPE_DIV,
+  LEXEME_TYPE_OPAREN,
+  LEXEME_TYPE_CPAREN,
+  LEXEME_TYPE_SEMICOLON,
+  LEXEME_TYPE_COLON,
+  LEXEME_TYPE_COMMA,
+  LEXEME_TYPE_COUNT,
+} LexemeType;
+
+char *lexeme_strings[LEXEME_TYPE_COUNT] = {
+  [LEXEME_TYPE_SYMBOL] =     "LEXEME_TYPE_SYMBOL",
+  [LEXEME_TYPE_NUMBER] =     "LEXEME_TYPE_NUMBER",
+  [LEXEME_TYPE_ASSIGNMENT] = "LEXEME_TYPE_ASSIGNMENT",
+  [LEXEME_TYPE_ADD] =        "LEXEME_TYPE_ADD",
+  [LEXEME_TYPE_MULT] =       "LEXEME_TYPE_MULT",
+  [LEXEME_TYPE_SUB] =        "LEXEME_TYPE_SUB",
+  [LEXEME_TYPE_DIV] =        "LEXEME_TYPE_DIV",
+  [LEXEME_TYPE_OPAREN] =     "LEXEME_TYPE_OPAREN",
+  [LEXEME_TYPE_CPAREN] =     "LEXEME_TYPE_CPAREN",
+  [LEXEME_TYPE_SEMICOLON] =  "LEXEME_TYPE_SEMICOLON",
+  [LEXEME_TYPE_COLON] =      "LEXEME_TYPE_COLON",
+  [LEXEME_TYPE_COMMA] =      "LEXEME_TYPE_COMMA",
+};
+
+typedef struct {
+  LexemeType type;
+  sdm_string_view content;
+} Lexeme;
+
+size_t starts_with_float(const char *input) {
+    char *endptr;
+
+    strtod(input, &endptr);
+    if (errno == 0) return 0;
+    return endptr - input;
+}
+
+typedef struct {
+  size_t capacity;
+  size_t length;
+  Lexeme *data;
+} LexemeArray;
+
+typedef struct {
+  size_t capacity;
+  size_t length;
+  double *data;
+} DoubleArray;
+
+int prec(Lexeme lex) {
+  if (lex.type == LEXEME_TYPE_SUB) return 50;
+  if (lex.type == LEXEME_TYPE_ADD) return 50;
+  if (lex.type == LEXEME_TYPE_DIV) return 100;
+  if (lex.type == LEXEME_TYPE_MULT) return 100;
+  fprintf(stderr, "'prec' called with inappropriate lexeme");
+  exit(1);
+}
+
+double evaluate_lexeme_string(Lexeme *lexemes, size_t *index) {
+  DoubleArray return_stack = {0};
+  SDM_ENSURE_ARRAY_MIN_CAP(return_stack, 1024);
+  LexemeArray operator_stack = {0};
+  SDM_ENSURE_ARRAY_MIN_CAP(operator_stack, 1024);
+
+  Lexeme lexeme = lexemes[*index];
+  
+  bool done_parsing = false;
+  while (((*index) < arrlenu(lexemes)) && !done_parsing) {
+    if (lexeme.type == LEXEME_TYPE_SEMICOLON) {
+      break;
+    }
+    switch (lexeme.type) {
+      case LEXEME_TYPE_SEMICOLON:
+      case LEXEME_TYPE_COMMA: {
+        done_parsing = true;
+      } break;
+      case LEXEME_TYPE_COLON:
+      case LEXEME_TYPE_COUNT:
+      case LEXEME_TYPE_ASSIGNMENT: {
+        fprintf(stderr, "Faulty expression\n");
+        exit(1);
+      } break;
+      case LEXEME_TYPE_SYMBOL: {
+        char *var_name = sdm_sv_to_cstr(lexeme.content);
+        double val = shget(variables, var_name);
+        SDM_ARRAY_PUSH(return_stack, val);
+        free(var_name);
+      } break;
+      case LEXEME_TYPE_NUMBER: {
+        SDM_ARRAY_PUSH(return_stack, strtod(lexeme.content.data, NULL));
+      } break;
+      case LEXEME_TYPE_MULT:
+      case LEXEME_TYPE_DIV:
+      case LEXEME_TYPE_ADD:
+      case LEXEME_TYPE_SUB: {
+        while ((operator_stack.length > 0) && (prec(operator_stack.data[operator_stack.length-1]) >= prec(lexeme))) {
+          Lexeme popped = SDM_ARRAY_POP(operator_stack);
+          assert(return_stack.length >= 2);
+          double b = SDM_ARRAY_POP(return_stack);
+          double a = SDM_ARRAY_POP(return_stack);
+          if (popped.type == LEXEME_TYPE_ADD) SDM_ARRAY_PUSH(return_stack, a+b)
+          else if (popped.type == LEXEME_TYPE_SUB) SDM_ARRAY_PUSH(return_stack, a-b)
+          else if (popped.type == LEXEME_TYPE_MULT) SDM_ARRAY_PUSH(return_stack, a*b)
+          else if (popped.type == LEXEME_TYPE_DIV) SDM_ARRAY_PUSH(return_stack, a/b)
+          else {
+            fprintf(stderr, "operator_stack corrupted\n");
+            exit(1);
+          }
+        }
+        SDM_ARRAY_PUSH(operator_stack, lexeme);
+      } break;
+      case LEXEME_TYPE_OPAREN:
+      case LEXEME_TYPE_CPAREN: {
+        fprintf(stderr, "Cannot handle parentheses yet\n");
+        exit(1);
+      } break;
+    }
+    (*index)++;
+    lexeme = lexemes[*index];
+  }
+
+  while (operator_stack.length > 0) {
+    Lexeme popped = SDM_ARRAY_POP(operator_stack);
+    assert(return_stack.length >= 2);
+    double b = SDM_ARRAY_POP(return_stack);
+    double a = SDM_ARRAY_POP(return_stack);
+    if (popped.type == LEXEME_TYPE_ADD) SDM_ARRAY_PUSH(return_stack, a+b)
+    else if (popped.type == LEXEME_TYPE_SUB) SDM_ARRAY_PUSH(return_stack, a-b)
+    else if (popped.type == LEXEME_TYPE_MULT) SDM_ARRAY_PUSH(return_stack, a*b)
+    else if (popped.type == LEXEME_TYPE_DIV) SDM_ARRAY_PUSH(return_stack, a/b)
+    else {
+      fprintf(stderr, "operator_stack corrupted\n");
+      exit(1);
+    }
+  }
+
+  assert(return_stack.length == 1 && "Unused variables on return stack");
+  return return_stack.data[0];
+}
+
+typedef struct {
+  char *key;
+  Element value;
+} EleLibItem;
+
+typedef struct {
+  size_t capacity;
+  size_t length;
+  Element *data;
+} Line;
+
+typedef struct {
+  char *key;
+  Line value;
+} LineItem;
+
+void generate_lattice_from_tracy_file(const char *filename, Element **line) {
+  EleLibItem *element_library = NULL;
+
+  char *buffer = read_entire_file(filename);
+  sdm_string_view file_contents = sdm_cstr_as_sv(buffer);
+
+  Lexeme *lexemes = {0};
+  sdm_sv_trim(&file_contents);
+  while (file_contents.length > 0) {
+    Lexeme lexeme = {0};
+
+    size_t len = starts_with_float(file_contents.data);
+    if (isalpha(file_contents.data[0])) {
+      lexeme.type = LEXEME_TYPE_SYMBOL;
+      size_t i = 0;
+      while (isvalididchar(file_contents.data[i])) i++;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, i);
+      file_contents.data += i;
+      file_contents.length -= i;
+    } else if (len > 0) {
+      lexeme.type = LEXEME_TYPE_NUMBER;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, len);
+      file_contents.data += len;
+      file_contents.length -= len;
+    } else if (file_contents.data[0] == '=') {
+      lexeme.type = LEXEME_TYPE_ASSIGNMENT;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == ';') {
+      lexeme.type = LEXEME_TYPE_SEMICOLON;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == '/') {
+      lexeme.type = LEXEME_TYPE_DIV;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == ':') {
+      lexeme.type = LEXEME_TYPE_COLON;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == ',') {
+      lexeme.type = LEXEME_TYPE_COMMA;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == '*') {
+      lexeme.type = LEXEME_TYPE_MULT;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == '-') {
+      lexeme.type = LEXEME_TYPE_SUB;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == '(') {
+      lexeme.type = LEXEME_TYPE_OPAREN;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else if (file_contents.data[0] == ')') {
+      lexeme.type = LEXEME_TYPE_CPAREN;
+      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      file_contents.data += 1;
+      file_contents.length -= 1;
+    } else {
+      fprintf(stderr, "Trying to parse an unknown character, %c\n", file_contents.data[0]);
+      exit(1);
+    }
+
+    arrput(lexemes, lexeme);
+
+    sdm_sv_trim(&file_contents);
+  }
+
+  LineItem *lines = NULL;
+
+  size_t i = 0;
+  while (i < arrlenu(lexemes)) {
+    Lexeme lexeme = lexemes[i];
+
+    if (lexeme.type != LEXEME_TYPE_SYMBOL) {
+      fprintf(stderr, "Expected lexeme type %s but got %s \""SDM_SV_F"\"\n", lexeme_strings[LEXEME_TYPE_SYMBOL], lexeme_strings[lexeme.type], SDM_SV_Vals(lexeme.content));
+      exit(1);
+    }
+    char *name = sdm_sv_to_cstr(sdm_sized_str_as_sv(lexeme.content.data, lexeme.content.length));
+
+    if (strncasecmp(name, "USE", 3) == 0) {
+      i++;
+      lexeme = lexemes[i];
+      assert(lexeme.type == LEXEME_TYPE_COLON);
+      i++;
+      lexeme = lexemes[i];
+      assert(lexeme.type == LEXEME_TYPE_SYMBOL);
+      char *line_name_to_use = sdm_sv_to_cstr(lexeme.content);
+      Line line_to_use = shget(lines, line_name_to_use);
+      for (size_t i=0; i<line_to_use.length; i++) {
+        arrput((*line), line_to_use.data[i]);
+      }
+      i++;
+      lexeme = lexemes[i];
+      assert(lexeme.type == LEXEME_TYPE_SEMICOLON);
+      i++;
+      lexeme = lexemes[i];
+      continue;
+    }
+
+    i++;
+    lexeme = lexemes[i];
+
+    if (lexeme.type == LEXEME_TYPE_ASSIGNMENT) {
+      // We are assigning a value to a variable
+      i++;
+      lexeme = lexemes[i];
+      double val = evaluate_lexeme_string(lexemes, &i);
+      shput(variables, name, val);
+    } else if (lexeme.type == LEXEME_TYPE_COLON) {
+      // We are defining an element
+      ParsingVar *ele_defns = NULL;
+      i++;
+      lexeme = lexemes[i];
+      EleType ele_type = {0};
+      if (strncasecmp(lexeme.content.data, "cavity", 6) == 0) ele_type = ELETYPE_CAVITY;
+      else if (strncasecmp(lexeme.content.data, "drift", 5) == 0) ele_type = ELETYPE_DRIFT;
+      else if (strncasecmp(lexeme.content.data, "quadrupole", 10) == 0) ele_type = ELETYPE_QUAD;
+      else if (strncasecmp(lexeme.content.data, "bending", 7) == 0) ele_type = ELETYPE_SBEND;
+      else if (strncasecmp(lexeme.content.data, "sextupole", 9) == 0) ele_type = ELETYPE_SEXTUPOLE;
+      else if (strncasecmp(lexeme.content.data, "octupole", 8) == 0) ele_type = ELETYPE_OCTUPOLE;
+      else if (strncasecmp(lexeme.content.data, "marker", 6) == 0) ele_type = ELETYPE_DRIFT;
+      else if (strncasecmp(lexeme.content.data, "line", 4) == 0) {
+        // Dealing with a line
+        Line newline = {0};
+        SDM_ENSURE_ARRAY_MIN_CAP(newline, 256);
+        i++;
+        lexeme = lexemes[i];
+        assert(lexeme.type == LEXEME_TYPE_ASSIGNMENT);
+        i++;
+        lexeme = lexemes[i];
+        assert(lexeme.type = LEXEME_TYPE_OPAREN);
+        i++;
+        lexeme = lexemes[i];
+        while (i < arrlenu(lexemes)) {
+          if (lexeme.type == LEXEME_TYPE_COMMA) {
+            i++;
+            lexeme= lexemes[i];
+            continue;
+          }
+          else if (lexeme.type == LEXEME_TYPE_SYMBOL) {
+            char *symbol_val = sdm_sv_to_cstr(lexeme.content);
+            if (shgeti(element_library, symbol_val) >= 0) {
+              SDM_ARRAY_PUSH(newline, shget(element_library, symbol_val));
+            } else if (shgeti(lines, symbol_val) >= 0) {
+              Line line2insert = shget(lines, symbol_val);
+              for (size_t i=0; i<line2insert.length; i++) {
+                SDM_ARRAY_PUSH(newline, line2insert.data[i]);
+              }
+            } else {
+              fprintf(stderr, "%s is neither in element_library or lines\n", symbol_val);
+              exit(1);
+            }
+            free(symbol_val);
+          } else if (lexeme.type == LEXEME_TYPE_CPAREN) {
+            i++;
+            lexeme = lexemes[i];
+            break;
+          }
+          i++;
+          lexeme = lexemes[i];
+        }
+        shput(lines, name, newline);
+        i++;
+        lexeme = lexemes[i];
+        continue;
+      } else {
+        fprintf(stderr, "Unknown element type: '"SDM_SV_F"'\n", SDM_SV_Vals(lexeme.content));
+        exit(1);
+      }
+      i++;
+      lexeme = lexemes[i];
+      while (lexeme.type != LEXEME_TYPE_SEMICOLON) {
+        while (lexeme.type != LEXEME_TYPE_SYMBOL) {
+          i++;
+          lexeme = lexemes[i];
+        }
+        char *varname = sdm_sv_to_cstr(sdm_sized_str_as_sv(lexeme.content.data, lexeme.content.length));
+        i++;
+        lexeme = lexemes[i];
+        assert(lexeme.type == LEXEME_TYPE_ASSIGNMENT);
+        i++;
+        lexeme = lexemes[i];
+        double val = evaluate_lexeme_string(lexemes, &i);
+        shput(ele_defns, varname, val);
+        lexeme = lexemes[i];
+      }
+      Element ele = {0};
+      memcpy(ele.name, name, strlen(name)<64 ? strlen(name) : 63);
+      switch (ele_type) {
+        case ELETYPE_QUAD: {
+          ele.type = ELETYPE_QUAD;
+          ele.as.quad.length = shget(ele_defns, "L");
+          ele.as.quad.K1 = shget(ele_defns, "B_2");
+        } break;
+        case ELETYPE_SBEND: {
+          ele.type = ELETYPE_SBEND;
+          ele.as.sbend.length = shget(ele_defns, "L");
+          ele.as.sbend.K1 = shget(ele_defns, "B_2");
+          ele.as.sbend.angle = shget(ele_defns, "Phi");
+        } break;
+        case ELETYPE_SEXTUPOLE: {
+          ele.type = ELETYPE_SEXTUPOLE;
+          ele.as.sextupole.length = shget(ele_defns, "L");
+          ele.as.sextupole.K2 = shget(ele_defns, "B_3");
+        } break;
+        case ELETYPE_OCTUPOLE: {
+          ele.type = ELETYPE_OCTUPOLE;
+          ele.as.octupole.length = shget(ele_defns, "L");
+          ele.as.octupole.K3 = shget(ele_defns, "B_4");
+        } break;
+        case ELETYPE_MULTIPOLE: {
+          fprintf(stderr, "%s not implmented\n", get_element_type(ele_type));
+          exit(1);
+        } break;
+        case ELETYPE_DRIFT: {
+          ele.type = ELETYPE_DRIFT;
+          ele.as.drift.length = shget(ele_defns, "L");
+        } break;
+        case ELETYPE_CAVITY: {
+          ele.type = ELETYPE_CAVITY;
+          ele.as.cavity.length   = shget(ele_defns, "L");
+          ele.as.cavity.voltage = shget(ele_defns, "Voltage");
+          ele.as.cavity.harmonic = shget(ele_defns, "HarNum");
+        } break;
+      }
+      shput(element_library, name, ele);
+    } else {
+      fprintf(stderr, "Malformed input file\n");
+      exit(1);
+    }
+
+    i++;
+  }
+
+  arrfree(lexemes);
   free(buffer);
 }
 

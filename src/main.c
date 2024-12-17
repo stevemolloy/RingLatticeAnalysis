@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   const double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
 
   Element *line = {0};
-  generate_lattice(args.file_path, &line);
+  generate_lattice_from_mad8_file(args.file_path, &line);
 
   double line_length = calculate_line_length(line);
   double total_length = line_length * args.periodicity;
@@ -159,6 +159,7 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
+  /*
   size_t num_turns = 1000 * args.periodicity;
   FILE *aperture_search = fopen("aperture.csv", "w");
   for (double starting_x = -0.03; starting_x < 0.031; starting_x += 0.0005) {
@@ -179,6 +180,7 @@ int main(int argc, char **argv) {
     }
   }
   fclose(aperture_search);
+  */
 
   printf("\n");
 
