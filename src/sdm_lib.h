@@ -15,6 +15,7 @@
  * SDM_ENSURE_ARRAY_MIN_CAP(da, cap)   Ensure that the dynamic array, da, has a capacity equal-to or greater-than cap. Realloc is used if needed.
  * DEFAULT_CAPACITY 128                Default capacity in bytes to be used when the capacity has not been set by the user.
  * SDM_ARRAY_PUSH(da, item)            Push the value of item to the dynamic array, da, reallocing if needed.
+ * SDM_ARRAY_SWAP(da, ind1, ind2)      Swap the elements at the marked indices (if length==capacity this will extend the array)
  * SDM_ARRAY_FREE(da)                  Free the memory in the dynamic array, da, and zero things
  * SDM_ARRAY_RESET(da)                 Reset the length of the dynamic array, da, to zero, effectively emptying it. No memory is freed by this.
  * 
@@ -73,6 +74,8 @@ do {                           \
     }                                                          \
   } while (0)
 
+#define SDM_ARRAY_POP(da) (da).data[--((da).length)]
+
 #define DEFAULT_CAPACITY 128
 
 #define SDM_ARRAY_PUSH(da, item) do {                             \
@@ -97,6 +100,16 @@ do {                           \
     (da).data[(da).length++] = item;                              \
   } while (0);
 
+#define SDM_ARRAY_SWAP(da, ind1, ind2)                                   \
+do {                                                                     \
+  assert((int)ind1 < (int)da.length && "First index is out of bounds");  \
+  assert((int)ind2 < (int)da.length && "Second index is out of bounds"); \
+  SDM_ARRAY_PUSH(da, da.data[ind1]);                                     \
+  da.data[ind1] = da.data[ind2];                                         \
+  da.data[ind2] = da.data[da.length - 1];                                \
+  da.length--;                                                           \
+} while (0)
+
 #define SDM_ARRAY_FREE(da) do {                                \
     SDM_FREE((da).data);                                           \
     (da).length = 0;                                           \
@@ -118,8 +131,12 @@ char *sdm_shift_args(int *argc, char ***argv);
 char *sdm_read_entire_file(const char *file_path);
 
 sdm_string_view sdm_cstr_as_sv(char *cstr);
+char *sdm_sv_to_cstr(sdm_string_view sv);
 sdm_string_view sdm_sized_str_as_sv(char *cstr, size_t length);
 sdm_string_view sdm_sv_pop_by_delim(sdm_string_view *SV, const char delim);
+sdm_string_view sdm_sv_pop_by_whitespace(sdm_string_view *SV);
+int sdm_sv_pop_integer(sdm_string_view *SV);
+char sdm_sv_pop_one_char(sdm_string_view *SV);
 void sdm_sv_trim(sdm_string_view *SV);
 
 typedef struct {
@@ -212,7 +229,7 @@ void push_to_dblarray(DblArray *hm, char *key, double value);
 uint32_t get_hashmap_location(const char* key, size_t capacity);
 uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length);
 
-#define SDM_ARENA_DEFAULT_CAP 256*1024*1024
+#define SDM_ARENA_DEFAULT_CAP 256 * 1024*1024
 
 typedef struct sdm_arena_t sdm_arena_t;
 
@@ -268,11 +285,33 @@ sdm_string_view sdm_cstr_as_sv(char *cstr) {
   };
 }
 
+char *sdm_sv_to_cstr(sdm_string_view sv) {
+  char *ret = malloc(sv.length + 1);
+  memset(ret, 0, sv.length + 1);
+  memcpy(ret, sv.data, sv.length);
+  return ret;
+}
+
 sdm_string_view sdm_sized_str_as_sv(char *cstr, size_t length) {
   return (sdm_string_view) {
     .data = cstr,
     .length = length
   };
+}
+
+sdm_string_view sdm_sv_pop_by_whitespace(sdm_string_view *SV) {
+  sdm_string_view ret = {0};
+  ret.data = SV->data;
+
+  while (!isspace(*SV->data) && (SV->length>0)) {
+    SV->data++;
+    SV->length--;
+    ret.length++;
+  }
+  SV->data++;
+  SV->length--;
+
+  return ret;
 }
 
 sdm_string_view sdm_sv_pop_by_delim(sdm_string_view *SV, const char delim) {
@@ -288,6 +327,22 @@ sdm_string_view sdm_sv_pop_by_delim(sdm_string_view *SV, const char delim) {
   SV->length--;
 
   return ret;
+}
+
+int sdm_sv_pop_integer(sdm_string_view *SV) {
+  char *new_pos;
+  int retval = strtol(SV->data, &new_pos, 0);
+  size_t diff = new_pos - SV->data;
+  SV->data = new_pos;
+  SV->length -= diff;
+  return retval;
+}
+
+char sdm_sv_pop_one_char(sdm_string_view *SV) {
+  char retval = SV->data[0];
+  SV->data++;
+  SV->length--;
+  return retval;
 }
 
 void sdm_sv_trim(sdm_string_view *SV) {
@@ -348,7 +403,7 @@ void sdm_arena_init(sdm_arena_t *arena, size_t capacity) {
     fprintf(stderr, "Memory problem. Aborting.\n");
     exit(1);
   }
-  // memset(arena->start, 0, capacity);
+  memset(arena->start, 0, capacity);
   arena->next = malloc(sizeof(*arena->next));
   if (arena->next == NULL) {
     fprintf(stderr, "Memory problem. Aborting.\n");
@@ -379,8 +434,6 @@ void *sdm_arena_alloc(sdm_arena_t *arena, size_t size) {
     arena->length += size;
   else
     arena->length += 1;
-
-  memset(return_val, 0, size);
 
   return return_val;
 }

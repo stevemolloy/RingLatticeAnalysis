@@ -1,0 +1,102 @@
+n_bend = 4;
+n_quad = 4;
+n_sext = 2;
+
+c0   = 2.99792458e8;
+
+h_rf = 176;
+C    = 528.0/20.0;
+
+
+cav: Cavity, Frequency = c0/C*h_rf, Voltage = 2*1.50e6, HarNum = h_rf,
+     Phi = 0.0;
+
+d1:  Drift, L = 0.01;
+d2:  Drift, L = 0.30311 - 0.1;
+d3:  Drift, L = 0.40311 - 0.30311;
+d4:  Drift, L = 0.075 - 0.0375;
+twk: Drift, L = 0.25;
+d5:  Drift, L = 0.0375;
+d6:  Drift, L = 1.302 - 0.25;
+d7:  Drift, L = 0.045;
+d8:  Drift, L = 0.125 - 0.1;
+d9:  Drift, L = 0.26268 - 0.045 - 0.125;
+d10: Drift, L = 0.00608;
+d11: Drift, L = 0.1;
+d12: Drift, L = 0.025;
+d13: Drift, L = 0.118 - 0.1;
+d14: Drift, L = 0.161 - 0.118;
+d15: Drift, L = 2.55 - 0.161;
+
+d_corr: Drift, L = 0.05;
+
+q1   : Quadrupole, L = 0.25000, Phi =  0.00000, B_2 =  4.79596, N = n_quad;
+q2   : Quadrupole, L = 0.25000, Phi =  0.00000, B_2 = -4.30427, N = n_quad;
+q3   : Bending,    L = 0.15000, Phi = -0.04132, B_2 =  3.09361, N = n_quad;
+
+r1   : Bending, L = 0.15000, Phi = -0.26652, B_2 =  5.46047, N = n_bend;
+
+d2_0 : Bending, L = 0.36189, Phi =  1.13556, B_2 = -1.15655, N = n_bend;
+d2_1 : Bending, L = 0.05000, Phi =  0.15289, B_2 = -0.84188, N = n_bend;
+d2_2 : Bending, L = 0.05000, Phi =  0.15000, B_2 = -0.82408, N = n_bend;
+d2_3 : Bending, L = 0.05000, Phi =  0.14486, B_2 = -0.48802, N = n_bend;
+d2_4 : Bending, L = 0.05000, Phi =  0.13740, B_2 =  0.09853, N = n_bend;
+d2_5 : Bending, L = 0.05000, Phi =  0.13389, B_2 =  0.11139, N = n_bend;
+
+d1_u6: Bending, L = 0.05000, Phi = -0.20542, B_2 =  0.00181, N = n_bend;
+d1_u5: Bending, L = 0.05000, Phi = -0.05352, B_2 =  0.00071, N = n_bend;
+d1_u4: Bending, L = 0.05000, Phi =  0.11626, B_2 =  0.00075, N = n_bend;
+d1_u3: Bending, L = 0.05000, Phi =  0.13522, B_2 =  0.00080, N = n_bend;
+d1_u2: Bending, L = 0.05000, Phi =  0.10448, B_2 =  0.00001, N = n_bend;
+d1_u1: Bending, L = 0.05000, Phi =  0.10292, B_2 = -0.00014, N = n_bend;
+d1_0 : Bending, L = 0.20424, Phi =  0.45463, B_2 = -0.36804, N = n_bend;
+d1_d1: Bending, L = 0.05000, Phi =  0.09087, B_2 = -0.00157, N = n_bend;
+d1_d2: Bending, L = 0.05000, Phi =  0.08600, B_2 = -0.00199, N = n_bend;
+d1_d3: Bending, L = 0.05000, Phi =  0.08373, B_2 = -0.00170, N = n_bend;
+d1_d4: Bending, L = 0.05000, Phi =  0.09601, B_2 = -0.00239, N = n_bend;
+d1_d5: Bending, L = 0.05000, Phi =  0.08976, B_2 = -0.00255, N = n_bend;
+
+s1: Sextupole, L = 0.1,  B_3 = -1.24426e+02, N = n_sext;
+s2: Sextupole, L = 0.05, B_3 =  9.02251e+01, N = n_sext;
+s3: Sextupole, L = 0.05, B_3 =  3.30631e+02, N = n_sext;
+s4: Sextupole, L = 0.1,  B_3 = -2.95678e+02, N = n_sext;
+
+o1: Octupole, L = 0.10000, B_4 =  2.04859e+04, N = 1;
+o2: Octupole, L = 0.10000, B_4 = -2.06184e+04, N = 1;
+o3: Octupole, L = 0.10000, B_4 =  1.44110e+04, N = 1;
+
+ch: Bending, L = 0.05, N = 1;
+cv: Bending, L = 0.05, N = 1;
+
+begin: Marker;
+bpm:   Marker;
+gs:    Marker;
+ge:    Marker;
+
+b_uc:   LINE = (d2_0, d2_1, d2_2, d2_3, d2_4, d2_5);
+i_b_uc: LINE = (d2_5, d2_4, d2_3, d2_2, d2_1, d2_0);
+
+b_mc:   LINE = (
+	  d1_u6, d1_u5, d1_u4, d1_u3, d1_u2, d1_u1, d1_0, d1_d1, d1_d2, d1_d3,
+	  d1_d4, d1_d5);
+i_b_mc: LINE = (
+	  d1_d5, d1_d4, d1_d3, d1_d2, d1_d1, d1_0, d1_u1, d1_u2, d1_u3, d1_u4,
+	  d1_u5, d1_u6);
+
+m_cell: LINE = (
+	  s2, d5, d4, q3, twk, ge, d6, gs, s1, d7, bpm, d8, ch, cv, d9, o3,
+	  -b_mc, d10, q2, d11, o2, d12, q1, d12, o1, d13, ch, cv, d14, bpm, ge,
+	  d15);
+
+half_cell: LINE = (s3, d5, bpm, d4, r1, d3, cv, ch, d2, s4, d1, -b_uc);
+
+unit_cell: LINE = (
+	     half_cell, b_uc, d1, s4, ge, d2, gs, 2*d_corr, d3, r1, d4, d5, s3);
+
+sup_per: LINE = (
+	   -m_cell, unit_cell, unit_cell, half_cell, -half_cell, -unit_cell, -unit_cell, m_cell);
+
+uc: LINE = (begin, unit_cell, cav);
+sp: LINE = (begin, sup_per, cav);
+
+USE: sp;
