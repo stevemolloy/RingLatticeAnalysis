@@ -28,6 +28,13 @@ bool lattice_is_closed(double total_angle) {
   return !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
 }
 
+bool str_ends_with(const char *s, const char *suff) {
+    size_t slen = strlen(s);
+    size_t sufflen = strlen(suff);
+
+    return slen >= sufflen && !memcmp(s + slen - sufflen, suff, sufflen);
+}
+
 int main(int argc, char **argv) {
   CommandLineArgs args = get_clargs(argc, argv);
   if (args.error) {
@@ -38,7 +45,16 @@ int main(int argc, char **argv) {
   const double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
 
   Element *line = {0};
-  generate_lattice_from_mad8_file(args.file_path, &line);
+  if (str_ends_with(args.file_path, ".mad8")) {
+    generate_lattice_from_mad8_file(args.file_path, &line);
+  } else if (str_ends_with(args.file_path, ".lat")) {
+    if (args.E_0 == 0.0) {
+      fprintf(stderr, "For a Tracy lattice, E must be provided");
+      usage(args.programname);
+      return 1;
+    }
+    generate_lattice_from_tracy_file(args.file_path, &line, args.E_0 * 1e9);
+  }
 
   double line_length = calculate_line_length(line);
   double total_length = line_length * args.periodicity;

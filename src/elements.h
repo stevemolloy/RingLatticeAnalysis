@@ -125,7 +125,7 @@ double get_curlyH(Element element, double eta, double etap, double beta, double 
 void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params, double *I);
 
 void generate_lattice_from_mad8_file(const char *filename, Element **line);
-void generate_lattice_from_tracy_file(const char *filename, Element **line);
+void generate_lattice_from_tracy_file(const char *filename, Element **line, double E0);
 void create_line(char *cursor, Element **line, ElementLibrary *element_library);
 char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor);
 void get_line_matrix(double *matrix, Element *line);

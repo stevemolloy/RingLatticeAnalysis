@@ -1000,7 +1000,10 @@ typedef struct {
   Line value;
 } LineItem;
 
-void generate_lattice_from_tracy_file(const char *filename, Element **line) {
+void generate_lattice_from_tracy_file(const char *filename, Element **line, double E0) {
+  assert(E0 > 0 && "Cannot sensibly derive a lattice for a zero-energy beam");
+  double Brho = -E0 / C;
+
   EleLibItem *element_library = NULL;
 
   char *buffer = read_entire_file(filename);
@@ -1214,23 +1217,23 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
         case ELETYPE_QUAD: {
           ele.type = ELETYPE_QUAD;
           ele.as.quad.length = shget(ele_defns, "L");
-          ele.as.quad.K1 = shget(ele_defns, "B_2");
+          ele.as.quad.K1 = shget(ele_defns, "B_2") / Brho;
         } break;
         case ELETYPE_SBEND: {
           ele.type = ELETYPE_SBEND;
           ele.as.sbend.length = shget(ele_defns, "L");
-          ele.as.sbend.K1 = shget(ele_defns, "B_2");
+          ele.as.sbend.K1 = shget(ele_defns, "B_2") / Brho;
           ele.as.sbend.angle = degrees_to_radians(shget(ele_defns, "Phi"));
         } break;
         case ELETYPE_SEXTUPOLE: {
           ele.type = ELETYPE_SEXTUPOLE;
           ele.as.sextupole.length = shget(ele_defns, "L");
-          ele.as.sextupole.K2 = shget(ele_defns, "B_3");
+          ele.as.sextupole.K2 = shget(ele_defns, "B_3") / Brho;
         } break;
         case ELETYPE_OCTUPOLE: {
           ele.type = ELETYPE_OCTUPOLE;
           ele.as.octupole.length = shget(ele_defns, "L");
-          ele.as.octupole.K3 = shget(ele_defns, "B_4");
+          ele.as.octupole.K3 = shget(ele_defns, "B_4") / Brho;
         } break;
         case ELETYPE_MULTIPOLE: {
           fprintf(stderr, "%s not implmented\n", get_element_type(ele_type));
