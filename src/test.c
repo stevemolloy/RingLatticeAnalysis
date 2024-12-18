@@ -65,12 +65,23 @@ bool test_generate_from_tracy_file(void) {
   const char *test_name = "LOAD LATTICE FROM TRACY FILE TEST";
 
   const char *filename = "./lattices/max_4u_sp_jb_5.lat";
+  double expected_length = 26.4;
+  double expected_angle = 18.0;
 
   Element *line = {0};
   generate_lattice_from_tracy_file(filename, &line);
 
-  for (size_t i=0; i<arrlenu(line); i++) {
-    printf("%zu: %s\n", i, get_element_type(line[i].type));
+  double length = calculate_line_length(line);
+  double angle = calculate_line_angle(line);
+  double length_err = fabs(length - expected_length);
+  double angle_err = fabs(radians_to_degrees(angle) - expected_angle);
+  if (length_err > 1e-6) {
+    printf("%s FAILED with length mismatch of %e m\n", test_name, length_err);
+    return false;
+  }
+  if (angle_err > 1e-3) {
+    printf("%s FAILED with bending angle mismatch of %e degrees\n", test_name, angle_err);
+    return false;
   }
 
   printf("%s PASSED\n", test_name);
