@@ -69,7 +69,7 @@ bool test_generate_from_tracy_file(void) {
   double expected_angle = 18.0;
 
   Element *line = {0};
-  generate_lattice_from_tracy_file(filename, &line, 3.0e9);
+  generate_lattice_from_tracy_file(filename, &line);
 
   double length = calculate_line_length(line);
   double angle = calculate_line_angle(line);

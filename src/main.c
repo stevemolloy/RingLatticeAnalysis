@@ -48,12 +48,7 @@ int main(int argc, char **argv) {
   if (str_ends_with(args.file_path, ".mad8")) {
     generate_lattice_from_mad8_file(args.file_path, &line);
   } else if (str_ends_with(args.file_path, ".lat")) {
-    if (args.E_0 == 0.0) {
-      fprintf(stderr, "For a Tracy lattice, E must be provided");
-      usage(args.programname);
-      return 1;
-    }
-    generate_lattice_from_tracy_file(args.file_path, &line, args.E_0 * 1e9);
+    generate_lattice_from_tracy_file(args.file_path, &line);
   }
 
   double line_length = calculate_line_length(line);
