@@ -1250,6 +1250,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line, doub
           ele.as.cavity.harmonic = shget(ele_defns, "HarNum");
         } break;
       }
+      make_r_matrix(&ele);
       shput(element_library, name, ele);
     } else {
       fprintf(stderr, "Malformed input file\n");
