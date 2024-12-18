@@ -1135,6 +1135,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       else if (strncasecmp(lexeme.content.data, "marker", 6) == 0) ele_type = ELETYPE_DRIFT;
       else if (strncasecmp(lexeme.content.data, "line", 4) == 0) {
         // Dealing with a line
+        bool parse_backwards = false;
         Line newline = {0};
         SDM_ENSURE_ARRAY_MIN_CAP(newline, 256);
         i++;
@@ -1147,6 +1148,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
         lexeme = lexemes[i];
         while (i < arrlenu(lexemes)) {
           if (lexeme.type == LEXEME_TYPE_COMMA) {
+            parse_backwards = false;
             i++;
             lexeme= lexemes[i];
             continue;
@@ -1157,14 +1159,22 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
               SDM_ARRAY_PUSH(newline, shget(element_library, symbol_val));
             } else if (shgeti(lines, symbol_val) >= 0) {
               Line line2insert = shget(lines, symbol_val);
-              for (size_t i=0; i<line2insert.length; i++) {
-                SDM_ARRAY_PUSH(newline, line2insert.data[i]);
+              if (parse_backwards) {
+                for (int i=line2insert.length-1; i>=0; i--) {
+                  SDM_ARRAY_PUSH(newline, line2insert.data[i]);
+                }
+              } else {
+                for (size_t i=0; i<line2insert.length; i++) {
+                  SDM_ARRAY_PUSH(newline, line2insert.data[i]);
+                }
               }
             } else {
               fprintf(stderr, "%s is neither in element_library or lines\n", symbol_val);
               exit(1);
             }
             free(symbol_val);
+          } else if (lexeme.type == LEXEME_TYPE_SUB) {
+            parse_backwards = true;
           } else if (lexeme.type == LEXEME_TYPE_CPAREN) {
             i++;
             lexeme = lexemes[i];
@@ -1210,7 +1220,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
           ele.type = ELETYPE_SBEND;
           ele.as.sbend.length = shget(ele_defns, "L");
           ele.as.sbend.K1 = shget(ele_defns, "B_2");
-          ele.as.sbend.angle = shget(ele_defns, "Phi");
+          ele.as.sbend.angle = degrees_to_radians(shget(ele_defns, "Phi"));
         } break;
         case ELETYPE_SEXTUPOLE: {
           ele.type = ELETYPE_SEXTUPOLE;
