@@ -298,7 +298,7 @@ static void calc_sbend_matrix(Element *element) {
   }
 
   if (omega_y == 0.0f) {
-    element->R_matrix[2*BEAM_DOFS + 2] = 0;
+    element->R_matrix[2*BEAM_DOFS + 2] = 1;
     element->R_matrix[2*BEAM_DOFS + 3] = L;
     element->R_matrix[3*BEAM_DOFS + 2] = 0;
     element->R_matrix[3*BEAM_DOFS + 3] = 1;
@@ -741,6 +741,7 @@ void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *
       double L = line[i].as.sbend.length;
       double K1 = line[i].as.sbend.K1;
       double h = angle / L;
+      if (h == 0.0) continue;
 
       double (*sinlike_func)(double);
       double (*coslike_func)(double);
