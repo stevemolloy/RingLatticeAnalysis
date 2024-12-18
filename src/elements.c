@@ -874,11 +874,13 @@ typedef struct {
 } Lexeme;
 
 size_t starts_with_float(const char *input) {
-    char *endptr;
+  char *endptr;
 
-    strtod(input, &endptr);
-    if (errno == 0) return 0;
-    return endptr - input;
+  errno = 0;
+  strtod(input, &endptr);
+  if (errno != 0) return 0;
+  size_t retval = endptr - input;
+  return retval;
 }
 
 typedef struct {
