@@ -166,6 +166,15 @@ int main(int argc, char **argv) {
     arrfree(lin_opt_params.element_beta_ys);
     arrfree(lin_opt_params.element_curlyH);
     arrfree(lin_opt_params.Ss);
+
+    FILE *matrix_out = fopen("matrix_out.txt", "w");
+    for (size_t i=0; i<arrlenu(line); i++) {
+      fprintf(matrix_out, "%zu: ", i+1);
+      element_print(matrix_out, line[i]);
+      rmatrix_print(matrix_out, line[i].R_matrix);
+      fprintf(matrix_out, "\n");
+    }
+    fclose(matrix_out);
   }
 
   printf("\n");
