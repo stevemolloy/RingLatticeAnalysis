@@ -323,11 +323,11 @@ static void calc_sbend_matrix(Element *element) {
 void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
   char *fmt_str = "%+0.6e";
   for (size_t j=0; j<BEAM_DOFS; j++) {
+    fprintf(file, " ");
     for (size_t i=0; i<BEAM_DOFS; i++) {
       double val = mat[j*BEAM_DOFS + i];
-      if (val != 0.0) fprintf(file, fmt_str, val);
-      else fprintf(file, "%*c0", 12, ' ');
-      if (i!=BEAM_DOFS-1) fprintf(file, ", ");
+      fprintf(file, fmt_str, val);
+      if (i!=BEAM_DOFS-1) fprintf(file, "  ");
     }
     fprintf(file, "\n");
   }
