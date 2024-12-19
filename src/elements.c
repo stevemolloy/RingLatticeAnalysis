@@ -675,7 +675,7 @@ double get_curlyH(Element element, double eta0, double etap0, double beta0, doub
   return I5 / (L*fabs(cube(h)));
 }
 
-void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *lin_opt_params, double *I) {
+void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *lin_opt_params, double *I_synch) {
   double S = 0.0;
   arrput(lin_opt_params->Ss, 0.0);
 
@@ -730,11 +730,11 @@ void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *
     arrput(lin_opt_params->element_etaps, eta_vec[1]);
   }
 
-  I[0] = R56;
-  I[1] = synch_rad_integral_2(line);
-  I[2] = synch_rad_integral_3(line);
-  I[3] = 0.0;
-  I[4] = 0.0;
+  I_synch[0] = R56;
+  I_synch[1] = synch_rad_integral_2(line);
+  I_synch[2] = synch_rad_integral_3(line);
+  I_synch[3] = 0.0;
+  I_synch[4] = 0.0;
   for (size_t i=0; i<arrlenu(line); i++) {
     if (line[i].type == ELETYPE_SBEND) {
       double angle = line[i].as.sbend.angle;
@@ -761,8 +761,8 @@ void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *
                 + sign * lin_opt_params->element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L)
                 + sign* h * (omega*L - sinlike_func(omega*L))/(pow(omega,3)*L);
 
-      I[3] += (mean_eta * h * L * (2*K1 + h*h));
-      I[4] += (L * pow(fabs(h), 3) * lin_opt_params->element_curlyH[i]);
+      I_synch[3] += (mean_eta * h * L * (2*K1 + h*h));
+      I_synch[4] += (L * pow(fabs(h), 3) * lin_opt_params->element_curlyH[i]);
     }
   }
 }

@@ -122,7 +122,7 @@ double e_loss_per_turn(double I2, double gamma0);
 double natural_emittance_x(double I2, double I4, double I5, double gamma0);
 double energy_spread(double I2, double I3, double I4, double gamma0);
 double get_curlyH(Element element, double eta, double etap, double beta, double alpha);
-void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params, double *I);
+void propagate_linear_optics(Element *line, double *total_matrix, LinOptsParams *lin_opt_params, double *I_synch);
 
 void generate_lattice_from_mad8_file(const char *filename, Element **line);
 void generate_lattice_from_tracy_file(const char *filename, Element **line);
