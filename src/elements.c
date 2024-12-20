@@ -27,8 +27,6 @@ typedef struct {
   double value;
 } ParsingVar;
 
-ParsingVar *variables = NULL;
-
 bool element_is_nonlinear(Element ele) {
   return ((ele.type == ELETYPE_OCTUPOLE) ||
           (ele.type == ELETYPE_SEXTUPOLE) ||
@@ -856,7 +854,7 @@ int prec(Token tok) {
   exit(1);
 }
 
-double evaluate_token_string(Token *tokens, size_t *index) {
+double evaluate_token_string(Token *tokens, size_t *index, ParsingVar *variables) {
   DoubleArray return_stack = {0};
   SDM_ENSURE_ARRAY_MIN_CAP(return_stack, 1024);
   TokenArray operator_stack = {0};
@@ -935,7 +933,12 @@ double evaluate_token_string(Token *tokens, size_t *index) {
   }
 
   assert(return_stack.length == 1 && "Unused variables on return stack");
-  return return_stack.data[0];
+
+  double retval = return_stack.data[0];
+
+  SDM_ARRAY_FREE(operator_stack);
+  SDM_ARRAY_FREE(return_stack);
+  return retval;
 }
 
 char *token_strings[TOKEN_TYPE_COUNT] = {
@@ -954,12 +957,14 @@ char *token_strings[TOKEN_TYPE_COUNT] = {
 };
 
 void generate_lattice_from_tracy_file(const char *filename, Element **line) {
-  EleLibItem *element_library = NULL;
-
   char *buffer = read_entire_file(filename);
   sdm_string_view file_contents = sdm_cstr_as_sv(buffer);
 
-  Token *tokens = {0};
+  EleLibItem *element_library = NULL;
+  ParsingVar *variables = NULL;
+  Token *tokens = NULL;
+  LineItem *lines = NULL;
+
   sdm_sv_trim(&file_contents);
   while (file_contents.length > 0) {
     Token token = {0};
@@ -1032,8 +1037,6 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
     sdm_sv_trim(&file_contents);
   }
 
-  LineItem *lines = NULL;
-
   size_t i = 0;
   while (i < arrlenu(tokens)) {
     Token token = tokens[i];
@@ -1053,6 +1056,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       assert(token.type == TOKEN_TYPE_SYMBOL);
       char *line_name_to_use = sdm_sv_to_cstr(token.content);
       Line line_to_use = shget(lines, line_name_to_use);
+      free(line_name_to_use);
       for (size_t i=0; i<line_to_use.length; i++) {
         arrput((*line), line_to_use.data[i]);
       }
@@ -1061,6 +1065,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       assert(token.type == TOKEN_TYPE_SEMICOLON);
       i++;
       token = tokens[i];
+      free(name);
       continue;
     }
 
@@ -1071,7 +1076,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       // We are assigning a value to a variable
       i++;
       token = tokens[i];
-      double val = evaluate_token_string(tokens, &i);
+      double val = evaluate_token_string(tokens, &i, variables);
       shput(variables, name, val);
     } else if (token.type == TOKEN_TYPE_COLON) {
       // We are defining an element
@@ -1157,7 +1162,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
         assert(token.type == TOKEN_TYPE_ASSIGNMENT);
         i++;
         token = tokens[i];
-        double val = evaluate_token_string(tokens, &i);
+        double val = evaluate_token_string(tokens, &i, variables);
         shput(ele_defns, varname, val);
         token = tokens[i];
       }
@@ -1202,6 +1207,10 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       }
       make_r_matrix(&ele);
       shput(element_library, name, ele);
+      for (size_t i=0; i<shlenu(ele_defns); i++) {
+        free(ele_defns[i].key);
+      }
+      shfree(ele_defns);
     } else {
       fprintf(stderr, "Malformed input file\n");
       exit(1);
@@ -1209,6 +1218,16 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
 
     i++;
   }
+
+  for (size_t i=0; i<shlenu(variables); i++) free(variables[i].key);
+  shfree(variables);
+
+  for (size_t i=0; i<shlenu(lines); i++) free(lines[i].key);
+  for (size_t i=0; i<shlenu(lines); i++) SDM_ARRAY_FREE(lines[i].value);
+  shfree(lines);
+
+  for (size_t i=0; i<shlenu(element_library); i++) free(element_library[i].key);
+  shfree(element_library);
 
   arrfree(tokens);
   free(buffer);
