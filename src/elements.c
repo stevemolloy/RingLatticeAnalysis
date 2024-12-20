@@ -847,18 +847,6 @@ size_t starts_with_float(const char *input) {
   return retval;
 }
 
-typedef struct {
-  size_t capacity;
-  size_t length;
-  Token *data;
-} TokenArray;
-
-typedef struct {
-  size_t capacity;
-  size_t length;
-  double *data;
-} DoubleArray;
-
 int prec(Token tok) {
   if (tok.type == TOKEN_TYPE_SUB) return 50;
   if (tok.type == TOKEN_TYPE_ADD) return 50;

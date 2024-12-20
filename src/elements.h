@@ -133,6 +133,18 @@ typedef struct {
 } Token;
 
 typedef struct {
+  size_t capacity;
+  size_t length;
+  Token *data;
+} TokenArray;
+
+typedef struct {
+  size_t capacity;
+  size_t length;
+  double *data;
+} DoubleArray;
+
+typedef struct {
   char *key;
   Element value;
 } EleLibItem;
