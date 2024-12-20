@@ -133,6 +133,7 @@ char *sdm_read_entire_file(const char *file_path);
 sdm_string_view sdm_cstr_as_sv(char *cstr);
 char *sdm_sv_to_cstr(sdm_string_view sv);
 sdm_string_view sdm_sized_str_as_sv(char *cstr, size_t length);
+sdm_string_view sdm_pop_by_length(sdm_string_view *SV, size_t len);
 sdm_string_view sdm_sv_pop_by_delim(sdm_string_view *SV, const char delim);
 sdm_string_view sdm_sv_pop_by_whitespace(sdm_string_view *SV);
 int sdm_sv_pop_integer(sdm_string_view *SV);
@@ -297,6 +298,16 @@ sdm_string_view sdm_sized_str_as_sv(char *cstr, size_t length) {
     .data = cstr,
     .length = length
   };
+}
+
+sdm_string_view sdm_pop_by_length(sdm_string_view *SV, size_t len) {
+  sdm_string_view retval = (sdm_string_view) {
+    .data = SV->data,
+    .length = len,
+  };
+  SV->data += len;
+  SV->length -= len;
+  return retval;
 }
 
 sdm_string_view sdm_sv_pop_by_whitespace(sdm_string_view *SV) {

@@ -956,6 +956,45 @@ char *token_strings[TOKEN_TYPE_COUNT] = {
   [TOKEN_TYPE_COMMA] =      "TOKEN_TYPE_COMMA",
 };
 
+bool tokenise_tracy_file(sdm_string_view *file_contents, Token **tokens) {
+  sdm_sv_trim(file_contents);
+  while (file_contents->length > 0) {
+    Token token = {0};
+
+    size_t len = starts_with_float(file_contents->data);
+    size_t jump_len = 1;
+    if (isalpha(file_contents->data[0])) {
+      token.type = TOKEN_TYPE_SYMBOL;
+      jump_len = 0;
+      while (isvalididchar(file_contents->data[jump_len])) jump_len++;
+    } else if (len > 0) {
+      token.type = TOKEN_TYPE_NUMBER;
+      jump_len = len;
+    } 
+    else if (file_contents->data[0] == '=') token.type = TOKEN_TYPE_ASSIGNMENT;
+    else if (file_contents->data[0] == ';') token.type = TOKEN_TYPE_SEMICOLON;
+    else if (file_contents->data[0] == '/') token.type = TOKEN_TYPE_DIV;
+    else if (file_contents->data[0] == ':') token.type = TOKEN_TYPE_COLON;
+    else if (file_contents->data[0] == ',') token.type = TOKEN_TYPE_COMMA;
+    else if (file_contents->data[0] == '*') token.type = TOKEN_TYPE_MULT;
+    else if (file_contents->data[0] == '-') token.type = TOKEN_TYPE_SUB;
+    else if (file_contents->data[0] == '(') token.type = TOKEN_TYPE_OPAREN;
+    else if (file_contents->data[0] == ')') token.type = TOKEN_TYPE_CPAREN;
+    else {
+      fprintf(stderr, "Trying to parse an unknown character, %c\n", file_contents->data[0]);
+      return false;
+    }
+
+    token.content = sdm_pop_by_length(file_contents, jump_len);
+
+    arrput((*tokens), token);
+
+    sdm_sv_trim(file_contents);
+  }
+  
+  return true;
+}
+
 void generate_lattice_from_tracy_file(const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   sdm_string_view file_contents = sdm_cstr_as_sv(buffer);
@@ -965,77 +1004,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
   Token *tokens = NULL;
   LineItem *lines = NULL;
 
-  sdm_sv_trim(&file_contents);
-  while (file_contents.length > 0) {
-    Token token = {0};
-
-    size_t len = starts_with_float(file_contents.data);
-    if (isalpha(file_contents.data[0])) {
-      token.type = TOKEN_TYPE_SYMBOL;
-      size_t i = 0;
-      while (isvalididchar(file_contents.data[i])) i++;
-      token.content = sdm_sized_str_as_sv(file_contents.data, i);
-      file_contents.data += i;
-      file_contents.length -= i;
-    } else if (len > 0) {
-      token.type = TOKEN_TYPE_NUMBER;
-      token.content = sdm_sized_str_as_sv(file_contents.data, len);
-      file_contents.data += len;
-      file_contents.length -= len;
-    } else if (file_contents.data[0] == '=') {
-      token.type = TOKEN_TYPE_ASSIGNMENT;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == ';') {
-      token.type = TOKEN_TYPE_SEMICOLON;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == '/') {
-      token.type = TOKEN_TYPE_DIV;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == ':') {
-      token.type = TOKEN_TYPE_COLON;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == ',') {
-      token.type = TOKEN_TYPE_COMMA;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == '*') {
-      token.type = TOKEN_TYPE_MULT;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == '-') {
-      token.type = TOKEN_TYPE_SUB;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == '(') {
-      token.type = TOKEN_TYPE_OPAREN;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else if (file_contents.data[0] == ')') {
-      token.type = TOKEN_TYPE_CPAREN;
-      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
-      file_contents.data += 1;
-      file_contents.length -= 1;
-    } else {
-      fprintf(stderr, "Trying to parse an unknown character, %c\n", file_contents.data[0]);
-      exit(1);
-    }
-
-    arrput(tokens, token);
-
-    sdm_sv_trim(&file_contents);
-  }
+  if (!tokenise_tracy_file(&file_contents, &tokens)) exit(1);
 
   size_t i = 0;
   while (i < arrlenu(tokens)) {
