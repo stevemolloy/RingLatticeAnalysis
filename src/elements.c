@@ -304,12 +304,12 @@ static void calc_sbend_matrix(Element *element) {
     element->R_matrix[3*BEAM_DOFS + 3] = 1;
   } else {
     if (omega_y_sqr > 0) {
-      sinlike_func = sinh;
-      coslike_func = cosh;
+      sinlike_func = &sinh;
+      coslike_func = &cosh;
       sign = 1;
     } else {
-      sinlike_func = sin;
-      coslike_func = cos;
+      sinlike_func = &sin;
+      coslike_func = &cos;
       sign = -1;
     }
     assert(((sign == 1) || (sign == -1)) && "Sign value has been corrupted");
