@@ -845,6 +845,10 @@ size_t starts_with_float(const char *input) {
   return retval;
 }
 
+bool string_starts_with(const char *input, const char *needle) {
+  return strncasecmp(input, needle, strlen(needle))==0;
+}
+
 int prec(Token tok) {
   if (tok.type == TOKEN_TYPE_SUB) return 50;
   if (tok.type == TOKEN_TYPE_ADD) return 50;
@@ -1011,17 +1015,17 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
     Token token = tokens[i];
 
     if (token.type != TOKEN_TYPE_SYMBOL) {
-      fprintf(stderr, "Expected token type %s but got %s \""SDM_SV_F"\"\n", token_strings[TOKEN_TYPE_SYMBOL], token_strings[token.type], SDM_SV_Vals(token.content));
+      fprintf(stderr, "Expected token type %s but got %s \""SDM_SV_F"\"\n", 
+              token_strings[TOKEN_TYPE_SYMBOL], token_strings[token.type], 
+              SDM_SV_Vals(token.content));
       exit(1);
     }
     char *name = sdm_sv_to_cstr(sdm_sized_str_as_sv(token.content.data, token.content.length));
 
-    if (strncasecmp(name, "USE", 3) == 0) {
-      i++;
-      token = tokens[i];
+    if (string_starts_with(name, "USE")) {
+      token = tokens[++i];
       assert(token.type == TOKEN_TYPE_COLON);
-      i++;
-      token = tokens[i];
+      token = tokens[++i];
       assert(token.type == TOKEN_TYPE_SYMBOL);
       char *line_name_to_use = sdm_sv_to_cstr(token.content);
       Line line_to_use = shget(lines, line_name_to_use);
@@ -1029,55 +1033,46 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       for (size_t i=0; i<line_to_use.length; i++) {
         arrput((*line), line_to_use.data[i]);
       }
-      i++;
-      token = tokens[i];
+      token = tokens[++i];
       assert(token.type == TOKEN_TYPE_SEMICOLON);
-      i++;
-      token = tokens[i];
+      token = tokens[++i];
       free(name);
       continue;
     }
 
-    i++;
-    token = tokens[i];
+    token = tokens[++i];
 
     if (token.type == TOKEN_TYPE_ASSIGNMENT) {
       // We are assigning a value to a variable
-      i++;
-      token = tokens[i];
+      token = tokens[++i];
       double val = evaluate_token_string(tokens, &i, variables);
       shput(variables, name, val);
     } else if (token.type == TOKEN_TYPE_COLON) {
       // We are defining an element
       ParsingVar *ele_defns = NULL;
-      i++;
-      token = tokens[i];
+      token = tokens[++i];
       EleType ele_type = {0};
-      if (strncasecmp(token.content.data, "cavity", 6) == 0) ele_type = ELETYPE_CAVITY;
-      else if (strncasecmp(token.content.data, "drift", 5) == 0) ele_type = ELETYPE_DRIFT;
-      else if (strncasecmp(token.content.data, "quadrupole", 10) == 0) ele_type = ELETYPE_QUAD;
-      else if (strncasecmp(token.content.data, "bending", 7) == 0) ele_type = ELETYPE_SBEND;
-      else if (strncasecmp(token.content.data, "sextupole", 9) == 0) ele_type = ELETYPE_SEXTUPOLE;
-      else if (strncasecmp(token.content.data, "octupole", 8) == 0) ele_type = ELETYPE_OCTUPOLE;
-      else if (strncasecmp(token.content.data, "marker", 6) == 0) ele_type = ELETYPE_DRIFT;
-      else if (strncasecmp(token.content.data, "line", 4) == 0) {
+      if (string_starts_with(token.content.data, "cavity"))          ele_type = ELETYPE_CAVITY;
+      else if (string_starts_with(token.content.data, "drift"))      ele_type = ELETYPE_DRIFT;
+      else if (string_starts_with(token.content.data, "quadrupole")) ele_type = ELETYPE_QUAD;
+      else if (string_starts_with(token.content.data, "bending"))    ele_type = ELETYPE_SBEND;
+      else if (string_starts_with(token.content.data, "sextupole"))  ele_type = ELETYPE_SEXTUPOLE;
+      else if (string_starts_with(token.content.data, "octupole"))   ele_type = ELETYPE_OCTUPOLE;
+      else if (string_starts_with(token.content.data, "marker"))     ele_type = ELETYPE_DRIFT;
+      else if (string_starts_with(token.content.data, "line")) {
         // Dealing with a line
         bool parse_backwards = false;
         Line newline = {0};
         SDM_ENSURE_ARRAY_MIN_CAP(newline, 256);
-        i++;
-        token = tokens[i];
+        token = tokens[++i];
         assert(token.type == TOKEN_TYPE_ASSIGNMENT);
-        i++;
-        token = tokens[i];
+        token = tokens[++i];
         assert(token.type = TOKEN_TYPE_OPAREN);
-        i++;
-        token = tokens[i];
+        token = tokens[++i];
         while (i < arrlenu(tokens)) {
           if (token.type == TOKEN_TYPE_COMMA) {
             parse_backwards = false;
-            i++;
-            token= tokens[i];
+            token= tokens[++i];
             continue;
           }
           else if (token.type == TOKEN_TYPE_SYMBOL) {
@@ -1103,34 +1098,25 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
           } else if (token.type == TOKEN_TYPE_SUB) {
             parse_backwards = true;
           } else if (token.type == TOKEN_TYPE_CPAREN) {
-            i++;
-            token = tokens[i];
+            token = tokens[++i];
             break;
           }
-          i++;
-          token = tokens[i];
+          token = tokens[++i];
         }
         shput(lines, name, newline);
-        i++;
-        token = tokens[i];
+        token = tokens[++i];
         continue;
       } else {
         fprintf(stderr, "Unknown element type: '"SDM_SV_F"'\n", SDM_SV_Vals(token.content));
         exit(1);
       }
-      i++;
-      token = tokens[i];
+      token = tokens[++i];
       while (token.type != TOKEN_TYPE_SEMICOLON) {
-        while (token.type != TOKEN_TYPE_SYMBOL) {
-          i++;
-          token = tokens[i];
-        }
+        while (token.type != TOKEN_TYPE_SYMBOL) token = tokens[++i];
         char *varname = sdm_sv_to_cstr(sdm_sized_str_as_sv(token.content.data, token.content.length));
-        i++;
-        token = tokens[i];
+        token = tokens[++i];
         assert(token.type == TOKEN_TYPE_ASSIGNMENT);
-        i++;
-        token = tokens[i];
+        token = tokens[++i];
         double val = evaluate_token_string(tokens, &i, variables);
         shput(ele_defns, varname, val);
         token = tokens[i];
@@ -1141,23 +1127,23 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
         case ELETYPE_QUAD: {
           ele.type = ELETYPE_QUAD;
           ele.as.quad.length = shget(ele_defns, "L");
-          ele.as.quad.K1 = shget(ele_defns, "B_2");
+          ele.as.quad.K1     = shget(ele_defns, "B_2");
         } break;
         case ELETYPE_SBEND: {
           ele.type = ELETYPE_SBEND;
           ele.as.sbend.length = shget(ele_defns, "L");
-          ele.as.sbend.K1 = shget(ele_defns, "B_2");
-          ele.as.sbend.angle = degrees_to_radians(shget(ele_defns, "Phi"));
+          ele.as.sbend.K1     = shget(ele_defns, "B_2");
+          ele.as.sbend.angle  = degrees_to_radians(shget(ele_defns, "Phi"));
         } break;
         case ELETYPE_SEXTUPOLE: {
           ele.type = ELETYPE_SEXTUPOLE;
           ele.as.sextupole.length = shget(ele_defns, "L");
-          ele.as.sextupole.K2 = shget(ele_defns, "B_3");
+          ele.as.sextupole.K2     = shget(ele_defns, "B_3");
         } break;
         case ELETYPE_OCTUPOLE: {
           ele.type = ELETYPE_OCTUPOLE;
           ele.as.octupole.length = shget(ele_defns, "L");
-          ele.as.octupole.K3 = shget(ele_defns, "B_4");
+          ele.as.octupole.K3     = shget(ele_defns, "B_4");
         } break;
         case ELETYPE_MULTIPOLE: {
           fprintf(stderr, "%s not implmented\n", get_element_type(ele_type));
@@ -1170,15 +1156,13 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
         case ELETYPE_CAVITY: {
           ele.type = ELETYPE_CAVITY;
           ele.as.cavity.length   = shget(ele_defns, "L");
-          ele.as.cavity.voltage = shget(ele_defns, "Voltage");
+          ele.as.cavity.voltage  = shget(ele_defns, "Voltage");
           ele.as.cavity.harmonic = shget(ele_defns, "HarNum");
         } break;
       }
       make_r_matrix(&ele);
       shput(element_library, name, ele);
-      for (size_t i=0; i<shlenu(ele_defns); i++) {
-        free(ele_defns[i].key);
-      }
+      for (size_t i=0; i<shlenu(ele_defns); i++) free(ele_defns[i].key);
       shfree(ele_defns);
     } else {
       fprintf(stderr, "Malformed input file\n");
