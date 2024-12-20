@@ -816,7 +816,6 @@ void get_line_matrix(double *matrix, Element *line) {
     double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
     matrix_multiply(line[i].R_matrix, matrix, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS);
     memcpy(matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
-
   }
 }
 
@@ -838,42 +837,6 @@ void generate_lattice_from_mad8_file(const char *filename, Element **line) {
   free(buffer);
 }
 
-typedef enum {
-  LEXEME_TYPE_SYMBOL,
-  LEXEME_TYPE_NUMBER,
-  LEXEME_TYPE_ASSIGNMENT,
-  LEXEME_TYPE_ADD,
-  LEXEME_TYPE_MULT,
-  LEXEME_TYPE_SUB,
-  LEXEME_TYPE_DIV,
-  LEXEME_TYPE_OPAREN,
-  LEXEME_TYPE_CPAREN,
-  LEXEME_TYPE_SEMICOLON,
-  LEXEME_TYPE_COLON,
-  LEXEME_TYPE_COMMA,
-  LEXEME_TYPE_COUNT,
-} LexemeType;
-
-char *lexeme_strings[LEXEME_TYPE_COUNT] = {
-  [LEXEME_TYPE_SYMBOL] =     "LEXEME_TYPE_SYMBOL",
-  [LEXEME_TYPE_NUMBER] =     "LEXEME_TYPE_NUMBER",
-  [LEXEME_TYPE_ASSIGNMENT] = "LEXEME_TYPE_ASSIGNMENT",
-  [LEXEME_TYPE_ADD] =        "LEXEME_TYPE_ADD",
-  [LEXEME_TYPE_MULT] =       "LEXEME_TYPE_MULT",
-  [LEXEME_TYPE_SUB] =        "LEXEME_TYPE_SUB",
-  [LEXEME_TYPE_DIV] =        "LEXEME_TYPE_DIV",
-  [LEXEME_TYPE_OPAREN] =     "LEXEME_TYPE_OPAREN",
-  [LEXEME_TYPE_CPAREN] =     "LEXEME_TYPE_CPAREN",
-  [LEXEME_TYPE_SEMICOLON] =  "LEXEME_TYPE_SEMICOLON",
-  [LEXEME_TYPE_COLON] =      "LEXEME_TYPE_COLON",
-  [LEXEME_TYPE_COMMA] =      "LEXEME_TYPE_COMMA",
-};
-
-typedef struct {
-  LexemeType type;
-  sdm_string_view content;
-} Lexeme;
-
 size_t starts_with_float(const char *input) {
   char *endptr;
 
@@ -887,8 +850,8 @@ size_t starts_with_float(const char *input) {
 typedef struct {
   size_t capacity;
   size_t length;
-  Lexeme *data;
-} LexemeArray;
+  Token *data;
+} TokenArray;
 
 typedef struct {
   size_t capacity;
@@ -896,87 +859,87 @@ typedef struct {
   double *data;
 } DoubleArray;
 
-int prec(Lexeme lex) {
-  if (lex.type == LEXEME_TYPE_SUB) return 50;
-  if (lex.type == LEXEME_TYPE_ADD) return 50;
-  if (lex.type == LEXEME_TYPE_DIV) return 100;
-  if (lex.type == LEXEME_TYPE_MULT) return 100;
-  fprintf(stderr, "'prec' called with inappropriate lexeme");
+int prec(Token tok) {
+  if (tok.type == TOKEN_TYPE_SUB) return 50;
+  if (tok.type == TOKEN_TYPE_ADD) return 50;
+  if (tok.type == TOKEN_TYPE_DIV) return 100;
+  if (tok.type == TOKEN_TYPE_MULT) return 100;
+  fprintf(stderr, "'prec' called with inappropriate token");
   exit(1);
 }
 
-double evaluate_lexeme_string(Lexeme *lexemes, size_t *index) {
+double evaluate_token_string(Token *tokens, size_t *index) {
   DoubleArray return_stack = {0};
   SDM_ENSURE_ARRAY_MIN_CAP(return_stack, 1024);
-  LexemeArray operator_stack = {0};
+  TokenArray operator_stack = {0};
   SDM_ENSURE_ARRAY_MIN_CAP(operator_stack, 1024);
 
-  Lexeme lexeme = lexemes[*index];
+  Token token = tokens[*index];
   
   bool done_parsing = false;
-  while (((*index) < arrlenu(lexemes)) && !done_parsing) {
-    if (lexeme.type == LEXEME_TYPE_SEMICOLON) {
+  while (((*index) < arrlenu(tokens)) && !done_parsing) {
+    if (token.type == TOKEN_TYPE_SEMICOLON) {
       break;
     }
-    switch (lexeme.type) {
-      case LEXEME_TYPE_SEMICOLON:
-      case LEXEME_TYPE_COMMA: {
+    switch (token.type) {
+      case TOKEN_TYPE_SEMICOLON:
+      case TOKEN_TYPE_COMMA: {
         done_parsing = true;
       } break;
-      case LEXEME_TYPE_COLON:
-      case LEXEME_TYPE_COUNT:
-      case LEXEME_TYPE_ASSIGNMENT: {
+      case TOKEN_TYPE_COLON:
+      case TOKEN_TYPE_COUNT:
+      case TOKEN_TYPE_ASSIGNMENT: {
         fprintf(stderr, "Faulty expression\n");
         exit(1);
       } break;
-      case LEXEME_TYPE_SYMBOL: {
-        char *var_name = sdm_sv_to_cstr(lexeme.content);
+      case TOKEN_TYPE_SYMBOL: {
+        char *var_name = sdm_sv_to_cstr(token.content);
         double val = shget(variables, var_name);
         SDM_ARRAY_PUSH(return_stack, val);
         free(var_name);
       } break;
-      case LEXEME_TYPE_NUMBER: {
-        SDM_ARRAY_PUSH(return_stack, strtod(lexeme.content.data, NULL));
+      case TOKEN_TYPE_NUMBER: {
+        SDM_ARRAY_PUSH(return_stack, strtod(token.content.data, NULL));
       } break;
-      case LEXEME_TYPE_MULT:
-      case LEXEME_TYPE_DIV:
-      case LEXEME_TYPE_ADD:
-      case LEXEME_TYPE_SUB: {
-        while ((operator_stack.length > 0) && (prec(operator_stack.data[operator_stack.length-1]) >= prec(lexeme))) {
-          Lexeme popped = SDM_ARRAY_POP(operator_stack);
+      case TOKEN_TYPE_MULT:
+      case TOKEN_TYPE_DIV:
+      case TOKEN_TYPE_ADD:
+      case TOKEN_TYPE_SUB: {
+        while ((operator_stack.length > 0) && (prec(operator_stack.data[operator_stack.length-1]) >= prec(token))) {
+          Token popped = SDM_ARRAY_POP(operator_stack);
           assert(return_stack.length >= 2);
           double b = SDM_ARRAY_POP(return_stack);
           double a = SDM_ARRAY_POP(return_stack);
-          if (popped.type == LEXEME_TYPE_ADD) SDM_ARRAY_PUSH(return_stack, a+b)
-          else if (popped.type == LEXEME_TYPE_SUB) SDM_ARRAY_PUSH(return_stack, a-b)
-          else if (popped.type == LEXEME_TYPE_MULT) SDM_ARRAY_PUSH(return_stack, a*b)
-          else if (popped.type == LEXEME_TYPE_DIV) SDM_ARRAY_PUSH(return_stack, a/b)
+          if (popped.type == TOKEN_TYPE_ADD) SDM_ARRAY_PUSH(return_stack, a+b)
+          else if (popped.type == TOKEN_TYPE_SUB) SDM_ARRAY_PUSH(return_stack, a-b)
+          else if (popped.type == TOKEN_TYPE_MULT) SDM_ARRAY_PUSH(return_stack, a*b)
+          else if (popped.type == TOKEN_TYPE_DIV) SDM_ARRAY_PUSH(return_stack, a/b)
           else {
             fprintf(stderr, "operator_stack corrupted\n");
             exit(1);
           }
         }
-        SDM_ARRAY_PUSH(operator_stack, lexeme);
+        SDM_ARRAY_PUSH(operator_stack, token);
       } break;
-      case LEXEME_TYPE_OPAREN:
-      case LEXEME_TYPE_CPAREN: {
+      case TOKEN_TYPE_OPAREN:
+      case TOKEN_TYPE_CPAREN: {
         fprintf(stderr, "Cannot handle parentheses yet\n");
         exit(1);
       } break;
     }
     (*index)++;
-    lexeme = lexemes[*index];
+    token = tokens[*index];
   }
 
   while (operator_stack.length > 0) {
-    Lexeme popped = SDM_ARRAY_POP(operator_stack);
+    Token popped = SDM_ARRAY_POP(operator_stack);
     assert(return_stack.length >= 2);
     double b = SDM_ARRAY_POP(return_stack);
     double a = SDM_ARRAY_POP(return_stack);
-    if (popped.type == LEXEME_TYPE_ADD) SDM_ARRAY_PUSH(return_stack, a+b)
-    else if (popped.type == LEXEME_TYPE_SUB) SDM_ARRAY_PUSH(return_stack, a-b)
-    else if (popped.type == LEXEME_TYPE_MULT) SDM_ARRAY_PUSH(return_stack, a*b)
-    else if (popped.type == LEXEME_TYPE_DIV) SDM_ARRAY_PUSH(return_stack, a/b)
+    if (popped.type == TOKEN_TYPE_ADD) SDM_ARRAY_PUSH(return_stack, a+b)
+    else if (popped.type == TOKEN_TYPE_SUB) SDM_ARRAY_PUSH(return_stack, a-b)
+    else if (popped.type == TOKEN_TYPE_MULT) SDM_ARRAY_PUSH(return_stack, a*b)
+    else if (popped.type == TOKEN_TYPE_DIV) SDM_ARRAY_PUSH(return_stack, a/b)
     else {
       fprintf(stderr, "operator_stack corrupted\n");
       exit(1);
@@ -987,21 +950,20 @@ double evaluate_lexeme_string(Lexeme *lexemes, size_t *index) {
   return return_stack.data[0];
 }
 
-typedef struct {
-  char *key;
-  Element value;
-} EleLibItem;
-
-typedef struct {
-  size_t capacity;
-  size_t length;
-  Element *data;
-} Line;
-
-typedef struct {
-  char *key;
-  Line value;
-} LineItem;
+char *token_strings[TOKEN_TYPE_COUNT] = {
+  [TOKEN_TYPE_SYMBOL] =     "TOKEN_TYPE_SYMBOL",
+  [TOKEN_TYPE_NUMBER] =     "TOKEN_TYPE_NUMBER",
+  [TOKEN_TYPE_ASSIGNMENT] = "TOKEN_TYPE_ASSIGNMENT",
+  [TOKEN_TYPE_ADD] =        "TOKEN_TYPE_ADD",
+  [TOKEN_TYPE_MULT] =       "TOKEN_TYPE_MULT",
+  [TOKEN_TYPE_SUB] =        "TOKEN_TYPE_SUB",
+  [TOKEN_TYPE_DIV] =        "TOKEN_TYPE_DIV",
+  [TOKEN_TYPE_OPAREN] =     "TOKEN_TYPE_OPAREN",
+  [TOKEN_TYPE_CPAREN] =     "TOKEN_TYPE_CPAREN",
+  [TOKEN_TYPE_SEMICOLON] =  "TOKEN_TYPE_SEMICOLON",
+  [TOKEN_TYPE_COLON] =      "TOKEN_TYPE_COLON",
+  [TOKEN_TYPE_COMMA] =      "TOKEN_TYPE_COMMA",
+};
 
 void generate_lattice_from_tracy_file(const char *filename, Element **line) {
   EleLibItem *element_library = NULL;
@@ -1009,67 +971,67 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   sdm_string_view file_contents = sdm_cstr_as_sv(buffer);
 
-  Lexeme *lexemes = {0};
+  Token *tokens = {0};
   sdm_sv_trim(&file_contents);
   while (file_contents.length > 0) {
-    Lexeme lexeme = {0};
+    Token token = {0};
 
     size_t len = starts_with_float(file_contents.data);
     if (isalpha(file_contents.data[0])) {
-      lexeme.type = LEXEME_TYPE_SYMBOL;
+      token.type = TOKEN_TYPE_SYMBOL;
       size_t i = 0;
       while (isvalididchar(file_contents.data[i])) i++;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, i);
+      token.content = sdm_sized_str_as_sv(file_contents.data, i);
       file_contents.data += i;
       file_contents.length -= i;
     } else if (len > 0) {
-      lexeme.type = LEXEME_TYPE_NUMBER;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, len);
+      token.type = TOKEN_TYPE_NUMBER;
+      token.content = sdm_sized_str_as_sv(file_contents.data, len);
       file_contents.data += len;
       file_contents.length -= len;
     } else if (file_contents.data[0] == '=') {
-      lexeme.type = LEXEME_TYPE_ASSIGNMENT;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_ASSIGNMENT;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == ';') {
-      lexeme.type = LEXEME_TYPE_SEMICOLON;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_SEMICOLON;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == '/') {
-      lexeme.type = LEXEME_TYPE_DIV;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_DIV;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == ':') {
-      lexeme.type = LEXEME_TYPE_COLON;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_COLON;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == ',') {
-      lexeme.type = LEXEME_TYPE_COMMA;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_COMMA;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == '*') {
-      lexeme.type = LEXEME_TYPE_MULT;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_MULT;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == '-') {
-      lexeme.type = LEXEME_TYPE_SUB;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_SUB;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == '(') {
-      lexeme.type = LEXEME_TYPE_OPAREN;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_OPAREN;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else if (file_contents.data[0] == ')') {
-      lexeme.type = LEXEME_TYPE_CPAREN;
-      lexeme.content = sdm_sized_str_as_sv(file_contents.data, 1);
+      token.type = TOKEN_TYPE_CPAREN;
+      token.content = sdm_sized_str_as_sv(file_contents.data, 1);
       file_contents.data += 1;
       file_contents.length -= 1;
     } else {
@@ -1077,7 +1039,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       exit(1);
     }
 
-    arrput(lexemes, lexeme);
+    arrput(tokens, token);
 
     sdm_sv_trim(&file_contents);
   }
@@ -1085,79 +1047,79 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
   LineItem *lines = NULL;
 
   size_t i = 0;
-  while (i < arrlenu(lexemes)) {
-    Lexeme lexeme = lexemes[i];
+  while (i < arrlenu(tokens)) {
+    Token token = tokens[i];
 
-    if (lexeme.type != LEXEME_TYPE_SYMBOL) {
-      fprintf(stderr, "Expected lexeme type %s but got %s \""SDM_SV_F"\"\n", lexeme_strings[LEXEME_TYPE_SYMBOL], lexeme_strings[lexeme.type], SDM_SV_Vals(lexeme.content));
+    if (token.type != TOKEN_TYPE_SYMBOL) {
+      fprintf(stderr, "Expected token type %s but got %s \""SDM_SV_F"\"\n", token_strings[TOKEN_TYPE_SYMBOL], token_strings[token.type], SDM_SV_Vals(token.content));
       exit(1);
     }
-    char *name = sdm_sv_to_cstr(sdm_sized_str_as_sv(lexeme.content.data, lexeme.content.length));
+    char *name = sdm_sv_to_cstr(sdm_sized_str_as_sv(token.content.data, token.content.length));
 
     if (strncasecmp(name, "USE", 3) == 0) {
       i++;
-      lexeme = lexemes[i];
-      assert(lexeme.type == LEXEME_TYPE_COLON);
+      token = tokens[i];
+      assert(token.type == TOKEN_TYPE_COLON);
       i++;
-      lexeme = lexemes[i];
-      assert(lexeme.type == LEXEME_TYPE_SYMBOL);
-      char *line_name_to_use = sdm_sv_to_cstr(lexeme.content);
+      token = tokens[i];
+      assert(token.type == TOKEN_TYPE_SYMBOL);
+      char *line_name_to_use = sdm_sv_to_cstr(token.content);
       Line line_to_use = shget(lines, line_name_to_use);
       for (size_t i=0; i<line_to_use.length; i++) {
         arrput((*line), line_to_use.data[i]);
       }
       i++;
-      lexeme = lexemes[i];
-      assert(lexeme.type == LEXEME_TYPE_SEMICOLON);
+      token = tokens[i];
+      assert(token.type == TOKEN_TYPE_SEMICOLON);
       i++;
-      lexeme = lexemes[i];
+      token = tokens[i];
       continue;
     }
 
     i++;
-    lexeme = lexemes[i];
+    token = tokens[i];
 
-    if (lexeme.type == LEXEME_TYPE_ASSIGNMENT) {
+    if (token.type == TOKEN_TYPE_ASSIGNMENT) {
       // We are assigning a value to a variable
       i++;
-      lexeme = lexemes[i];
-      double val = evaluate_lexeme_string(lexemes, &i);
+      token = tokens[i];
+      double val = evaluate_token_string(tokens, &i);
       shput(variables, name, val);
-    } else if (lexeme.type == LEXEME_TYPE_COLON) {
+    } else if (token.type == TOKEN_TYPE_COLON) {
       // We are defining an element
       ParsingVar *ele_defns = NULL;
       i++;
-      lexeme = lexemes[i];
+      token = tokens[i];
       EleType ele_type = {0};
-      if (strncasecmp(lexeme.content.data, "cavity", 6) == 0) ele_type = ELETYPE_CAVITY;
-      else if (strncasecmp(lexeme.content.data, "drift", 5) == 0) ele_type = ELETYPE_DRIFT;
-      else if (strncasecmp(lexeme.content.data, "quadrupole", 10) == 0) ele_type = ELETYPE_QUAD;
-      else if (strncasecmp(lexeme.content.data, "bending", 7) == 0) ele_type = ELETYPE_SBEND;
-      else if (strncasecmp(lexeme.content.data, "sextupole", 9) == 0) ele_type = ELETYPE_SEXTUPOLE;
-      else if (strncasecmp(lexeme.content.data, "octupole", 8) == 0) ele_type = ELETYPE_OCTUPOLE;
-      else if (strncasecmp(lexeme.content.data, "marker", 6) == 0) ele_type = ELETYPE_DRIFT;
-      else if (strncasecmp(lexeme.content.data, "line", 4) == 0) {
+      if (strncasecmp(token.content.data, "cavity", 6) == 0) ele_type = ELETYPE_CAVITY;
+      else if (strncasecmp(token.content.data, "drift", 5) == 0) ele_type = ELETYPE_DRIFT;
+      else if (strncasecmp(token.content.data, "quadrupole", 10) == 0) ele_type = ELETYPE_QUAD;
+      else if (strncasecmp(token.content.data, "bending", 7) == 0) ele_type = ELETYPE_SBEND;
+      else if (strncasecmp(token.content.data, "sextupole", 9) == 0) ele_type = ELETYPE_SEXTUPOLE;
+      else if (strncasecmp(token.content.data, "octupole", 8) == 0) ele_type = ELETYPE_OCTUPOLE;
+      else if (strncasecmp(token.content.data, "marker", 6) == 0) ele_type = ELETYPE_DRIFT;
+      else if (strncasecmp(token.content.data, "line", 4) == 0) {
         // Dealing with a line
         bool parse_backwards = false;
         Line newline = {0};
         SDM_ENSURE_ARRAY_MIN_CAP(newline, 256);
         i++;
-        lexeme = lexemes[i];
-        assert(lexeme.type == LEXEME_TYPE_ASSIGNMENT);
+        token = tokens[i];
+        assert(token.type == TOKEN_TYPE_ASSIGNMENT);
         i++;
-        lexeme = lexemes[i];
-        assert(lexeme.type = LEXEME_TYPE_OPAREN);
+        token = tokens[i];
+        assert(token.type = TOKEN_TYPE_OPAREN);
         i++;
-        lexeme = lexemes[i];
-        while (i < arrlenu(lexemes)) {
-          if (lexeme.type == LEXEME_TYPE_COMMA) {
+        token = tokens[i];
+        while (i < arrlenu(tokens)) {
+          if (token.type == TOKEN_TYPE_COMMA) {
             parse_backwards = false;
             i++;
-            lexeme= lexemes[i];
+            token= tokens[i];
             continue;
           }
-          else if (lexeme.type == LEXEME_TYPE_SYMBOL) {
-            char *symbol_val = sdm_sv_to_cstr(lexeme.content);
+          else if (token.type == TOKEN_TYPE_SYMBOL) {
+            char *symbol_val = sdm_sv_to_cstr(token.content);
             if (shgeti(element_library, symbol_val) >= 0) {
               SDM_ARRAY_PUSH(newline, shget(element_library, symbol_val));
             } else if (shgeti(lines, symbol_val) >= 0) {
@@ -1176,40 +1138,40 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
               exit(1);
             }
             free(symbol_val);
-          } else if (lexeme.type == LEXEME_TYPE_SUB) {
+          } else if (token.type == TOKEN_TYPE_SUB) {
             parse_backwards = true;
-          } else if (lexeme.type == LEXEME_TYPE_CPAREN) {
+          } else if (token.type == TOKEN_TYPE_CPAREN) {
             i++;
-            lexeme = lexemes[i];
+            token = tokens[i];
             break;
           }
           i++;
-          lexeme = lexemes[i];
+          token = tokens[i];
         }
         shput(lines, name, newline);
         i++;
-        lexeme = lexemes[i];
+        token = tokens[i];
         continue;
       } else {
-        fprintf(stderr, "Unknown element type: '"SDM_SV_F"'\n", SDM_SV_Vals(lexeme.content));
+        fprintf(stderr, "Unknown element type: '"SDM_SV_F"'\n", SDM_SV_Vals(token.content));
         exit(1);
       }
       i++;
-      lexeme = lexemes[i];
-      while (lexeme.type != LEXEME_TYPE_SEMICOLON) {
-        while (lexeme.type != LEXEME_TYPE_SYMBOL) {
+      token = tokens[i];
+      while (token.type != TOKEN_TYPE_SEMICOLON) {
+        while (token.type != TOKEN_TYPE_SYMBOL) {
           i++;
-          lexeme = lexemes[i];
+          token = tokens[i];
         }
-        char *varname = sdm_sv_to_cstr(sdm_sized_str_as_sv(lexeme.content.data, lexeme.content.length));
+        char *varname = sdm_sv_to_cstr(sdm_sized_str_as_sv(token.content.data, token.content.length));
         i++;
-        lexeme = lexemes[i];
-        assert(lexeme.type == LEXEME_TYPE_ASSIGNMENT);
+        token = tokens[i];
+        assert(token.type == TOKEN_TYPE_ASSIGNMENT);
         i++;
-        lexeme = lexemes[i];
-        double val = evaluate_lexeme_string(lexemes, &i);
+        token = tokens[i];
+        double val = evaluate_token_string(tokens, &i);
         shput(ele_defns, varname, val);
-        lexeme = lexemes[i];
+        token = tokens[i];
       }
       Element ele = {0};
       memcpy(ele.name, name, strlen(name)<64 ? strlen(name) : 63);
@@ -1260,7 +1222,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
     i++;
   }
 
-  arrfree(lexemes);
+  arrfree(tokens);
   free(buffer);
 }
 

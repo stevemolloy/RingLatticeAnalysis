@@ -111,6 +111,43 @@ typedef struct {
   double *element_curlyH;
 } LinOptsParams;
 
+typedef enum {
+  TOKEN_TYPE_SYMBOL,
+  TOKEN_TYPE_NUMBER,
+  TOKEN_TYPE_ASSIGNMENT,
+  TOKEN_TYPE_ADD,
+  TOKEN_TYPE_MULT,
+  TOKEN_TYPE_SUB,
+  TOKEN_TYPE_DIV,
+  TOKEN_TYPE_OPAREN,
+  TOKEN_TYPE_CPAREN,
+  TOKEN_TYPE_SEMICOLON,
+  TOKEN_TYPE_COLON,
+  TOKEN_TYPE_COMMA,
+  TOKEN_TYPE_COUNT,
+} TokenType;
+
+typedef struct {
+  TokenType type;
+  sdm_string_view content;
+} Token;
+
+typedef struct {
+  char *key;
+  Element value;
+} EleLibItem;
+
+typedef struct {
+  size_t capacity;
+  size_t length;
+  Element *data;
+} Line;
+
+typedef struct {
+  char *key;
+  Line value;
+} LineItem;
+
 void track_thru(double *beam, size_t n_particles, Element element);
 void track(double *beam, size_t n_particles, Element *line, size_t n_elements);
 
