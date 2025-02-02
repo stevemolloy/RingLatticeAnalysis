@@ -85,6 +85,9 @@ bool test_generate_from_tracy_file(void) {
   }
 
   printf("%s PASSED\n", test_name);
+
+  arrfree(line);
+
   return true;
 }
 
@@ -316,6 +319,15 @@ bool test_synchrad_integrals(void) {
   }
   fclose(synradint_file);
 
+  arrfree(lin_opt_params.element_etas);
+  arrfree(lin_opt_params.element_etaps);
+  arrfree(lin_opt_params.element_beta_xs);
+  arrfree(lin_opt_params.element_beta_ys);
+  arrfree(lin_opt_params.element_curlyH);
+  arrfree(lin_opt_params.Ss);
+
+  arrfree(line);
+
   return compare_files(test_name, expected_filename, result_filename);
 }
 
@@ -334,6 +346,8 @@ bool test_populate_element_library(void) {
     element_print(element_file, line[i]);
   }
   fclose(element_file);
+
+  arrfree(line);
 
   return compare_files(test_name, expected_filename, result_filename);
 }
@@ -370,6 +384,15 @@ bool test_twiss_propagation(void) {
   }
   fclose(twiss_file);
 
+  arrfree(lin_opt_params.element_etas);
+  arrfree(lin_opt_params.element_etaps);
+  arrfree(lin_opt_params.element_beta_xs);
+  arrfree(lin_opt_params.element_beta_ys);
+  arrfree(lin_opt_params.element_curlyH);
+  arrfree(lin_opt_params.Ss);
+
+  arrfree(line);
+
   return compare_files(test_name, expected_filename, result_filename);
 }
 
@@ -393,6 +416,9 @@ bool test_full_lattice_tracking(void) {
   }
 
   if (retval) printf("%s PASSED\n", test_name);
+
+  arrfree(line);
+
   return retval;
 }
 
