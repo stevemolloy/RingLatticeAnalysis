@@ -1,8 +1,5 @@
 CC=clang
 CFLAGS = -Wall -Wpedantic -Wextra -Wshadow -Wvla -std=c18 -ggdb
-ifeq ($(CC), clang)
-	CFLAGS +=  -fsanitize=undefined,address
-endif
 
 CINCLUDES = -I./third_party/
 ifeq ($(OS),Windows_NT)
@@ -12,6 +9,9 @@ ifeq ($(OS),Windows_NT)
 else
 	CC ?= clang
 	CLIBS = -lm -lcblas
+  ifeq ($(CC), clang)
+  	CFLAGS +=  -fsanitize=undefined,address
+  endif
 endif
 
 SRC = src
