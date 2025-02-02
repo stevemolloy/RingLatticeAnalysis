@@ -1,4 +1,9 @@
-CFLAGS = -Wall -Wpedantic -Wextra -std=c99 -ggdb
+CC=clang
+CFLAGS = -Wall -Wpedantic -Wextra -Wshadow -Wvla -std=c18 -ggdb
+ifeq ($(CC), clang)
+	CFLAGS +=  -fsanitize=undefined,address
+endif
+
 CINCLUDES = -I./third_party/
 ifeq ($(OS),Windows_NT)
 	CC = gcc

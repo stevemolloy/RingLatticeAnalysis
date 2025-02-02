@@ -1030,8 +1030,8 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       char *line_name_to_use = sdm_sv_to_cstr(token.content);
       Line line_to_use = shget(lines, line_name_to_use);
       free(line_name_to_use);
-      for (size_t i=0; i<line_to_use.length; i++) {
-        arrput((*line), line_to_use.data[i]);
+      for (size_t j=0; j<line_to_use.length; j++) {
+        arrput((*line), line_to_use.data[j]);
       }
       token = tokens[++i];
       assert(token.type == TOKEN_TYPE_SEMICOLON);
@@ -1082,12 +1082,12 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
             } else if (shgeti(lines, symbol_val) >= 0) {
               Line line2insert = shget(lines, symbol_val);
               if (parse_backwards) {
-                for (int i=line2insert.length-1; i>=0; i--) {
-                  SDM_ARRAY_PUSH(newline, line2insert.data[i]);
+                for (int j=line2insert.length-1; j>=0; j--) {
+                  SDM_ARRAY_PUSH(newline, line2insert.data[j]);
                 }
               } else {
-                for (size_t i=0; i<line2insert.length; i++) {
-                  SDM_ARRAY_PUSH(newline, line2insert.data[i]);
+                for (size_t j=0; j<line2insert.length; j++) {
+                  SDM_ARRAY_PUSH(newline, line2insert.data[j]);
                 }
               }
             } else {
@@ -1162,7 +1162,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       }
       make_r_matrix(&ele);
       shput(element_library, name, ele);
-      for (size_t i=0; i<shlenu(ele_defns); i++) free(ele_defns[i].key);
+      for (size_t j=0; j<shlenu(ele_defns); j++) free(ele_defns[j].key);
       shfree(ele_defns);
     } else {
       fprintf(stderr, "Malformed input file\n");
@@ -1172,14 +1172,14 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
     i++;
   }
 
-  for (size_t i=0; i<shlenu(variables); i++) free(variables[i].key);
+  for (size_t j=0; j<shlenu(variables); j++) free(variables[j].key);
   shfree(variables);
 
-  for (size_t i=0; i<shlenu(lines); i++) free(lines[i].key);
-  for (size_t i=0; i<shlenu(lines); i++) SDM_ARRAY_FREE(lines[i].value);
+  for (size_t j=0; j<shlenu(lines); j++) free(lines[j].key);
+  for (size_t j=0; j<shlenu(lines); j++) SDM_ARRAY_FREE(lines[j].value);
   shfree(lines);
 
-  for (size_t i=0; i<shlenu(element_library); i++) free(element_library[i].key);
+  for (size_t j=0; j<shlenu(element_library); j++) free(element_library[j].key);
   shfree(element_library);
 
   arrfree(tokens);
