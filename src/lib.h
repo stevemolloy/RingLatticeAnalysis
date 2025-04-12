@@ -30,6 +30,7 @@ size_t string_to_lines(char **string, char ***lines);
 void advance_to_char(char **string, char c);
 size_t count_lines(char *contents);
 void advance_to_next_line(char **string);
+bool str_ends_with(const char *s, const char *suff);
 
 #endif // !_LIB
 

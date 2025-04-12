@@ -4,35 +4,17 @@
 #include <math.h>
 #include <string.h>
 
-#include "lib.h"
-#include "elements.h"
-
-#define M_PI (acos(-1.0))
-#define ANGLE_EPSILON (0.1*M_PI/180)
-
 #include "stb_ds.h"
 
+#include "lib.h"
+#include "elements.h"
 #include "sdm_lib.h"
 
-// TODO: Factor out the twiss propagation stuff into diagonalised 2x2 instead of the 3x3 stuff
 // TODO: Rationalise memory management. In some places it is dynamic arrays, in other an arena is used. Time to straighten this out.
-// TODO: Spin off a few more functions for the library.  The "main" function should be a list of calls to library functions.
-// TODO: Rationalise organisation of the libraries.
 // TODO: Handle off-energy dynamics.
 
 void usage(const char* program) {
   fprintf(stderr, "USAGE: %s [-p <periodicity>] [-h <harmonic number>] [-E <kinetic energy>] lattice_file\n", program);
-}
-
-bool lattice_is_closed(double total_angle) {
-  return !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
-}
-
-bool str_ends_with(const char *s, const char *suff) {
-    size_t slen = strlen(s);
-    size_t sufflen = strlen(suff);
-
-    return slen >= sufflen && !memcmp(s + slen - sufflen, suff, sufflen);
 }
 
 int main(int argc, char **argv) {
@@ -118,13 +100,10 @@ int main(int argc, char **argv) {
   printf("Number of elements in the line: %td\n", arrlen(line));
   if (args.periodicity != 1) {
     printf("Total length of the lattice: %0.3f m (%0.3f m for the line)\n", total_length, line_length);
-  } else {
-    printf("Total length of the line: %f m\n", line_length);
-  }
-  if (args.periodicity != 1) {
     printf("Total bending angle of the lattice: %0.3f deg (%0.3f deg for the line))\n", 
            radians_to_degrees(total_angle), radians_to_degrees(line_angle));
   } else {
+    printf("Total length of the line: %f m\n", line_length);
     printf("Total bending angle of the line: %0.3f degrees\n", radians_to_degrees(line_angle));
   }
 
@@ -176,31 +155,6 @@ int main(int argc, char **argv) {
     }
     fclose(matrix_out);
   }
-
-  printf("\n");
-
-  /*
-  size_t num_turns = 1000 * args.periodicity;
-  FILE *aperture_search = fopen("aperture.csv", "w");
-  for (double starting_x = -0.03; starting_x < 0.031; starting_x += 0.0005) {
-    for (double starting_y = 0.0; starting_y < 0.008; starting_y += 0.0001) {
-      double beam[6] = {0};
-      beam[0] = starting_x;
-      beam[2] = starting_y;
-      printf("Tracking %0.3e, %0.3e %zu times", beam[0], beam[2], num_turns);
-      size_t turn;
-      for (turn=0; turn<num_turns; turn++) {
-        track(beam, 1, line, arrlenu(line));
-        if ((fabs(beam[0]) > 1.0) || (fabs(beam[2]) > 1.0) || (isnan(beam[0])) || isnan(beam[2])) {
-          break;
-        }
-      }
-      printf(": Survived %zu periods\n", turn);
-      fprintf(aperture_search, "%0.6e, %0.6e, %zu\n", starting_x, starting_y, turn);
-    }
-  }
-  fclose(aperture_search);
-  */
 
   printf("\n");
 

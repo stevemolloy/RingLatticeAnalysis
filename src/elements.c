@@ -817,6 +817,10 @@ void get_line_matrix(double *matrix, Element *line) {
   }
 }
 
+bool lattice_is_closed(double total_angle) {
+  return !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
+}
+
 void generate_lattice_from_mad8_file(const char *filename, Element **line) {
   char *buffer = read_entire_file(filename);
   char *cursor = buffer;

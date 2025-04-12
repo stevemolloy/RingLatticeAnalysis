@@ -12,6 +12,8 @@
 #define BEAM_DOFS 6
 #define ERADIUS_TIMES_RESTMASS 0.959976365e-9
 #define C_Q 3.83193864121903e-13
+#define M_PI (acos(-1.0))
+#define ANGLE_EPSILON (0.1*M_PI/180)
 
 #define SIXBYSIX_IDENTITY (double[]){ \
     1, 0, 0, 0, 0, 0, \
@@ -179,6 +181,7 @@ bool tokenise_tracy_file(sdm_string_view *file_contents, Token **tokens);
 void create_line(char *cursor, Element **line, ElementLibrary *element_library);
 char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor);
 void get_line_matrix(double *matrix, Element *line);
+bool lattice_is_closed(double total_angle);
 Element create_element(sdm_arena_t *mem_arena, char *name, char **cursor);
 void element_print(FILE *sink, Element element);
 double element_length(Element element);

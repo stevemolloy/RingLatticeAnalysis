@@ -161,3 +161,10 @@ void advance_to_next_line(char **string) {
   (*string)++;
 }
 
+bool str_ends_with(const char *s, const char *suff) {
+    size_t slen = strlen(s);
+    size_t sufflen = strlen(suff);
+
+    return slen >= sufflen && !memcmp(s + slen - sufflen, suff, sufflen);
+}
+
