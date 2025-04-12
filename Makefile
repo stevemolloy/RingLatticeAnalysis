@@ -52,6 +52,7 @@ physics/dispersion_propagation/dispersion.pdf: physics/dispersion_propagation/di
 
 clean:
 	rm -rf $(BINDIR) $(OBJ) tests/*result*
+	rm -rf physics/dispersion_propagation/dispersion.{aux,log,pdf}
 
 $(OBJ):
 	@mkdir -p $@
