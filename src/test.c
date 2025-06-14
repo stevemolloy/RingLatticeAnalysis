@@ -357,10 +357,12 @@ bool test_twiss_propagation(void) {
   const char *expected_filename = "./tests/twissprop_expected.txt";
   const char *result_filename =   "./tests/twissprop_result.txt";
 
-  char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
+  // char *file_path = "./lattices/m4U_f02020101_lattice.mad8";
+  char *file_path = "./lattices/max_4u_sp_jb_5.lat";
 
   Element *line = {0};
-  generate_lattice_from_mad8_file(file_path, &line);
+  // generate_lattice_from_mad8_file(file_path, &line);
+    generate_lattice_from_tracy_file(file_path, &line);
 
   const double periodicity = 20;
 
