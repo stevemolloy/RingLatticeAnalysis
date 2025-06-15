@@ -14,7 +14,7 @@
 bool compare_files(const char *testname, const char *filename1, const char *filename2);
 
 bool test_matmul(void);
-// bool test_sbend(void);
+bool test_sbend(void);
 bool test_full_lat_all_mats(void);
 bool compare_with_matlab(void);
 bool test_threebythree(void);
@@ -29,7 +29,7 @@ typedef bool (*TestFunction)(void);
 
 TestFunction test_functions[] = {
   test_matmul,
-  // test_sbend,
+  test_sbend,
   /*test_full_lat_all_mats, compare_with_matlab*/
   test_threebythree,
   test_twiss_propagation,
@@ -211,36 +211,35 @@ bool test_matmul(void) {
   return compare_files(test_name, expected_filename, result_filename);
 }
 
-// bool test_sbend(void) {
-//   const char *test_name = "SBEND ELEMENT TEST";
-//   const char *expected_filename = "./tests/sbend_expected.txt";
-//   const char *result_filename =   "./tests/sbend_result.txt";
-//
-//   const char *filename = "./lattices/whiskey.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(filename, &line);
-//   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-//   get_line_matrix(line_matrix, line);
-//
-// #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-//   FILE *result_file;
-//   fopen_s(&result_file, result_filename, "w");
-// #else
-//   FILE *result_file = fopen(result_filename, "w");
-// #endif
-//
-//   fprintf(result_file, "Total matrix, R, for the line is:\n");
-//   rmatrix_print(result_file, line_matrix);
-//
-//   fclose(result_file);
-//
-//   bool comparison_result = compare_files(test_name, expected_filename, result_filename);
-//
-//   arrfree(line);
-//   
-//   return comparison_result;
-// }
+bool test_sbend(void) {
+  const char *test_name = "SBEND ELEMENT TEST";
+  const char *expected_filename = "./tests/sbend_expected.txt";
+  const char *result_filename =   "./tests/sbend_result.txt";
+
+  const char *filename = "./lattices/whiskey.lat";
+
+  Line line = generate_lattice_from_tracy_file(filename);
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  get_line_matrix(line_matrix, line);
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  FILE *result_file;
+  fopen_s(&result_file, result_filename, "w");
+#else
+  FILE *result_file = fopen(result_filename, "w");
+#endif
+
+  fprintf(result_file, "Total matrix, R, for the line is:\n");
+  rmatrix_print(result_file, line_matrix);
+
+  fclose(result_file);
+
+  bool comparison_result = compare_files(test_name, expected_filename, result_filename);
+
+  SDM_ARRAY_FREE(line);
+
+  return comparison_result;
+}
 
 // bool test_full_lat_all_mats(void) {
 //   const char *test_name = "FULL LAT ALL MATS TEST";
