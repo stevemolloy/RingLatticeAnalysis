@@ -240,47 +240,6 @@ bool test_sbend(void) {
   return comparison_result;
 }
 
-// bool test_full_lat_all_mats(void) {
-//   const char *test_name = "FULL LAT ALL MATS TEST";
-//   const char *expected_filename = "./tests/fulllat_allmats_expected.txt";
-//   const char *result_filename =   "./tests/fulllat_allmats_result.txt";
-//
-//   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(filename, &line);
-//
-// #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-//   FILE *result_file;
-//   fopen_s(&result_file, result_filename, "w");
-// #else
-//   FILE *result_file = fopen(result_filename, "w");
-// #endif
-//
-//   for (size_t i=0; i<arrlenu(line); i++) {
-//     fprintf(result_file, "Element %03zu: ", i+1);
-//     switch (line[i].type) {
-//       case ELETYPE_DRIFT:     fprintf(result_file, "DRIFT\n"); break;
-//       case ELETYPE_QUAD:      fprintf(result_file, "QUAD\n"); break;
-//       case ELETYPE_SBEND:     fprintf(result_file, "SBEND\n"); break;
-//       case ELETYPE_CAVITY:    fprintf(result_file, "CAVITY\n"); break;
-//       case ELETYPE_SEXTUPOLE: fprintf(result_file, "SEXTUPOLE\n"); break;
-//       case ELETYPE_OCTUPOLE:  fprintf(result_file, "OCTUPOLE\n"); break;
-//       case ELETYPE_MULTIPOLE: fprintf(result_file, "MULTIPOLE\n"); break;
-//     }
-//     rmatrix_print(result_file, line[i].R_matrix);
-//     fprintf(result_file, "\n");
-//   }
-//
-//   fclose(result_file);
-//
-//   bool comparison_result = compare_files(test_name, expected_filename, result_filename);
-//   
-//   arrfree(line);
-//
-//   return comparison_result;
-// }
-
 bool test_synchrad_integrals(void) {
   const char *test_name = "SYNCH RAD INTEGRALS TEST";
   const char *expected_filename = "./tests/synchradintegrals_expected.txt";
@@ -347,47 +306,6 @@ bool test_populate_element_library(void) {
   return compare_files(test_name, expected_filename, result_filename);
 }
 
-// bool test_full_lat_all_mats(void) {
-//   const char *test_name = "FULL LAT ALL MATS TEST";
-//   const char *expected_filename = "./tests/fulllat_allmats_expected.txt";
-//   const char *result_filename =   "./tests/fulllat_allmats_result.txt";
-//
-//   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(filename, &line);
-//
-// #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-//   FILE *result_file;
-//   fopen_s(&result_file, result_filename, "w");
-// #else
-//   FILE *result_file = fopen(result_filename, "w");
-// #endif
-//
-//   for (size_t i=0; i<arrlenu(line); i++) {
-//     fprintf(result_file, "Element %03zu: ", i+1);
-//     switch (line[i].type) {
-//       case ELETYPE_DRIFT:     fprintf(result_file, "DRIFT\n"); break;
-//       case ELETYPE_QUAD:      fprintf(result_file, "QUAD\n"); break;
-//       case ELETYPE_SBEND:     fprintf(result_file, "SBEND\n"); break;
-//       case ELETYPE_CAVITY:    fprintf(result_file, "CAVITY\n"); break;
-//       case ELETYPE_SEXTUPOLE: fprintf(result_file, "SEXTUPOLE\n"); break;
-//       case ELETYPE_OCTUPOLE:  fprintf(result_file, "OCTUPOLE\n"); break;
-//       case ELETYPE_MULTIPOLE: fprintf(result_file, "MULTIPOLE\n"); break;
-//     }
-//     rmatrix_print(result_file, line[i].R_matrix);
-//     fprintf(result_file, "\n");
-//   }
-//
-//   fclose(result_file);
-//
-//   bool comparison_result = compare_files(test_name, expected_filename, result_filename);
-//   
-//   arrfree(line);
-//
-//   return comparison_result;
-// }
-
 // bool test_synchrad_integrals(void) {
 //   const char *test_name = "SYNCH RAD INTEGRALS TEST";
 //   const char *expected_filename = "./tests/synchradintegrals_expected.txt";
@@ -429,27 +347,6 @@ bool test_populate_element_library(void) {
 //   arrfree(lin_opt_params.element_beta_ys);
 //   arrfree(lin_opt_params.element_curlyH);
 //   arrfree(lin_opt_params.Ss);
-//
-//   arrfree(line);
-//
-//   return compare_files(test_name, expected_filename, result_filename);
-// }
-
-// bool test_populate_element_library(void) {
-//   const char *test_name = "ELEMENT PARSING TEST";
-//   const char *expected_filename = "./tests/eleparse_expected.txt";
-//   const char *result_filename =   "./tests/eleparse_result.txt";
-//
-//   char *file_path = "./lattices/max4_r3_lattice.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(file_path, &line);
-//
-//   FILE *element_file = fopen(result_filename, "w");
-//   for (size_t i=0; i<arrlenu(line); i++) {
-//     element_print(element_file, line[i]);
-//   }
-//   fclose(element_file);
 //
 //   arrfree(line);
 //
@@ -593,143 +490,6 @@ bool compare_arrays(double *correct_mat, double *compare_mat, size_t n) {
   }
   return result;
 }
-
-// bool compare_with_matlab(void) {
-//   const char *test_name = "MATLAB_COMPARISON TEST";
-//
-//   const char *filename = "./lattices/m4U_240521_b03_03_07_06.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(filename, &line);
-//
-//   const char *matlab_output_filename = "./tests/matlab_output.txt";
-//   char *matlab_output_buffer = read_entire_file(matlab_output_filename);
-//   char *cursor = matlab_output_buffer;
-//
-//   for (size_t i=0; i<arrlenu(line); i++) {
-//     if (strncmp(cursor, "Element ", 8) != 0) {
-//       printf("%s FAILED\n", test_name);
-//       printf("    Error while parsing element %zu\n", i+1);
-//       printf("    Expected the text \"Element\", but got something else. File not formatted correctly.\n");
-//       return false;
-//     }
-//     cursor += 8;
-//     size_t ele_num = strtol(cursor, &cursor, 10);
-//     if (ele_num != i+1) {
-//       printf("%s FAILED\n", test_name);
-//       printf("    Error while parsing element %zu\n", i+1);
-//       printf("    Got an unexpected element number from the matlab output file\n");
-//       return false;
-//     }
-//     while ((*cursor==':') || isspace(*cursor)) {
-//       cursor++;
-//     }
-//     if ((strncmp(cursor, "Drift", 5) == 0)) {
-//       cursor += 5;
-//       if (line[i].type != ELETYPE_DRIFT) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected a DRIFT, but got something else.\n");
-//         return false;
-//       }
-//     } else if ((strncmp(cursor, "Marker", 6) == 0)) {
-//       cursor += 6;
-//       if (line[i].type != ELETYPE_DRIFT) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected a DRIFT, but got something else.\n");
-//         return false;
-//       }
-//     } else if ((strncmp(cursor, "Monitor", 7) == 0)) {
-//       cursor += 7;
-//       if (line[i].type != ELETYPE_DRIFT) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected a DRIFT, but got something else.\n");
-//         return false;
-//       }
-//     } else if ((strncmp(cursor, "Corrector", 9) == 0)) {
-//       cursor += 9;
-//       if (line[i].type != ELETYPE_DRIFT) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected a DRIFT, but got something else.\n");
-//         return false;
-//       }
-//     } else if ((strncmp(cursor, "Multipole", 9) == 0)) {
-//       cursor += 9;
-//       if ((line[i].type != ELETYPE_SBEND) && 
-//         (line[i].type != ELETYPE_QUAD) && 
-//         (line[i].type != ELETYPE_OCTUPOLE) && 
-//         (line[i].type != ELETYPE_SEXTUPOLE) && 
-//         (line[i].type != ELETYPE_MULTIPOLE)) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected something that matches a multipole, but got something else.\n");
-//         return false;
-//       }
-//     } else if ((strncmp(cursor, "Bend", 4) == 0)) {
-//       cursor += 4;
-//       if ((line[i].type != ELETYPE_SBEND)) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected something that matches a multipole, but got something else.\n");
-//         return false;
-//       }
-//     } else if ((strncmp(cursor, "RFCavity", 8) == 0)) {
-//       cursor += 8;
-//       if ((line[i].type != ELETYPE_CAVITY)) {
-//         printf("%s FAILED\n", test_name);
-//         printf("    Error while parsing element %zu\n", i+1);
-//         printf("    Expected something that matches a multipole, but got something else.\n");
-//         return false;
-//       }
-//     } else {
-//       printf("%s FAILED\n", test_name);
-//       printf("    Error while parsing element %zu\n", i+1);
-//       printf("    Got an unknown element type.\n");
-//       return false;
-//     }
-//
-//     double mat_from_matlab[BEAM_DOFS*BEAM_DOFS] = {0};
-//     for (size_t j=0; j<BEAM_DOFS*BEAM_DOFS; j++) {
-//       size_t y_ind = j / BEAM_DOFS;
-//       size_t x_ind = j % BEAM_DOFS;
-//       double sign = 1.0;
-//       if (y_ind == 4) {
-//         y_ind = 5;
-//         sign = -1.0;
-//       } else if (y_ind == 5) {
-//         y_ind = 4;
-//         sign = -1.0;
-//       }
-//       if (x_ind == 4) {
-//         x_ind = 5;
-//         sign = -1.0;
-//       } else if (x_ind == 5) {
-//         x_ind = 4;
-//         sign = -1.0;
-//       }
-//       mat_from_matlab[y_ind*BEAM_DOFS + x_ind] = sign * strtod(cursor, &cursor);
-//     }
-//     if (!compare_arrays(mat_from_matlab, line[i].R_matrix, BEAM_DOFS*BEAM_DOFS)) {
-//       printf("%s FAILED\n", test_name);
-//       printf("    Error while parsing element %zu\n", i+1);
-//       printf("    Matrices not equal.\n");
-//       return false;
-//     }
-//
-//     while (isspace(*cursor)) {
-//       cursor++;
-//     }
-//   }
-//
-//   free(matlab_output_buffer);
-//   arrfree(line);
-//
-//   printf("%s PASSED\n", test_name);
-//   return true;
-// }
 
 bool compare_files(const char *testname, const char *filename1, const char *filename2) {
   bool comparison_result = true;
