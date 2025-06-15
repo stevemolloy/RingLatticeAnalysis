@@ -22,7 +22,7 @@ bool test_twiss_propagation(void);
 bool test_synchrad_integrals(void);
 // bool test_populate_element_library(void);
 bool test_individual_ele_tracking(void);
-// bool test_full_lattice_tracking(void);
+bool test_full_lattice_tracking(void);
 bool test_generate_from_tracy_file(void);
 
 typedef bool (*TestFunction)(void);
@@ -36,7 +36,7 @@ TestFunction test_functions[] = {
   test_synchrad_integrals,
   // test_populate_element_library,
   test_individual_ele_tracking,
-  // test_full_lattice_tracking,
+  test_full_lattice_tracking,
   test_generate_from_tracy_file,
 };
 
@@ -504,57 +504,30 @@ bool test_twiss_propagation(void) {
   return compare_files(test_name, expected_filename, result_filename);
 }
 
-// bool test_full_lattice_tracking(void) {
-//   const char *test_name = "TRACKING THRU R3 TEST";
-//   bool retval = true;
-//
-//   const char *file_path = "./lattices/max4_r3_lattice.mad8";
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(file_path, &line);
-//
-//   double beam[6] = {0};
-//   track(beam, 1, line, arrlenu(line));
-//
-//   for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
-//     if (beam[i] != 0.0) {
-//       printf("%s FAILED\n", test_name);
-//       retval = false;
-//       break;
-//     }
-//   }
-//
-//   if (retval) printf("%s PASSED\n", test_name);
-//
-//   arrfree(line);
-//
-//   return retval;
-// }
+bool test_full_lattice_tracking(void) {
+  const char *test_name = "TRACKING THRU R3 TEST";
+  bool retval = true;
 
-// bool test_full_lattice_tracking(void) {
-//   const char *test_name = "TRACKING THRU R3 TEST";
-//   bool retval = true;
-//
-//   const char *file_path = "./lattices/max4_r3_lattice.mad8";
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(file_path, &line);
-//
-//   double beam[6] = {0};
-//   track(beam, 1, line, arrlenu(line));
-//
-//   for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
-//     if (beam[i] != 0.0) {
-//       printf("%s FAILED\n", test_name);
-//       retval = false;
-//       break;
-//     }
-//   }
-//
-//   if (retval) printf("%s PASSED\n", test_name);
-//
-//   arrfree(line);
-//
-//   return retval;
-// }
+  const char *file_path = "./lattices/max_4u_sp_jb_5.lat";
+  Line line = generate_lattice_from_tracy_file(file_path);
+
+  double beam[6] = {0};
+  track(beam, 1, line, line.length);
+
+  for (size_t i=0; i<sizeof(beam)/sizeof(beam[0]); i++) {
+    if (beam[i] != 0.0) {
+      printf("%s FAILED\n", test_name);
+      retval = false;
+      break;
+    }
+  }
+
+  if (retval) printf("%s PASSED\n", test_name);
+
+  SDM_ARRAY_FREE(line);
+
+  return retval;
+}
 
 bool test_individual_ele_tracking(void) {
   const char *test_name = "TRACKING ON-AXIS PARTICLE TEST";
