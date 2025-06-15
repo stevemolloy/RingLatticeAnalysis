@@ -1,5 +1,4 @@
 #include <float.h>
-#include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -20,7 +19,7 @@ bool compare_with_matlab(void);
 bool test_threebythree(void);
 bool test_twiss_propagation(void);
 bool test_synchrad_integrals(void);
-// bool test_populate_element_library(void);
+bool test_populate_element_library(void);
 bool test_individual_ele_tracking(void);
 bool test_full_lattice_tracking(void);
 bool test_generate_from_tracy_file(void);
@@ -34,7 +33,7 @@ TestFunction test_functions[] = {
   test_threebythree,
   test_twiss_propagation,
   test_synchrad_integrals,
-  // test_populate_element_library,
+  test_populate_element_library,
   test_individual_ele_tracking,
   test_full_lattice_tracking,
   test_generate_from_tracy_file,
@@ -328,26 +327,25 @@ bool test_synchrad_integrals(void) {
   return compare_files(test_name, expected_filename, result_filename);
 }
 
-// bool test_populate_element_library(void) {
-//   const char *test_name = "ELEMENT PARSING TEST";
-//   const char *expected_filename = "./tests/eleparse_expected.txt";
-//   const char *result_filename =   "./tests/eleparse_result.txt";
-//
-//   char *file_path = "./lattices/max4_r3_lattice.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(file_path, &line);
-//
-//   FILE *element_file = fopen(result_filename, "w");
-//   for (size_t i=0; i<arrlenu(line); i++) {
-//     element_print(element_file, line[i]);
-//   }
-//   fclose(element_file);
-//
-//   arrfree(line);
-//
-//   return compare_files(test_name, expected_filename, result_filename);
-// }
+bool test_populate_element_library(void) {
+  const char *test_name = "ELEMENT PARSING TEST";
+  const char *expected_filename = "./tests/eleparse_expected.txt";
+  const char *result_filename =   "./tests/eleparse_result.txt";
+
+  char *file_path = "./lattices/max_4u_sp_jb_5.lat";
+
+  Line line = generate_lattice_from_tracy_file(file_path);
+
+  FILE *element_file = fopen(result_filename, "w");
+  for (size_t i=0; i<line.length; i++) {
+    element_print(element_file, line.data[i]);
+  }
+  fclose(element_file);
+
+  SDM_ARRAY_FREE(line);
+
+  return compare_files(test_name, expected_filename, result_filename);
+}
 
 // bool test_full_lat_all_mats(void) {
 //   const char *test_name = "FULL LAT ALL MATS TEST";
