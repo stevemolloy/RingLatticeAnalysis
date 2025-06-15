@@ -23,7 +23,7 @@ CommandLineArgs get_clargs(int argc, char **argv);
 bool isvalididchar(char c);
 double degrees_to_radians(double degrees);
 double radians_to_degrees(double radians);
-char *join_lines(char* cursor);
+// char *join_lines(char* cursor);
 size_t read_entire_file_to_lines(char *file_path, char **buffer, char ***lines);
 char *read_entire_file(const char *file_path);
 size_t string_to_lines(char **string, char ***lines);

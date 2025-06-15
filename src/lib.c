@@ -65,23 +65,23 @@ double degrees_to_radians(double degrees) {
   return degrees * PI / 180.0f;
 }
 
-char *join_lines(char* cursor) {
-  char *result = cursor;
-
-  while (*cursor != '\0') {
-    if (*cursor == '&') {
-      while (*cursor != '\n') {
-        *cursor = ' ';
-        cursor++;
-      }
-      *cursor = ' ';
-    } else {
-      cursor++;
-    }
-  }
-
-  return result;
-}
+// char *join_lines(char* cursor) {
+//   char *result = cursor;
+//
+//   while (*cursor != '\0') {
+//     if (*cursor == '&') {
+//       while (*cursor != '\n') {
+//         *cursor = ' ';
+//         cursor++;
+//       }
+//       *cursor = ' ';
+//     } else {
+//       cursor++;
+//     }
+//   }
+//
+//   return result;
+// }
 
 size_t read_entire_file_to_lines(char *file_path, char **buffer, char ***lines) {
   *buffer = read_entire_file(file_path);
