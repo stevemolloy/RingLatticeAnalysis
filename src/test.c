@@ -19,7 +19,7 @@ bool test_full_lat_all_mats(void);
 bool compare_with_matlab(void);
 bool test_threebythree(void);
 bool test_twiss_propagation(void);
-// bool test_synchrad_integrals(void);
+bool test_synchrad_integrals(void);
 // bool test_populate_element_library(void);
 bool test_individual_ele_tracking(void);
 // bool test_full_lattice_tracking(void);
@@ -33,7 +33,7 @@ TestFunction test_functions[] = {
   /*test_full_lat_all_mats, compare_with_matlab*/
   test_threebythree,
   test_twiss_propagation,
-  // test_synchrad_integrals,
+  test_synchrad_integrals,
   // test_populate_element_library,
   test_individual_ele_tracking,
   // test_full_lattice_tracking,
@@ -282,52 +282,51 @@ bool test_sbend(void) {
 //   return comparison_result;
 // }
 
-// bool test_synchrad_integrals(void) {
-//   const char *test_name = "SYNCH RAD INTEGRALS TEST";
-//   const char *expected_filename = "./tests/synchradintegrals_expected.txt";
-//   const char *result_filename =   "./tests/synchradintegrals_result.txt";
-//
-//   char *file_path = "./lattices/max4_r3_lattice.mad8";
-//
-//   Element *line = {0};
-//   generate_lattice_from_mad8_file(file_path, &line);
-//
-//   const double periodicity = 20;
-//
-//   double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-//   double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
-//
-//   get_line_matrix(line_matrix, line);
-//   apply_matrix_n_times(total_matrix, line_matrix, periodicity);
-//
-//   LinOptsParams lin_opt_params = {
-//     .Ss = NULL,
-//     .element_beta_xs = NULL,
-//     .element_beta_ys = NULL,
-//     .element_etas = NULL,
-//     .element_etaps = NULL,
-//     .element_curlyH = NULL,
-//   };
-//   double I[5] = {0};
-//   propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
-//
-//   FILE *synradint_file = fopen(result_filename, "w");
-//   for (size_t i=0; i<5; i++) {
-//     fprintf(synradint_file, "I[%zu] = %e\n", i+1, I[i]);
-//   }
-//   fclose(synradint_file);
-//
-//   arrfree(lin_opt_params.element_etas);
-//   arrfree(lin_opt_params.element_etaps);
-//   arrfree(lin_opt_params.element_beta_xs);
-//   arrfree(lin_opt_params.element_beta_ys);
-//   arrfree(lin_opt_params.element_curlyH);
-//   arrfree(lin_opt_params.Ss);
-//
-//   arrfree(line);
-//
-//   return compare_files(test_name, expected_filename, result_filename);
-// }
+bool test_synchrad_integrals(void) {
+  const char *test_name = "SYNCH RAD INTEGRALS TEST";
+  const char *expected_filename = "./tests/synchradintegrals_expected.txt";
+  const char *result_filename =   "./tests/synchradintegrals_result.txt";
+
+  char *file_path = "./lattices/max_4u_sp_jb_5.lat";
+
+  Line line = generate_lattice_from_tracy_file(file_path);
+
+  const double periodicity = 20;
+
+  double line_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+  double total_matrix[BEAM_DOFS*BEAM_DOFS] = {0};
+
+  get_line_matrix(line_matrix, line);
+  apply_matrix_n_times(total_matrix, line_matrix, periodicity);
+
+  LinOptsParams lin_opt_params = {
+    .Ss = NULL,
+    .element_beta_xs = NULL,
+    .element_beta_ys = NULL,
+    .element_etas = NULL,
+    .element_etaps = NULL,
+    .element_curlyH = NULL,
+  };
+  double I[5] = {0};
+  propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
+
+  FILE *synradint_file = fopen(result_filename, "w");
+  for (size_t i=0; i<5; i++) {
+    fprintf(synradint_file, "I[%zu] = %e\n", i+1, I[i]);
+  }
+  fclose(synradint_file);
+
+  arrfree(lin_opt_params.element_etas);
+  arrfree(lin_opt_params.element_etaps);
+  arrfree(lin_opt_params.element_beta_xs);
+  arrfree(lin_opt_params.element_beta_ys);
+  arrfree(lin_opt_params.element_curlyH);
+  arrfree(lin_opt_params.Ss);
+
+  SDM_ARRAY_FREE(line);
+
+  return compare_files(test_name, expected_filename, result_filename);
+}
 
 // bool test_populate_element_library(void) {
 //   const char *test_name = "ELEMENT PARSING TEST";
