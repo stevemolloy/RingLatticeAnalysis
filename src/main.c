@@ -26,11 +26,12 @@ int main(int argc, char **argv) {
 
   const double gamma_0 = args.E_0 * 1e9 / ELECTRON_MASS;
 
-  Element *line = {0};
-  if (str_ends_with(args.file_path, ".mad8")) {
-    generate_lattice_from_mad8_file(args.file_path, &line);
-  } else if (str_ends_with(args.file_path, ".lat")) {
-    generate_lattice_from_tracy_file(args.file_path, &line);
+  Line line = {0};
+  if (str_ends_with(args.file_path, ".lat")) {
+    line = generate_lattice_from_tracy_file(args.file_path);
+  } else {
+    fprintf(stderr, "ERROR: Currently only Tracy files (ending with .lat) can be interpreted\n");
+    return 1;
   }
 
   double line_length = calculate_line_length(line);
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
     if (args.save_twiss) {
       FILE *twiss_file = fopen(args.twiss_filename, "w");
       fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
-      for (size_t i=0; i<arrlenu(line); i++) {
+      for (size_t i=0; i<line.length; i++) {
         fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
 		    		lin_opt_params.Ss[i],
 		    		lin_opt_params.element_beta_xs[i],
@@ -97,7 +98,7 @@ int main(int argc, char **argv) {
     printf("WARNING: Kinetic energy not provided, so not calculating all parameters\n\n");
 
   printf("Periodicity: %zu\n", args.periodicity);
-  printf("Number of elements in the line: %td\n", arrlen(line));
+  printf("Number of elements in the line: %td\n", line.length);
   if (args.periodicity != 1) {
     printf("Total length of the lattice: %0.3f m (%0.3f m for the line)\n", total_length, line_length);
     printf("Total bending angle of the lattice: %0.3f deg (%0.3f deg for the line))\n", 
@@ -147,10 +148,10 @@ int main(int argc, char **argv) {
     arrfree(lin_opt_params.Ss);
 
     FILE *matrix_out = fopen("matrix_out.txt", "w");
-    for (size_t i=0; i<arrlenu(line); i++) {
+    for (size_t i=0; i<line.length; i++) {
       fprintf(matrix_out, "%zu: ", i+1);
-      element_print(matrix_out, line[i]);
-      rmatrix_print(matrix_out, line[i].R_matrix);
+      element_print(matrix_out, line.data[i]);
+      rmatrix_print(matrix_out, line.data[i].R_matrix);
       fprintf(matrix_out, "\n");
     }
     fclose(matrix_out);
@@ -158,7 +159,7 @@ int main(int argc, char **argv) {
 
   printf("\n");
 
-  arrfree(line);
+  SDM_ARRAY_FREE(line);
 
   return 0;
 }

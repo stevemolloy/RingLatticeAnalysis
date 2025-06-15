@@ -83,27 +83,27 @@ void track_thru(double *beam, size_t n_particles, Element element) {
   }
 }
 
-void track(double *beam, size_t n_particles, Element *line, size_t n_elements) {
+void track(double *beam, size_t n_particles, Line line, size_t n_elements) {
   for (size_t i=0; i<n_elements; i++) {
-    track_thru(beam, n_particles, line[i]);
+    track_thru(beam, n_particles, line.data[i]);
   }
 }
 
-double synch_rad_integral_2(Element *line) {
+double synch_rad_integral_2(Line line) {
   double I_2 = 0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    double rho = bending_radius_of_element(line[i]);
-    I_2 += element_length(line[i]) / pow(rho, 2);
+  for (size_t i=0; i<line.length; i++) {
+    double rho = bending_radius_of_element(line.data[i]);
+    I_2 += element_length(line.data[i]) / pow(rho, 2);
   }
 
   return I_2;
 }
 
-double synch_rad_integral_3(Element *line) {
+double synch_rad_integral_3(Line line) {
   double I_3 = 0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    double rho_abs = fabs(bending_radius_of_element(line[i]));
-    I_3 += element_length(line[i]) / pow(rho_abs, 3);
+  for (size_t i=0; i<line.length; i++) {
+    double rho_abs = fabs(bending_radius_of_element(line.data[i]));
+    I_3 += element_length(line.data[i]) / pow(rho_abs, 3);
   }
 
   return I_3;
@@ -331,199 +331,199 @@ void rmatrix_print(FILE *file, double mat[BEAM_DOFS*BEAM_DOFS]) {
   }
 }
 
-Element create_element(sdm_arena_t *mem_arena, char *name, char **cursor) {
-  Element result = {0};
-  size_t name_len = strlen(name);
-  memcpy(result.name, name, name_len >= ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
+// Element create_element(sdm_arena_t *mem_arena, char *name, char **cursor) {
+//   Element result = {0};
+//   size_t name_len = strlen(name);
+//   memcpy(result.name, name, name_len >= ELENAME_MAX_LEN ? ELENAME_MAX_LEN-1 : name_len);
+//
+//   str2dbl_hashmap* kv_pairs = NULL;
+//
+//   while ((**cursor == ' ') | (**cursor == ':')) (*cursor)++;
+//
+//   char type[50] = {0};
+//   size_t i = 0;
+//   while (isalpha(**cursor)) {
+//     type[i++] = (char)toupper(**cursor);
+//     (*cursor)++;
+//   }
+//
+//   if (strcmp(type, "DRIFT") == 0)           result.type = ELETYPE_DRIFT;
+//   else if (strcmp(type, "KICKER") == 0)     result.type = ELETYPE_DRIFT;
+//   else if (strcmp(type, "MONITOR") == 0)    result.type = ELETYPE_DRIFT;
+//   else if (strcmp(type, "MARKER") == 0)     result.type = ELETYPE_DRIFT;
+//   else if (strcmp(type, "SBEND") == 0)      result.type = ELETYPE_SBEND;
+//   else if (strcmp(type, "QUADRUPOLE") == 0) result.type = ELETYPE_QUAD;
+//   else if (strcmp(type, "SEXTUPOLE") == 0)  result.type = ELETYPE_SEXTUPOLE;
+//   else if (strcmp(type, "MULTIPOLE") == 0)  result.type = ELETYPE_MULTIPOLE;
+//   else if (strcmp(type, "RFCAVITY") == 0)   result.type = ELETYPE_CAVITY;
+//   else if (strcmp(type, "LINE") == 0) {
+//     *cursor -= 4; // Safe since we just extracted "LINE" from this, so this puts the cursor back there.
+//     return result;
+//   } else {
+//     fprintf(stderr, "ERROR: Unable to parse elements of type %s\n", type);
+//     printf("%s\n", *cursor);
+//     exit(1);
+//   }
+//
+//   while ((**cursor==' ') | (**cursor==',')) (*cursor)++;
+//
+//   bool finding_key = true;
+//   bool finding_val = false;
+//   char *key = sdm_arena_alloc(mem_arena, 100*sizeof(char));
+//   size_t key_index = 0;
+//   double val = 0.0;
+//   for (;;) {
+//     if (**cursor == ';') {
+//       break;
+//     }
+//     if (finding_key & !finding_val) {
+//       if (isvalididchar(**cursor)) {
+//         key[key_index] = **cursor;
+//         key_index++;
+//         (*cursor)++;
+//       } else {
+//         if ((**cursor==' ') | (**cursor=='=')) {
+//           while (!(isdigit(**cursor) | (**cursor=='+') | (**cursor=='-')) & (**cursor!=';')) {
+//             (*cursor)++;
+//           }
+//           if (**cursor == ';') {
+//             fprintf(stderr, "Element definition terminated early");
+//             exit(1);
+//           }
+//           finding_key = false;
+//           finding_val = true;
+//         }
+//       }
+//     } else if (finding_val & !finding_key) {
+//       val = strtod(*cursor, cursor);
+//       shput(kv_pairs, key, val);
+//       finding_key = true;
+//       finding_val = false;
+//       key = sdm_arena_alloc(mem_arena, 100*sizeof(char));
+//       key_index = 0;
+//       val = 0.0;
+//       while ((**cursor==',') | (**cursor==' ')) {
+//         (*cursor)++;
+//       }
+//     }
+//   }
+//
+//   if (kv_pairs == NULL) {
+//     shfree(kv_pairs);
+//     make_r_matrix(&result);
+//     return result;
+//   }
+//
+//   switch (result.type) {
+//     case ELETYPE_DRIFT:
+//       result.as.drift.length = shget(kv_pairs, "L");
+//       break;
+//     case ELETYPE_QUAD:
+//       result.as.quad.length = shget(kv_pairs, "L");
+//       result.as.quad.K1     = shget(kv_pairs, "K1");
+//       break;
+//     case ELETYPE_SBEND:
+//       result.as.sbend.length = shget(kv_pairs, "L");
+//       result.as.sbend.K1     = shget(kv_pairs, "K1");
+//       result.as.sbend.angle  = shget(kv_pairs, "ANGLE");
+//       result.as.sbend.E1     = shget(kv_pairs, "E1");
+//       result.as.sbend.E2     = shget(kv_pairs, "E2");
+//       break;
+//     case ELETYPE_MULTIPOLE:
+//       result.as.multipole.length = shget(kv_pairs, "L");
+//       result.as.multipole.K1L    = shget(kv_pairs, "K1L");
+//       result.as.multipole.K2L    = shget(kv_pairs, "K2L");
+//       result.as.multipole.K3L    = shget(kv_pairs, "K3L");
+//       break;
+//     case ELETYPE_SEXTUPOLE:
+//       result.as.sextupole.length = shget(kv_pairs, "L");
+//       result.as.sextupole.K2     = shget(kv_pairs, "K2");
+//       break;
+//     case ELETYPE_CAVITY:
+//       result.as.cavity.length   = shget(kv_pairs, "L");
+//       result.as.cavity.voltage  = shget(kv_pairs, "VOLT");
+//       result.as.cavity.harmonic = shget(kv_pairs, "harm");
+//       result.as.cavity.lag      = shget(kv_pairs, "lag");
+//       break;
+//     case ELETYPE_OCTUPOLE:
+//       break;
+//   }
+//
+//   Element new_result = {0};
+//   if (result.type == ELETYPE_MULTIPOLE) {
+//     double K1L = result.as.multipole.K1L;
+//     double K2L = result.as.multipole.K2L;
+//     double K3L = result.as.multipole.K3L;
+//     memcpy(new_result.name, result.name, strlen(result.name));
+//     if ((K2L == 0.0) & (K3L == 0.0)) {
+//       // This is actually a quad
+//       new_result.type = ELETYPE_QUAD;
+//       new_result.as.quad.length = result.as.multipole.length;
+//       new_result.as.quad.K1 = K1L;
+//       result = new_result;
+//     } else if ((K1L == 0.0) & (K3L == 0.0)) {
+//       // This is actually a sextupole
+//       new_result.type = ELETYPE_SEXTUPOLE;
+//       new_result.as.sextupole.length = result.as.multipole.length;
+//       new_result.as.sextupole.K2 = K2L;
+//       result = new_result;
+//     } else if ((K1L == 0.0) & (K2L == 0.0)) {
+//       // This is actually an octupole
+//       new_result.type = ELETYPE_OCTUPOLE;
+//       new_result.as.octupole.length = result.as.multipole.length;
+//       new_result.as.octupole.K3 = K3L;
+//       result = new_result;
+//     } else if ((K1L == 0.0) & (K2L == 0.0) & (K3L == 0.0)) {
+//       // This is actually a drift
+//       new_result.type = ELETYPE_DRIFT;
+//       new_result.as.drift.length = result.as.multipole.length;
+//       result = new_result;
+//     }
+//   }
+//
+//   make_r_matrix(&result);
+//
+//   shfree(kv_pairs);
+//
+//   return result;
+// }
 
-  str2dbl_hashmap* kv_pairs = NULL;
-
-  while ((**cursor == ' ') | (**cursor == ':')) (*cursor)++;
-
-  char type[50] = {0};
-  size_t i = 0;
-  while (isalpha(**cursor)) {
-    type[i++] = (char)toupper(**cursor);
-    (*cursor)++;
-  }
-
-  if (strcmp(type, "DRIFT") == 0)           result.type = ELETYPE_DRIFT;
-  else if (strcmp(type, "KICKER") == 0)     result.type = ELETYPE_DRIFT;
-  else if (strcmp(type, "MONITOR") == 0)    result.type = ELETYPE_DRIFT;
-  else if (strcmp(type, "MARKER") == 0)     result.type = ELETYPE_DRIFT;
-  else if (strcmp(type, "SBEND") == 0)      result.type = ELETYPE_SBEND;
-  else if (strcmp(type, "QUADRUPOLE") == 0) result.type = ELETYPE_QUAD;
-  else if (strcmp(type, "SEXTUPOLE") == 0)  result.type = ELETYPE_SEXTUPOLE;
-  else if (strcmp(type, "MULTIPOLE") == 0)  result.type = ELETYPE_MULTIPOLE;
-  else if (strcmp(type, "RFCAVITY") == 0)   result.type = ELETYPE_CAVITY;
-  else if (strcmp(type, "LINE") == 0) {
-    *cursor -= 4; // Safe since we just extracted "LINE" from this, so this puts the cursor back there.
-    return result;
-  } else {
-    fprintf(stderr, "ERROR: Unable to parse elements of type %s\n", type);
-    printf("%s\n", *cursor);
-    exit(1);
-  }
-
-  while ((**cursor==' ') | (**cursor==',')) (*cursor)++;
-
-  bool finding_key = true;
-  bool finding_val = false;
-  char *key = sdm_arena_alloc(mem_arena, 100*sizeof(char));
-  size_t key_index = 0;
-  double val = 0.0;
-  for (;;) {
-    if (**cursor == ';') {
-      break;
-    }
-    if (finding_key & !finding_val) {
-      if (isvalididchar(**cursor)) {
-        key[key_index] = **cursor;
-        key_index++;
-        (*cursor)++;
-      } else {
-        if ((**cursor==' ') | (**cursor=='=')) {
-          while (!(isdigit(**cursor) | (**cursor=='+') | (**cursor=='-')) & (**cursor!=';')) {
-            (*cursor)++;
-          }
-          if (**cursor == ';') {
-            fprintf(stderr, "Element definition terminated early");
-            exit(1);
-          }
-          finding_key = false;
-          finding_val = true;
-        }
-      }
-    } else if (finding_val & !finding_key) {
-      val = strtod(*cursor, cursor);
-      shput(kv_pairs, key, val);
-      finding_key = true;
-      finding_val = false;
-      key = sdm_arena_alloc(mem_arena, 100*sizeof(char));
-      key_index = 0;
-      val = 0.0;
-      while ((**cursor==',') | (**cursor==' ')) {
-        (*cursor)++;
-      }
-    }
-  }
-
-  if (kv_pairs == NULL) {
-    shfree(kv_pairs);
-    make_r_matrix(&result);
-    return result;
-  }
-
-  switch (result.type) {
-    case ELETYPE_DRIFT:
-      result.as.drift.length = shget(kv_pairs, "L");
-      break;
-    case ELETYPE_QUAD:
-      result.as.quad.length = shget(kv_pairs, "L");
-      result.as.quad.K1     = shget(kv_pairs, "K1");
-      break;
-    case ELETYPE_SBEND:
-      result.as.sbend.length = shget(kv_pairs, "L");
-      result.as.sbend.K1     = shget(kv_pairs, "K1");
-      result.as.sbend.angle  = shget(kv_pairs, "ANGLE");
-      result.as.sbend.E1     = shget(kv_pairs, "E1");
-      result.as.sbend.E2     = shget(kv_pairs, "E2");
-      break;
-    case ELETYPE_MULTIPOLE:
-      result.as.multipole.length = shget(kv_pairs, "L");
-      result.as.multipole.K1L    = shget(kv_pairs, "K1L");
-      result.as.multipole.K2L    = shget(kv_pairs, "K2L");
-      result.as.multipole.K3L    = shget(kv_pairs, "K3L");
-      break;
-    case ELETYPE_SEXTUPOLE:
-      result.as.sextupole.length = shget(kv_pairs, "L");
-      result.as.sextupole.K2     = shget(kv_pairs, "K2");
-      break;
-    case ELETYPE_CAVITY:
-      result.as.cavity.length   = shget(kv_pairs, "L");
-      result.as.cavity.voltage  = shget(kv_pairs, "VOLT");
-      result.as.cavity.harmonic = shget(kv_pairs, "harm");
-      result.as.cavity.lag      = shget(kv_pairs, "lag");
-      break;
-    case ELETYPE_OCTUPOLE:
-      break;
-  }
-
-  Element new_result = {0};
-  if (result.type == ELETYPE_MULTIPOLE) {
-    double K1L = result.as.multipole.K1L;
-    double K2L = result.as.multipole.K2L;
-    double K3L = result.as.multipole.K3L;
-    memcpy(new_result.name, result.name, strlen(result.name));
-    if ((K2L == 0.0) & (K3L == 0.0)) {
-      // This is actually a quad
-      new_result.type = ELETYPE_QUAD;
-      new_result.as.quad.length = result.as.multipole.length;
-      new_result.as.quad.K1 = K1L;
-      result = new_result;
-    } else if ((K1L == 0.0) & (K3L == 0.0)) {
-      // This is actually a sextupole
-      new_result.type = ELETYPE_SEXTUPOLE;
-      new_result.as.sextupole.length = result.as.multipole.length;
-      new_result.as.sextupole.K2 = K2L;
-      result = new_result;
-    } else if ((K1L == 0.0) & (K2L == 0.0)) {
-      // This is actually an octupole
-      new_result.type = ELETYPE_OCTUPOLE;
-      new_result.as.octupole.length = result.as.multipole.length;
-      new_result.as.octupole.K3 = K3L;
-      result = new_result;
-    } else if ((K1L == 0.0) & (K2L == 0.0) & (K3L == 0.0)) {
-      // This is actually a drift
-      new_result.type = ELETYPE_DRIFT;
-      new_result.as.drift.length = result.as.multipole.length;
-      result = new_result;
-    }
-  }
-
-  make_r_matrix(&result);
-
-  shfree(kv_pairs);
-
-  return result;
-}
-
-char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor) {
-  sdm_arena_t mem_arena = {0};
-  sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
-
-  while (*cursor != '\0') {
-    if (*cursor == '!') {
-      while (*cursor != '\n') cursor++;
-      cursor++;
-      continue;
-    }
-    if (isalpha(*cursor)) {
-      char *element_name = cursor;
-      while (isvalididchar(*cursor)) {
-        cursor++;
-      }
-      *cursor = '\0';
-      cursor++;
-
-      if (strcmp(element_name, "RF_ON") == 0) {
-        while (*cursor != '\n') cursor++;
-        continue;
-      }
-
-      shput(*element_library, element_name, arrput(*element_list, 
-                                                  create_element(&mem_arena, element_name, &cursor)));
-    } else {
-      cursor++;
-    }
-    if (strncmp(cursor, "LINE", 4) == 0) {
-      break;
-    }
-  }
-
-  sdm_arena_free(&mem_arena);
-  return cursor;
-}
+// char *populate_element_library(ElementLibrary **element_library, Element **element_list, char *cursor) {
+//   sdm_arena_t mem_arena = {0};
+//   sdm_arena_init(&mem_arena, SDM_ARENA_DEFAULT_CAP);
+//
+//   while (*cursor != '\0') {
+//     if (*cursor == '!') {
+//       while (*cursor != '\n') cursor++;
+//       cursor++;
+//       continue;
+//     }
+//     if (isalpha(*cursor)) {
+//       char *element_name = cursor;
+//       while (isvalididchar(*cursor)) {
+//         cursor++;
+//       }
+//       *cursor = '\0';
+//       cursor++;
+//
+//       if (strcmp(element_name, "RF_ON") == 0) {
+//         while (*cursor != '\n') cursor++;
+//         continue;
+//       }
+//
+//       shput(*element_library, element_name, arrput(*element_list, 
+//                                                   create_element(&mem_arena, element_name, &cursor)));
+//     } else {
+//       cursor++;
+//     }
+//     if (strncmp(cursor, "LINE", 4) == 0) {
+//       break;
+//     }
+//   }
+//
+//   sdm_arena_free(&mem_arena);
+//   return cursor;
+// }
 
 void element_print(FILE *sink, Element element) {
   fprintf(sink, "%s: ", element.name);
@@ -571,12 +571,12 @@ void element_print(FILE *sink, Element element) {
   }
 }
 
-double calculate_line_angle(Element *line) {
+double calculate_line_angle(Line line) {
   double total_angle = 0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    switch (line[i].type) {
+  for (size_t i=0; i<line.length; i++) {
+    switch (line.data[i].type) {
       case ELETYPE_SBEND:
-        total_angle += line[i].as.sbend.angle;
+        total_angle += line.data[i].as.sbend.angle;
         break;
       case ELETYPE_QUAD:
       case ELETYPE_DRIFT:
@@ -590,34 +590,34 @@ double calculate_line_angle(Element *line) {
   return total_angle;
 }
 
-double calculate_line_length(Element *line) {
+double calculate_line_length(Line line) {
   double total_length = 0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    double ele_len = element_length(line[i]);
+  for (size_t i=0; i<line.length; i++) {
+    double ele_len = element_length(line.data[i]);
     total_length += ele_len;
   }
   return total_length;
 }
 
-void create_line(char *cursor, Element **line, ElementLibrary *element_library) {
-  advance_to_char(&cursor, '(');
-  while (*cursor != ')') {
-    while (!isalpha(*cursor) & (*cursor != ')')) {
-      cursor++;
-    }
-    if (*cursor == ')') {
-      break;
-    }
-    char *temp_cursor = cursor;
-    while (isvalididchar(*temp_cursor)) {
-      temp_cursor++;
-    }
-    *temp_cursor = '\0';
-    Element ele = shget(element_library, cursor);
-    arrput(*line, ele);
-    cursor = temp_cursor + 1;
-  }
-}
+// void create_line(char *cursor, Element **line, ElementLibrary *element_library) {
+//   advance_to_char(&cursor, '(');
+//   while (*cursor != ')') {
+//     while (!isalpha(*cursor) & (*cursor != ')')) {
+//       cursor++;
+//     }
+//     if (*cursor == ')') {
+//       break;
+//     }
+//     char *temp_cursor = cursor;
+//     while (isvalididchar(*temp_cursor)) {
+//       temp_cursor++;
+//     }
+//     *temp_cursor = '\0';
+//     Element ele = shget(element_library, cursor);
+//     arrput(*line, ele);
+//     cursor = temp_cursor + 1;
+//   }
+// }
 
 double e_loss_per_turn(double I2, double gamma0) {
   return ERADIUS_TIMES_RESTMASS * I2 * pow(gamma0, 4);
@@ -673,7 +673,7 @@ double get_curlyH(Element element, double eta0, double etap0, double beta0, doub
   return I5 / (L*fabs(cube(h)));
 }
 
-void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *lin_opt_params, double *I_synch) {
+void propagate_linear_optics(Line line, double *line_matrix, LinOptsParams *lin_opt_params, double *I_synch) {
   double S = 0.0;
   arrput(lin_opt_params->Ss, 0.0);
 
@@ -710,19 +710,19 @@ void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *
   arrput(lin_opt_params->element_etas, eta_vec[0]);
   arrput(lin_opt_params->element_etaps, eta_vec[1]);
 
-  for (size_t i=0; i<arrlenu(line); i++) {
-    arrput(lin_opt_params->element_curlyH, get_curlyH(line[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
+  for (size_t i=0; i<line.length; i++) {
+    arrput(lin_opt_params->element_curlyH, get_curlyH(line.data[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
 
-    S += element_length(line[i]);
+    S += element_length(line.data[i]);
     arrput(lin_opt_params->Ss, S);
 
-    advance_twiss_matrix(twiss_mat, line[i]);
+    advance_twiss_matrix(twiss_mat, line.data[i]);
 
     arrput(lin_opt_params->element_beta_xs, twiss_mat[0*BEAM_DOFS + 0]);
     arrput(lin_opt_params->element_beta_ys, twiss_mat[2*BEAM_DOFS + 2]);
 
     double temp_eta_vec[3] = {0};
-    matrix_multiply(line[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
+    matrix_multiply(line.data[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
     memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
     arrput(lin_opt_params->element_etas, eta_vec[0]);
     arrput(lin_opt_params->element_etaps, eta_vec[1]);
@@ -733,11 +733,11 @@ void propagate_linear_optics(Element *line, double *line_matrix, LinOptsParams *
   I_synch[2] = synch_rad_integral_3(line);
   I_synch[3] = 0.0;
   I_synch[4] = 0.0;
-  for (size_t i=0; i<arrlenu(line); i++) {
-    if (line[i].type == ELETYPE_SBEND) {
-      double angle = line[i].as.sbend.angle;
-      double L = line[i].as.sbend.length;
-      double K1 = line[i].as.sbend.K1;
+  for (size_t i=0; i<line.length; i++) {
+    if (line.data[i].type == ELETYPE_SBEND) {
+      double angle = line.data[i].as.sbend.angle;
+      double L = line.data[i].as.sbend.length;
+      double K1 = line.data[i].as.sbend.K1;
       double h = angle / L;
       if (h == 0.0) continue;
 
@@ -807,12 +807,12 @@ void apply_matrix_n_times(double* result, double *matrix, size_t N) {
   }
 }
 
-void get_line_matrix(double *matrix, Element *line) {
+void get_line_matrix(double *matrix, Line line) {
   memcpy(matrix, SIXBYSIX_IDENTITY, BEAM_DOFS*BEAM_DOFS*sizeof(double));
 
-  for (size_t i=0; i<arrlenu(line); i++) {
+  for (size_t i=0; i<line.length; i++) {
     double temp_result[BEAM_DOFS*BEAM_DOFS] = {0};
-    matrix_multiply(line[i].R_matrix, matrix, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS);
+    matrix_multiply(line.data[i].R_matrix, matrix, temp_result, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS, BEAM_DOFS);
     memcpy(matrix, temp_result, BEAM_DOFS*BEAM_DOFS*sizeof(double));
   }
 }
@@ -821,23 +821,23 @@ bool lattice_is_closed(double total_angle) {
   return !(fabs(total_angle - 2*M_PI) > ANGLE_EPSILON);
 }
 
-void generate_lattice_from_mad8_file(const char *filename, Element **line) {
-  char *buffer = read_entire_file(filename);
-  char *cursor = buffer;
-
-  cursor = join_lines(cursor);
-
-  Element *element_list = NULL;
-  ElementLibrary *element_library = NULL;
-  cursor = populate_element_library(&element_library, &element_list, cursor);
-
-  create_line(cursor, line, element_library);
-
-  arrfree(element_list);
-  shfree(element_library);
-
-  free(buffer);
-}
+// void generate_lattice_from_mad8_file(const char *filename, Element **line) {
+//   char *buffer = read_entire_file(filename);
+//   char *cursor = buffer;
+//
+//   cursor = join_lines(cursor);
+//
+//   Element *element_list = NULL;
+//   ElementLibrary *element_library = NULL;
+//   cursor = populate_element_library(&element_library, &element_list, cursor);
+//
+//   create_line(cursor, line, element_library);
+//
+//   arrfree(element_list);
+//   shfree(element_library);
+//
+//   free(buffer);
+// }
 
 size_t starts_with_float(const char *input) {
   char *endptr;
@@ -1003,7 +1003,8 @@ bool tokenise_tracy_file(sdm_string_view *file_contents, Token **tokens) {
   return true;
 }
 
-void generate_lattice_from_tracy_file(const char *filename, Element **line) {
+Line generate_lattice_from_tracy_file(const char *filename) {
+  Line line = {0};
   char *buffer = read_entire_file(filename);
   sdm_string_view file_contents = sdm_cstr_as_sv(buffer);
 
@@ -1035,7 +1036,8 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
       Line line_to_use = shget(lines, line_name_to_use);
       free(line_name_to_use);
       for (size_t j=0; j<line_to_use.length; j++) {
-        arrput((*line), line_to_use.data[j]);
+        SDM_ARRAY_PUSH(line, line_to_use.data[j]);
+        // arrput((*line), line_to_use.data[j]);
       }
       token = tokens[++i];
       assert(token.type == TOKEN_TYPE_SEMICOLON);
@@ -1188,5 +1190,7 @@ void generate_lattice_from_tracy_file(const char *filename, Element **line) {
 
   arrfree(tokens);
   free(buffer);
+
+  return line;
 }
 
