@@ -258,12 +258,12 @@ bool test_synchrad_integrals(void) {
   apply_matrix_n_times(total_matrix, line_matrix, periodicity);
 
   LinOptsParams lin_opt_params = {
-    .Ss = NULL,
-    .element_beta_xs = NULL,
-    .element_beta_ys = NULL,
-    .element_etas = NULL,
-    .element_etaps = NULL,
-    .element_curlyH = NULL,
+    .Ss = {0},
+    .element_beta_xs = {0},
+    .element_beta_ys = {0},
+    .element_etas = {0},
+    .element_etaps = {0},
+    .element_curlyH = {0},
   };
   double I[5] = {0};
   propagate_linear_optics(line, line_matrix, &lin_opt_params, I);
@@ -274,12 +274,12 @@ bool test_synchrad_integrals(void) {
   }
   fclose(synradint_file);
 
-  arrfree(lin_opt_params.element_etas);
-  arrfree(lin_opt_params.element_etaps);
-  arrfree(lin_opt_params.element_beta_xs);
-  arrfree(lin_opt_params.element_beta_ys);
-  arrfree(lin_opt_params.element_curlyH);
-  arrfree(lin_opt_params.Ss);
+  SDM_ARRAY_FREE(lin_opt_params.element_etas);
+  SDM_ARRAY_FREE(lin_opt_params.element_etaps);
+  SDM_ARRAY_FREE(lin_opt_params.element_beta_xs);
+  SDM_ARRAY_FREE(lin_opt_params.element_beta_ys);
+  SDM_ARRAY_FREE(lin_opt_params.element_curlyH);
+  SDM_ARRAY_FREE(lin_opt_params.Ss);
 
   SDM_ARRAY_FREE(line);
 
@@ -380,19 +380,19 @@ bool test_twiss_propagation(void) {
   fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
   for (size_t i=0; i<line.length; i++) {
     fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
-				lin_opt_params.Ss[i],
-				lin_opt_params.element_beta_xs[i],
-				lin_opt_params.element_beta_ys[i],
-				lin_opt_params.element_etas[i]);
+				lin_opt_params.Ss.data[i],
+				lin_opt_params.element_beta_xs.data[i],
+				lin_opt_params.element_beta_ys.data[i],
+				lin_opt_params.element_etas.data[i]);
   }
   fclose(twiss_file);
 
-  arrfree(lin_opt_params.element_etas);
-  arrfree(lin_opt_params.element_etaps);
-  arrfree(lin_opt_params.element_beta_xs);
-  arrfree(lin_opt_params.element_beta_ys);
-  arrfree(lin_opt_params.element_curlyH);
-  arrfree(lin_opt_params.Ss);
+  SDM_ARRAY_FREE(lin_opt_params.element_etas);
+  SDM_ARRAY_FREE(lin_opt_params.element_etaps);
+  SDM_ARRAY_FREE(lin_opt_params.element_beta_xs);
+  SDM_ARRAY_FREE(lin_opt_params.element_beta_ys);
+  SDM_ARRAY_FREE(lin_opt_params.element_curlyH);
+  SDM_ARRAY_FREE(lin_opt_params.Ss);
 
   SDM_ARRAY_FREE(line);
 

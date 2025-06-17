@@ -67,10 +67,10 @@ int main(int argc, char **argv) {
       fprintf(twiss_file, "S / m, beta_x / m, beta_y / m, eta_x / m\n");
       for (size_t i=0; i<line.length; i++) {
         fprintf(twiss_file, "%0.6e, %0.6e, %0.6e, %0.6e\n",
-		    		lin_opt_params.Ss[i],
-		    		lin_opt_params.element_beta_xs[i],
-		    		lin_opt_params.element_beta_ys[i],
-		    		lin_opt_params.element_etas[i]);
+		    		lin_opt_params.Ss.data[i],
+		    		lin_opt_params.element_beta_xs.data[i],
+		    		lin_opt_params.element_beta_ys.data[i],
+		    		lin_opt_params.element_etas.data[i]);
       }
       fclose(twiss_file);
     }
@@ -83,12 +83,12 @@ int main(int argc, char **argv) {
     j_x = 1.0f - I_4/I_2;
     T_0 = total_length / C;
 
-    arrfree(lin_opt_params.element_etas);
-    arrfree(lin_opt_params.element_etaps);
-    arrfree(lin_opt_params.element_beta_xs);
-    arrfree(lin_opt_params.element_beta_ys);
-    arrfree(lin_opt_params.element_curlyH);
-    arrfree(lin_opt_params.Ss);
+    SDM_ARRAY_FREE(lin_opt_params.element_etas);
+    SDM_ARRAY_FREE(lin_opt_params.element_etaps);
+    SDM_ARRAY_FREE(lin_opt_params.element_beta_xs);
+    SDM_ARRAY_FREE(lin_opt_params.element_beta_ys);
+    SDM_ARRAY_FREE(lin_opt_params.element_curlyH);
+    SDM_ARRAY_FREE(lin_opt_params.Ss);
   } else {
     get_line_matrix(line_matrix, line);
     apply_matrix_n_times(total_matrix, line_matrix, args.periodicity);
@@ -140,12 +140,12 @@ int main(int argc, char **argv) {
       printf("Energy spread:        %0.3e\n", sqrt(energy_spread(I_2, I_3, I_4, gamma_0)));
     }
 
-    arrfree(lin_opt_params.element_etas);
-    arrfree(lin_opt_params.element_etaps);
-    arrfree(lin_opt_params.element_beta_xs);
-    arrfree(lin_opt_params.element_beta_ys);
-    arrfree(lin_opt_params.element_curlyH);
-    arrfree(lin_opt_params.Ss);
+    SDM_ARRAY_FREE(lin_opt_params.element_etas);
+    SDM_ARRAY_FREE(lin_opt_params.element_etaps);
+    SDM_ARRAY_FREE(lin_opt_params.element_beta_xs);
+    SDM_ARRAY_FREE(lin_opt_params.element_beta_ys);
+    SDM_ARRAY_FREE(lin_opt_params.element_curlyH);
+    SDM_ARRAY_FREE(lin_opt_params.Ss);
 
     FILE *matrix_out = fopen("matrix_out.txt", "w");
     for (size_t i=0; i<line.length; i++) {

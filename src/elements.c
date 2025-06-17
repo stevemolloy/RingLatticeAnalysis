@@ -675,7 +675,7 @@ double get_curlyH(Element element, double eta0, double etap0, double beta0, doub
 
 void propagate_linear_optics(Line line, double *line_matrix, LinOptsParams *lin_opt_params, double *I_synch) {
   double S = 0.0;
-  arrput(lin_opt_params->Ss, 0.0);
+  SDM_ARRAY_PUSH(lin_opt_params->Ss, 0.0);
 
   get_line_matrix(line_matrix, line);
 
@@ -705,27 +705,27 @@ void propagate_linear_optics(Line line, double *line_matrix, LinOptsParams *lin_
     0,      0,        0,      0,        0,     0,
   };
 
-  arrput(lin_opt_params->element_beta_xs, beta_x);
-  arrput(lin_opt_params->element_beta_ys, beta_y);
-  arrput(lin_opt_params->element_etas, eta_vec[0]);
-  arrput(lin_opt_params->element_etaps, eta_vec[1]);
+  SDM_ARRAY_PUSH(lin_opt_params->element_beta_xs, beta_x);
+  SDM_ARRAY_PUSH(lin_opt_params->element_beta_ys, beta_y);
+  SDM_ARRAY_PUSH(lin_opt_params->element_etas, eta_vec[0]);
+  SDM_ARRAY_PUSH(lin_opt_params->element_etaps, eta_vec[1]);
 
   for (size_t i=0; i<line.length; i++) {
-    arrput(lin_opt_params->element_curlyH, get_curlyH(line.data[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
+    SDM_ARRAY_PUSH(lin_opt_params->element_curlyH, get_curlyH(line.data[i], eta_vec[0], eta_vec[1], twiss_mat[0*BEAM_DOFS + 0], -twiss_mat[0*BEAM_DOFS + 1]));
 
     S += element_length(line.data[i]);
-    arrput(lin_opt_params->Ss, S);
+    SDM_ARRAY_PUSH(lin_opt_params->Ss, S);
 
     advance_twiss_matrix(twiss_mat, line.data[i]);
 
-    arrput(lin_opt_params->element_beta_xs, twiss_mat[0*BEAM_DOFS + 0]);
-    arrput(lin_opt_params->element_beta_ys, twiss_mat[2*BEAM_DOFS + 2]);
+    SDM_ARRAY_PUSH(lin_opt_params->element_beta_xs, twiss_mat[0*BEAM_DOFS + 0]);
+    SDM_ARRAY_PUSH(lin_opt_params->element_beta_ys, twiss_mat[2*BEAM_DOFS + 2]);
 
     double temp_eta_vec[3] = {0};
     matrix_multiply(line.data[i].eta_prop_matrix, eta_vec, temp_eta_vec, 3, 3, 3, 1);
     memcpy(eta_vec, temp_eta_vec, 3*sizeof(double));
-    arrput(lin_opt_params->element_etas, eta_vec[0]);
-    arrput(lin_opt_params->element_etaps, eta_vec[1]);
+    SDM_ARRAY_PUSH(lin_opt_params->element_etas, eta_vec[0]);
+    SDM_ARRAY_PUSH(lin_opt_params->element_etaps, eta_vec[1]);
   }
 
   I_synch[0] = R56;
@@ -755,12 +755,12 @@ void propagate_linear_optics(Line line, double *line_matrix, LinOptsParams *lin_
         coslike_func = cosh;
         sign = -1.0;
       }
-      double mean_eta = lin_opt_params->element_etas[i] * sinlike_func(omega*L) / (omega*L)
-                + sign * lin_opt_params->element_etaps[i] * (1 - coslike_func(omega*L)) / (omega*omega*L)
+      double mean_eta = lin_opt_params->element_etas.data[i] * sinlike_func(omega*L) / (omega*L)
+                + sign * lin_opt_params->element_etaps.data[i] * (1 - coslike_func(omega*L)) / (omega*omega*L)
                 + sign* h * (omega*L - sinlike_func(omega*L))/(pow(omega,3)*L);
 
       I_synch[3] += (mean_eta * h * L * (2*K1 + h*h));
-      I_synch[4] += (L * pow(fabs(h), 3) * lin_opt_params->element_curlyH[i]);
+      I_synch[4] += (L * pow(fabs(h), 3) * lin_opt_params->element_curlyH.data[i]);
     }
   }
 }

@@ -104,15 +104,6 @@ typedef struct {
   Element value;
 } ElementLibrary;
 
-typedef struct {
-  double *Ss;
-  double *element_beta_xs;
-  double *element_beta_ys;
-  double *element_etas;
-  double *element_etaps;
-  double *element_curlyH;
-} LinOptsParams;
-
 typedef enum {
   TOKEN_TYPE_SYMBOL,
   TOKEN_TYPE_NUMBER,
@@ -161,6 +152,15 @@ typedef struct {
   char *key;
   Line value;
 } LineItem;
+
+typedef struct {
+  DoubleArray Ss;
+  DoubleArray element_beta_xs;
+  DoubleArray element_beta_ys;
+  DoubleArray element_etas;
+  DoubleArray element_etaps;
+  DoubleArray element_curlyH;
+} LinOptsParams;
 
 void track_thru(double *beam, size_t n_particles, Element element);
 void track(double *beam, size_t n_particles, Line line, size_t n_elements);
