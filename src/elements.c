@@ -862,16 +862,16 @@ int prec(Token tok) {
   exit(1);
 }
 
-double evaluate_token_string(Token *tokens, size_t *index, ParsingVar *variables) {
+double evaluate_token_string(TokenArray tokens, size_t *index, ParsingVar *variables) {
   DoubleArray return_stack = {0};
   SDM_ENSURE_ARRAY_MIN_CAP(return_stack, 1024);
   TokenArray operator_stack = {0};
   SDM_ENSURE_ARRAY_MIN_CAP(operator_stack, 1024);
 
-  Token token = tokens[*index];
+  Token token = tokens.data[*index];
   
   bool done_parsing = false;
-  while (((*index) < arrlenu(tokens)) && !done_parsing) {
+  while (((*index) < tokens.length) && !done_parsing) {
     if (token.type == TOKEN_TYPE_SEMICOLON) {
       break;
     }
@@ -922,7 +922,7 @@ double evaluate_token_string(Token *tokens, size_t *index, ParsingVar *variables
       } break;
     }
     (*index)++;
-    token = tokens[*index];
+    token = tokens.data[*index];
   }
 
   while (operator_stack.length > 0) {
@@ -964,7 +964,8 @@ char *token_strings[TOKEN_TYPE_COUNT] = {
   [TOKEN_TYPE_COMMA] =      "TOKEN_TYPE_COMMA",
 };
 
-bool tokenise_tracy_file(sdm_string_view *file_contents, Token **tokens) {
+TokenArray tokenise_tracy_file(sdm_string_view *file_contents) {
+  TokenArray tokens = {0};
   sdm_sv_trim(file_contents);
   while (file_contents->length > 0) {
     Token token = {0};
@@ -990,17 +991,17 @@ bool tokenise_tracy_file(sdm_string_view *file_contents, Token **tokens) {
     else if (file_contents->data[0] == ')') token.type = TOKEN_TYPE_CPAREN;
     else {
       fprintf(stderr, "Trying to parse an unknown character, %c\n", file_contents->data[0]);
-      return false;
+      exit(1);
     }
 
     token.content = sdm_pop_by_length(file_contents, jump_len);
 
-    arrput((*tokens), token);
+    SDM_ARRAY_PUSH(tokens, token);
 
     sdm_sv_trim(file_contents);
   }
   
-  return true;
+  return tokens;
 }
 
 Line generate_lattice_from_tracy_file(const char *filename) {
@@ -1010,14 +1011,13 @@ Line generate_lattice_from_tracy_file(const char *filename) {
 
   EleLibItem *element_library = NULL;
   ParsingVar *variables = NULL;
-  Token *tokens = NULL;
   LineItem *lines = NULL;
 
-  if (!tokenise_tracy_file(&file_contents, &tokens)) exit(1);
+  TokenArray tokens = tokenise_tracy_file(&file_contents);
 
   size_t i = 0;
-  while (i < arrlenu(tokens)) {
-    Token token = tokens[i];
+  while (i < tokens.length) {
+    Token token = tokens.data[i];
 
     if (token.type != TOKEN_TYPE_SYMBOL) {
       fprintf(stderr, "Expected token type %s but got %s \""SDM_SV_F"\"\n", 
@@ -1028,9 +1028,9 @@ Line generate_lattice_from_tracy_file(const char *filename) {
     char *name = sdm_sv_to_cstr(sdm_sized_str_as_sv(token.content.data, token.content.length));
 
     if (string_starts_with(name, "USE")) {
-      token = tokens[++i];
+      token = tokens.data[++i];
       assert(token.type == TOKEN_TYPE_COLON);
-      token = tokens[++i];
+      token = tokens.data[++i];
       assert(token.type == TOKEN_TYPE_SYMBOL);
       char *line_name_to_use = sdm_sv_to_cstr(token.content);
       Line line_to_use = shget(lines, line_name_to_use);
@@ -1039,24 +1039,24 @@ Line generate_lattice_from_tracy_file(const char *filename) {
         SDM_ARRAY_PUSH(line, line_to_use.data[j]);
         // arrput((*line), line_to_use.data[j]);
       }
-      token = tokens[++i];
+      token = tokens.data[++i];
       assert(token.type == TOKEN_TYPE_SEMICOLON);
-      token = tokens[++i];
+      token = tokens.data[++i];
       free(name);
       continue;
     }
 
-    token = tokens[++i];
+    token = tokens.data[++i];
 
     if (token.type == TOKEN_TYPE_ASSIGNMENT) {
       // We are assigning a value to a variable
-      token = tokens[++i];
+      token = tokens.data[++i];
       double val = evaluate_token_string(tokens, &i, variables);
       shput(variables, name, val);
     } else if (token.type == TOKEN_TYPE_COLON) {
       // We are defining an element
       ParsingVar *ele_defns = NULL;
-      token = tokens[++i];
+      token = tokens.data[++i];
       EleType ele_type = {0};
       if (string_starts_with(token.content.data, "cavity"))          ele_type = ELETYPE_CAVITY;
       else if (string_starts_with(token.content.data, "drift"))      ele_type = ELETYPE_DRIFT;
@@ -1070,15 +1070,15 @@ Line generate_lattice_from_tracy_file(const char *filename) {
         bool parse_backwards = false;
         Line newline = {0};
         SDM_ENSURE_ARRAY_MIN_CAP(newline, 256);
-        token = tokens[++i];
+        token = tokens.data[++i];
         assert(token.type == TOKEN_TYPE_ASSIGNMENT);
-        token = tokens[++i];
+        token = tokens.data[++i];
         assert(token.type = TOKEN_TYPE_OPAREN);
-        token = tokens[++i];
-        while (i < arrlenu(tokens)) {
+        token = tokens.data[++i];
+        while (i < tokens.length) {
           if (token.type == TOKEN_TYPE_COMMA) {
             parse_backwards = false;
-            token= tokens[++i];
+            token= tokens.data[++i];
             continue;
           }
           else if (token.type == TOKEN_TYPE_SYMBOL) {
@@ -1104,28 +1104,28 @@ Line generate_lattice_from_tracy_file(const char *filename) {
           } else if (token.type == TOKEN_TYPE_SUB) {
             parse_backwards = true;
           } else if (token.type == TOKEN_TYPE_CPAREN) {
-            token = tokens[++i];
+            token = tokens.data[++i];
             break;
           }
-          token = tokens[++i];
+          token = tokens.data[++i];
         }
         shput(lines, name, newline);
-        token = tokens[++i];
+        token = tokens.data[++i];
         continue;
       } else {
         fprintf(stderr, "Unknown element type: '"SDM_SV_F"'\n", SDM_SV_Vals(token.content));
         exit(1);
       }
-      token = tokens[++i];
+      token = tokens.data[++i];
       while (token.type != TOKEN_TYPE_SEMICOLON) {
-        while (token.type != TOKEN_TYPE_SYMBOL) token = tokens[++i];
+        while (token.type != TOKEN_TYPE_SYMBOL) token = tokens.data[++i];
         char *varname = sdm_sv_to_cstr(sdm_sized_str_as_sv(token.content.data, token.content.length));
-        token = tokens[++i];
+        token = tokens.data[++i];
         assert(token.type == TOKEN_TYPE_ASSIGNMENT);
-        token = tokens[++i];
+        token = tokens.data[++i];
         double val = evaluate_token_string(tokens, &i, variables);
         shput(ele_defns, varname, val);
-        token = tokens[i];
+        token = tokens.data[i];
       }
       Element ele = {0};
       memcpy(ele.name, name, strlen(name)<64 ? strlen(name) : 63);
@@ -1188,7 +1188,7 @@ Line generate_lattice_from_tracy_file(const char *filename) {
   for (size_t j=0; j<shlenu(element_library); j++) free(element_library[j].key);
   shfree(element_library);
 
-  arrfree(tokens);
+  SDM_ARRAY_FREE(tokens);
   free(buffer);
 
   return line;
